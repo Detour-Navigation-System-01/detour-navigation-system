@@ -1,5 +1,6 @@
 # detour-navigation-system
 高度情報演習1Bの遠回りナビゲーションシステム
+
 wander-map/
 ├── frontend/              # フロントエンド（Next.js）
 │   ├── public/            # 静的ファイル（画像・アイコン等）
