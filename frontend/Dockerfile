@@ -1,5 +1,5 @@
 # frontend/Dockerfile
-FROM node:18
+FROM node:18-alpine
 
 WORKDIR /app
 
@@ -10,5 +10,8 @@ RUN npm install
 # ソースコードコピー
 COPY . .
 
-# 本番環境用なら build、開発なら dev
-CMD ["npm", "run", "dev"]
+# 設定ファイルの拡張子が正しいことを確認
+RUN if [ -f next.config.ts ]; then mv next.config.ts next.config.js; fi
+
+# ホットリロードのために、ポーリングモードで開発サーバーを起動
+CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
