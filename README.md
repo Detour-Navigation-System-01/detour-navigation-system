@@ -123,7 +123,23 @@ backend/
 ├── package.json         # 依存関係・スクリプト
 └── nodemon.json         # 開発時自動再起動設定
 
-
+db/
+├── init/                # データベース初期化
+│   ├── 01-create-tables.sql     # テーブル作成SQL
+│   ├── 02-insert-sample-data.sql # サンプルデータ投入
+│   └── 03-create-indexes.sql    # インデックス作成
+│
+├── migrations/          # データベースマイグレーション
+│   ├── 001-initial-schema.sql
+│   ├── 002-add-user-preferences.sql
+│   └── 003-add-place-categories.sql
+│
+├── seeds/               # 初期データ
+│   ├── users.sql
+│   ├── places.sql
+│   └── categories.sql
+│
+└── backups/             # バックアップファイル置き場
 
 初回はビルドする
 docker-compose up --build
