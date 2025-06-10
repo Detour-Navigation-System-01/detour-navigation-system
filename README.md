@@ -10,7 +10,7 @@ frontend/
 │   └── manifest.json     # PWA設定（モバイルアプリ化用）
 │
 ├── src/                  # アプリケーション本体
-│   ├── app/              # Next.js App Router（ページ管理）
+│   ├── app/              # Next.js App Router（ページ管理）""UI層""
 │   │   ├── layout.tsx    # 全体共通レイアウト
 │   │   ├── page.tsx      # トップページ（/）
 │   │   ├── navigation/   # ナビゲーション関連ページ
@@ -19,12 +19,21 @@ frontend/
 │   │   │       └── page.tsx
 │   │   ├── profile/      # ユーザープロフィール
 │   │   │   └── page.tsx
-│   │   ├── history/      # ナビ履歴
+│   │   ├── history/      # ナビ履歴 
 │   │   │   └── page.tsx
+│   │   ├──login/　　　　　#ログインページ
+│   │   │   └── page.tsx
+│   │   ├──signup/        #サインアップページ
+│   │   │   └── page.tsx
+│   │   ├──favorites/     #お気に入り一覧
+│   │   │   └── page.tsx
+│   │   ├──user/          
+│   │   │   └── [userId]
+│   │   │        └── page.tsx
 │   │   └── api/          # API Routes（フロント側API）
 │   │       └── route.ts  # 内部API処理
 │   │
-│   ├── components/       # 再利用可能コンポーネント
+│   ├── components/       # 再利用可能コンポーネント ""アプリケーション層""
 │   │   ├── ui/           # 基本UIコンポーネント
 │   │   │   ├── Button.tsx        # ボタンコンポーネント
 │   │   │   ├── Input.tsx         # 入力フィールド
@@ -48,7 +57,7 @@ frontend/
 │   │   ├── components.css # コンポーネント専用CSS
 │   │   └── tailwind.css  # Tailwind CSS設定
 │   │
-│   ├── lib/              # ライブラリ・ユーティリティ
+│   ├── lib/              # ライブラリ・ユーティリティ ""インフラ層""
 │   │   ├── api.ts        # バックエンドAPI呼び出し
 │   │   ├── utils.ts      # 共通ユーティリティ関数
 │   │   ├── auth.ts       # 認証関連処理
@@ -77,19 +86,19 @@ backend/
 │   │   ├── index.js     # ルートルーティング（/api/）
 │   │   ├── navigation.js # ナビゲーション関連API（/api/navigation/）
 │   │   ├── users.js     # ユーザー関連API（/api/users/）
-│   │   ├── places.js    # 場所・スポット関連API（/api/places/）
+│   │   ├── favorites.js #沖に離スポット管理API
+│   │   ├── auth.js      #認証，ログインAPI
 │   │
 │   ├── controllers/     # ビジネスロジック処理
 │   │   ├── navigationController.js  # ルート計算・遠回りアルゴリズム
 │   │   ├── userController.js        # ユーザー管理処理
-│   │   ├── placeController.js       # 観光スポット・場所管理
-│   │   └── historyController.js     # 履歴管理処理
+│   │   ├── authController.js      # 認証関連処理
+│   │   ├── favoriteController.js  # お気に入り処理作
 │   │
 │   ├── models/          # データベース操作（ORM/クエリ）
 │   │   ├── User.js      # ユーザーテーブル操作
 │   │   ├── Route.js     # ルート情報テーブル操作
-│   │   ├── Place.js     # 場所・スポット情報操作
-│   │   └── History.js   # 履歴テーブル操作
+│   │   ├── Favorite.js  # お気に入り処理操作
 │   │
 │   ├── middleware/      # ミドルウェア
 │   │   ├── auth.js      # 認証チェック
