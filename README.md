@@ -78,7 +78,6 @@ backend/
 │   │   ├── navigation.js # ナビゲーション関連API（/api/navigation/）
 │   │   ├── users.js     # ユーザー関連API（/api/users/）
 │   │   ├── places.js    # 場所・スポット関連API（/api/places/）
-│   │   └── history.js   # 履歴関連API（/api/history/）
 │   │
 │   ├── controllers/     # ビジネスロジック処理
 │   │   ├── navigationController.js  # ルート計算・遠回りアルゴリズム
