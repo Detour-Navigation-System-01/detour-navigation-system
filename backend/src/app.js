@@ -2,6 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const indexRoutes = require('./routes/index');
+const dbTestRoutes = require('./routes/db-test');
+
+// dotenv設定を読み込み
+require('dotenv').config();
 
 // ミドルウェア
 app.use(cors()); 
@@ -10,6 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // APIルート
 app.use('/api', indexRoutes);
+app.use('/api', dbTestRoutes);
 
 // ルートエンドポイント - ヘルスチェック用
 app.get('/', (req, res) => {
