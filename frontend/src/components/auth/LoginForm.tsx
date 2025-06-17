@@ -2,8 +2,11 @@
 
 import { useState } from 'react';
 import { fetcher } from '@/lib/api';
+import { useRouter } from 'next/navigation';
+
 
 export default function LoginForm() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -13,7 +16,7 @@ export default function LoginForm() {
 
     try {
       const data = await fetcher<{success: boolean; userId?:number; message?: string}>(
-        '/api/suth/login',
+        '/api/auth/login',
         {
           method: 'POST',
           body: JSON.stringify({email,password}),
@@ -24,6 +27,7 @@ export default function LoginForm() {
       if (data.success) {
         setMessage(`ログイン成功！ユーザーID: ${data.userId}`);
         // TODO: トークン保存やリダイレクトなど
+        router.push('/profile');
       } else {
         setMessage(data.message || 'ログイン失敗');
       }
