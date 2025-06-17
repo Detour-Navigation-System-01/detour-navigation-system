@@ -1,12 +1,6 @@
-const express = require('express');
-const app = express();
-const PORT = 3001;
+// アプリケーションのエントリーポイント
+// server.jsをインポートして、サーバーを起動する
 
-app.get('/', (req, res) => {
-  res.send('Hello from backend!');
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+console.log('🚀 バックエンドアプリケーションを起動します...');
+require('./server');
 
