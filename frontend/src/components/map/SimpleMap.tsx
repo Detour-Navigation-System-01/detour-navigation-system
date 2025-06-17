@@ -1,0 +1,51 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+
+interface Position {
+  lat: number;
+  lng: number;
+}
+
+export default function SimpleMap() {
+  const [position, setPosition] = useState<Position>({
+    lat: 35.6812, // 東京駅（初期値）
+    lng: 139.7671,
+  });
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setPosition({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        },
+        (err) => {
+          console.error('位置情報の取得に失敗しました:', err);
+        }
+      );
+    }
+  }, []);
+
+  return (
+    <div style={{ height: '400px', width: '100%', marginTop: '20px' }}>
+      <MapContainer
+        center={[position.lat, position.lng]}
+        zoom={13}
+        style={{ height: '100%', width: '100%' }}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <Marker position={[position.lat, position.lng]}>
+          <Popup>現在地</Popup>
+        </Marker>
+      </MapContainer>
+    </div>
+  );
+}
