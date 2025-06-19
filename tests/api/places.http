@@ -1,0 +1,54 @@
+### 場所APIのテスト
+@baseUrl = http://localhost:3001/api
+
+### 場所一覧を取得
+GET {{baseUrl}}/places
+Content-Type: application/json
+
+### ページネーションとソートで場所一覧を取得
+GET {{baseUrl}}/places?page=1&limit=5&sort=name&order=asc
+Content-Type: application/json
+
+### フィルターで場所一覧を取得
+GET {{baseUrl}}/places?name=観光
+Content-Type: application/json
+
+### 場所を作成
+POST {{baseUrl}}/places
+Content-Type: application/json
+
+{
+  "name": "東京スカイツリー",
+  "description": "東京の観光名所として有名な高さ634mの電波塔",
+  "category": "観光",
+  "address": "東京都墨田区押上1丁目1−2",
+  "prefecture": "東京都",
+  "lat": 35.7100,
+  "lng": 139.8107,
+  "image_url": "https://example.com/skytree.jpg"
+}
+
+### 特定の場所を取得
+GET {{baseUrl}}/places/1
+Content-Type: application/json
+
+### 場所情報を更新
+PUT {{baseUrl}}/places/1
+Content-Type: application/json
+
+{
+  "description": "更新された説明文",
+  "image_url": "https://example.com/updated-skytree.jpg"
+}
+
+### 場所を削除
+DELETE {{baseUrl}}/places/1
+Content-Type: application/json
+
+### カテゴリー別の場所を取得
+GET {{baseUrl}}/places/category/観光
+Content-Type: application/json
+
+### 近隣の場所を検索
+GET {{baseUrl}}/places/nearby?lat=35.7100&lng=139.8107&radius=5
+Content-Type: application/json

@@ -13,6 +13,108 @@ class UserRepository extends BaseRepository {
     super(pool, 'users'); // ベースリポジトリを継承し、テーブル名を指定
     this.saltRounds = 10; // bcryptのソルトラウンド数
   }
+  
+  /**
+   * 条件に基づいてユーザーを検索
+   * @param {Object} options - 検索オプション
+   * @returns {Promise<Array>} 検索結果
+   */
+  async findAll(options = {}) {
+    const { 
+      orderBy = 'created_at', 
+      direction = 'DESC', 
+      limit = 10, 
+      offset = 0,
+      filters = {} 
+    } = options;
+    
+    // フィルター条件の構築
+    const filterConditions = [];
+    const queryParams = [];
+    let paramCounter = 1;
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        // テキストフィールドは部分一致で検索
+        if (['username', 'email', 'first_name', 'last_name'].includes(key)) {
+          filterConditions.push(`${key} ILIKE $${paramCounter}`);
+          queryParams.push(`%${value}%`);
+        } else {
+          filterConditions.push(`${key} = $${paramCounter}`);
+          queryParams.push(value);
+        }
+        paramCounter++;
+      }
+    });
+    
+    // クエリの構築
+    let query = `SELECT * FROM ${this.tableName}`;
+    
+    if (filterConditions.length > 0) {
+      query += ` WHERE ${filterConditions.join(' AND ')}`;
+    }
+    
+    query += ` ORDER BY ${orderBy} ${direction}`;
+    
+    if (limit) {
+      query += ` LIMIT $${paramCounter++}`;
+      queryParams.push(limit);
+    }
+    
+    if (offset) {
+      query += ` OFFSET $${paramCounter++}`;
+      queryParams.push(offset);
+    }
+    
+    try {
+      const result = await this.pool.query(query, queryParams);
+      return result.rows;
+    } catch (error) {
+      console.error('ユーザー検索エラー:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * 条件に基づくユーザー数を取得
+   * @param {Object} filters - フィルター条件
+   * @returns {Promise<number>} ユーザー数
+   */
+  async count(filters = {}) {
+    // フィルター条件の構築
+    const filterConditions = [];
+    const queryParams = [];
+    let paramCounter = 1;
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        // テキストフィールドは部分一致で検索
+        if (['username', 'email', 'first_name', 'last_name'].includes(key)) {
+          filterConditions.push(`${key} ILIKE $${paramCounter}`);
+          queryParams.push(`%${value}%`);
+        } else {
+          filterConditions.push(`${key} = $${paramCounter}`);
+          queryParams.push(value);
+        }
+        paramCounter++;
+      }
+    });
+    
+    // クエリの構築
+    let query = `SELECT COUNT(*) FROM ${this.tableName}`;
+    
+    if (filterConditions.length > 0) {
+      query += ` WHERE ${filterConditions.join(' AND ')}`;
+    }
+    
+    try {
+      const result = await this.pool.query(query, queryParams);
+      return parseInt(result.rows[0].count, 10);
+    } catch (error) {
+      console.error('ユーザー数取得エラー:', error);
+      throw error;
+    }
+  }
   /**
    * ユーザー名またはメールアドレスでユーザーを検索
    * @param {string} identifier - ユーザー名またはメールアドレス

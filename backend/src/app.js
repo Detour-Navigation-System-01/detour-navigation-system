@@ -3,6 +3,7 @@ const cors = require('cors');
 const app = express();
 const apiRoutes = require('./routes/api');
 const indexRoutes = require('./routes/index');
+// Docker環境との互換性のため相対パスを使用
 const dbTestRoutes = require('./routes/db-test');
 
 // dotenv設定を読み込み
