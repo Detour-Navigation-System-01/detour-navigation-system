@@ -1,9 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const apiRoutes = require('./routes/api');
 const indexRoutes = require('./routes/index');
 const dbTestRoutes = require('./routes/db-test');
-const userRoutes = require('./routes/user');
 
 // dotenv設定を読み込み
 require('dotenv').config();
@@ -13,10 +13,20 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// APIルート
+// リクエスト情報をログに出力（開発環境用）
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    console.log(`📥 ${req.method} ${req.originalUrl}`);
+    next();
+  });
+}
+
+// APIルート - 階層化されたルーティング
+app.use('/api', apiRoutes);
+
+// 開発用のレガシールート（互換性のため一時的に残す）
 app.use('/api', indexRoutes);
 app.use('/api', dbTestRoutes);
-app.use('/api', userRoutes);
 
 // ルートエンドポイント - ヘルスチェック用
 app.get('/', (req, res) => {
@@ -37,21 +47,13 @@ app.get('/health', (req, res) => {
   });
 });
 
-// 404エラーハンドリング
-app.use((req, res, next) => {
-  res.status(404).json({
-    status: 'error',
-    message: `リクエストされたパス ${req.path} が見つかりません`
-  });
-});
+// 共通エラーハンドリングを適用
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
-// グローバルエラーハンドリング
-app.use((err, req, res, next) => {
-  console.error('🚨 エラー:', err);
-  res.status(err.status || 500).json({
-    status: 'error',
-    message: err.message || '内部サーバーエラーが発生しました'
-  });
-});
+// 404エラーハンドリング - 存在しないパスへのリクエストを処理
+app.use(notFoundHandler);
+
+// グローバルエラーハンドリング - すべてのエラーを統一した形式で処理
+app.use(errorHandler);
 
 module.exports = app;
