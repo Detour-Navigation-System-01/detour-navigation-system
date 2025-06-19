@@ -38,25 +38,32 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleLogin}>
-      <input
-        type="email"
-        placeholder="メールアドレス"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <br />
-      <input
-        type="password"
-        placeholder="パスワード"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      <br />
-      <button type="submit">ログイン</button>
-      <p>{message}</p>
-    </form>
+    <div className = "flex justify-center items-center min-h-screen bg-gray-50">
+        <form onSubmit={handleLogin}>
+          <input
+            type="email"
+            placeholder="メールアドレス"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+          />
+          <br />
+          <input
+            type="password"
+            placeholder="パスワード"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+          />
+          <br />
+          <button type="submit"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
+          >ログイン</button>
+
+          <p>{message}</p>
+        </form>
+      </div>
   );
 }
