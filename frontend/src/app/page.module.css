@@ -1,10 +1,19 @@
-.page {
-  --gray-rgb: 0, 0, 0;
-  --gray-alpha-200: rgba(var(--gray-rgb), 0.08);
-  --gray-alpha-100: rgba(var(--gray-rgb), 0.05);
+/**
+ * @fileoverview ページレイアウトスタイル
+ * @description メインページのレイアウト、ボタン、フッターのスタイル定義
+ * @author 作成者名
+ * @created YYYY-MM-DD
+ * @updated YYYY-MM-DD
+ * @version 1.0.0
+ */
 
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
+.page-container {
+  --gray-color-rgb: 0, 0, 0;
+  --gray-alpha-opacity-200: rgba(var(--gray-color-rgb), 0.08);
+  --gray-alpha-opacity-100: rgba(var(--gray-color-rgb), 0.05);
+
+  --button-primary-hover-color: #383838;
+  --button-secondary-hover-color: #f2f2f2;
 
   display: grid;
   grid-template-rows: 20px 1fr 20px;
@@ -18,24 +27,24 @@
 
 /* ダークモード時 */
 @media (prefers-color-scheme: dark) {
-  .page {
-    --gray-rgb: 255, 255, 255;
-    --gray-alpha-200: rgba(var(--gray-rgb), 0.145);
-    --gray-alpha-100: rgba(var(--gray-rgb), 0.06);
+  .page-container {
+    --gray-color-rgb: 255, 255, 255;
+    --gray-alpha-opacity-200: rgba(var(--gray-color-rgb), 0.145);
+    --gray-alpha-opacity-100: rgba(var(--gray-color-rgb), 0.06);
 
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
+    --button-primary-hover-color: #ccc;
+    --button-secondary-hover-color: #1a1a1a;
   }
 }
 
-.main {
+.main-content {
   display: flex;
   flex-direction: column;
   gap: 32px;
   grid-row-start: 2;
 }
 
-.main ol {
+.main-content ol {
   font-family: var(--font-geist-mono);
   padding-left: 0;
   margin: 0;
@@ -45,24 +54,24 @@
   list-style-position: inside;
 }
 
-.main li:not(:last-of-type) {
+.main-content li:not(:last-of-type) {
   margin-bottom: 8px;
 }
 
-.main code {
+.main-content code {
   font-family: inherit;
-  background: var(--gray-alpha-100);
+  background: var(--gray-alpha-opacity-100);
   padding: 2px 4px;
   border-radius: 4px;
   font-weight: 600;
 }
 
-.ctas {
+.call-to-action-buttons {
   display: flex;
   gap: 16px;
 }
 
-.ctas a {
+.call-to-action-buttons a {
   appearance: none;
   border-radius: 128px;
   height: 48px;
@@ -82,80 +91,80 @@
   font-weight: 500;
 }
 
-a.primary {
+a.primary-button {
   background: var(--foreground);
   color: var(--background);
   gap: 8px;
 }
 
-a.secondary {
-  border-color: var(--gray-alpha-200);
+a.secondary-button {
+  border-color: var(--gray-alpha-opacity-200);
   min-width: 158px;
 }
 
-.footer {
+.footer-section {
   grid-row-start: 3;
   display: flex;
   gap: 24px;
 }
 
-.footer a {
+.footer-section a {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.footer img {
+.footer-section img {
   flex-shrink: 0;
 }
 
 /* Enable hover only on non-touch devices */
 @media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
+  a.primary-button:hover {
+    background: var(--button-primary-hover-color);
     border-color: transparent;
   }
 
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
+  a.secondary-button:hover {
+    background: var(--button-secondary-hover-color);
     border-color: transparent;
   }
 
-  .footer a:hover {
+  .footer-section a:hover {
     text-decoration: underline;
     text-underline-offset: 4px;
   }
 }
 
 @media (max-width: 600px) {
-  .page {
+  .page-container {
     padding: 32px;
     padding-bottom: 80px;
   }
 
-  .main {
+  .main-content {
     align-items: center;
   }
 
-  .main ol {
+  .main-content ol {
     text-align: center;
   }
 
-  .ctas {
+  .call-to-action-buttons {
     flex-direction: column;
   }
 
-  .ctas a {
+  .call-to-action-buttons a {
     font-size: 14px;
     height: 40px;
     padding: 0 16px;
   }
 
-  a.secondary {
+  a.secondary-button {
     min-width: auto;
   }
 
-  .footer {
+  .footer-section {
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
@@ -163,7 +172,7 @@ a.secondary {
 }
 
 @media (prefers-color-scheme: dark) {
-  .logo {
+  .logo-image {
     filter: invert();
   }
 }
