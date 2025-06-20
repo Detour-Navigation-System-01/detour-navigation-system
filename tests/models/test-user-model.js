@@ -1,5 +1,5 @@
-// backend/src/utils/test-user-model.js
-const User = require('../models/User');
+// tests/models/test-user-model.js
+const User = require('../../backend/src/models/User');
 
 async function testUserModel() {
   try {
@@ -29,33 +29,50 @@ async function testUserModel() {
     // 4. すべてのユーザーを取得
     console.log('\n4. 全ユーザー取得テスト:');
     const allUsers = await User.findAll();
-    console.log(`${allUsers.length}件のユーザーが見つかりました`);
-    allUsers.forEach(user => console.log(`- ${user.id}: ${user.username} (${user.email})`));
+    console.log(`${allUsers.length}人のユーザーが見つかりました`);
     
-    // 5. ユーザー情報の更新
+    // 5. ユーザー情報を更新
     console.log('\n5. ユーザー更新テスト:');
     const updatedUser = await User.update(newUser.id, {
       first_name: '更新済み',
-      last_name: 'テストユーザー'
+      last_name: 'テスト'
     });
-    console.log('更新後のユーザー:', updatedUser);
+    console.log('更新されたユーザー:', updatedUser);
     
-    // 6. ユーザーの削除 (コメントアウトして実行しないようにしておく)
-    /*
+    // 6. ユーザーを削除
     console.log('\n6. ユーザー削除テスト:');
-    const isDeleted = await User.delete(newUser.id);
-    console.log('削除結果:', isDeleted ? '成功' : '失敗');
+    const deleteResult = await User.delete(newUser.id);
+    console.log('削除結果:', deleteResult);
     
-    // 削除確認
-    const checkDeleted = await User.findById(newUser.id);
-    console.log('削除されたユーザー検索結果:', checkDeleted);
-    */
+    // 7. 削除後の検索テスト
+    console.log('\n7. 削除後のユーザー検索テスト:');
+    const deletedUser = await User.findById(newUser.id);
+    console.log('検索結果:', deletedUser);
     
-    console.log('\n✅ ユーザーモデルのテスト完了');
-    
+    console.log('\nすべてのテストが完了しました！');
+    return {
+      success: true,
+      message: 'すべてのユーザーモデルテストが成功しました'
+    };
   } catch (error) {
-    console.error('❌ テスト中にエラーが発生しました:', error);
+    console.error('テスト中にエラーが発生しました:', error);
+    return {
+      success: false,
+      error: error.message
+    };
   }
 }
 
-testUserModel();
+// スクリプト直接実行時にテストを実行
+if (require.main === module) {
+  testUserModel()
+    .then(result => {
+      if (!result.success) process.exit(1);
+    })
+    .catch(error => {
+      console.error('予期せぬエラー:', error);
+      process.exit(1);
+    });
+}
+
+module.exports = { testUserModel };

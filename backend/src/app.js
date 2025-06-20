@@ -3,6 +3,7 @@ const cors = require('cors');
 const app = express();
 const apiRoutes = require('./routes/api');
 const indexRoutes = require('./routes/index');
+// Docker環境との互換性のため相対パスを使用
 const dbTestRoutes = require('./routes/db-test');
 
 // dotenv設定を読み込み
@@ -12,6 +13,9 @@ require('dotenv').config();
 app.use(cors()); 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// JSONレスポンスを整形（読みやすく）
+app.set('json spaces', 2);
 
 // リクエスト情報をログに出力（開発環境用）
 if (process.env.NODE_ENV !== 'production') {
