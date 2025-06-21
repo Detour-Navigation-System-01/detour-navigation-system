@@ -13,17 +13,34 @@ const pool = new Pool({
   database: dbConfig.database,
 });
 
+/**
+ * マイグレーションを実行する関数
+ * SQLファイルを読み込み、データベースに適用する
+ */
 async function runMigration() {
   try {
     console.log('🔄 マイグレーションを開始します...');
-    
-    // マイグレーションファイルのディレクトリ
+      // マイグレーションファイルのディレクトリ
     const migrationsDir = path.join(__dirname, '..', 'db', 'migrations');
+    console.log(`マイグレーションディレクトリパス: ${migrationsDir}`);
+    
+    // ディレクトリが存在するか確認
+    if (!fs.existsSync(migrationsDir)) {
+      console.error(`マイグレーションディレクトリが存在しません: ${migrationsDir}`);
+      throw new Error(`マイグレーションディレクトリが見つかりません: ${migrationsDir}`);
+    }
     
     // マイグレーションファイルの読み込み
     const files = fs.readdirSync(migrationsDir)
       .filter(file => file.endsWith('.sql'))
       .sort(); // 番号順に実行するために並べ替え
+    
+    console.log(`マイグレーションファイル数: ${files.length}`);
+    if (files.length === 0) {
+      console.warn('マイグレーションファイルが見つかりませんでした');
+    } else {
+      console.log(`マイグレーションファイル: ${files.join(', ')}`);
+    }
     
     // マイグレーションテーブルの存在確認、なければ作成
     await pool.query(`
@@ -67,15 +84,33 @@ async function runMigration() {
         client.release();
       }
     }
+      console.log('✅ マイグレーションが完了しました');
     
-    console.log('✅ マイグレーションが完了しました');
-    await pool.end();
+    // モジュールとして呼び出された場合はプールを閉じない
+    if (require.main === module) {
+      await pool.end();
+    }
     
   } catch (err) {
     console.error('❌ マイグレーション処理でエラーが発生しました:', err);
-    await pool.end();
-    process.exit(1);
+    
+    // モジュールとして呼び出された場合はプールを閉じない
+    if (require.main === module) {
+      await pool.end();
+      process.exit(1);
+    }
+    throw err;
   }
 }
 
-runMigration();
+// スクリプトが直接実行された場合のみ実行
+if (require.main === module) {
+  runMigration()
+    .then(() => console.log('マイグレーションスクリプトが正常に完了しました'))
+    .catch(err => {
+      console.error('マイグレーションスクリプトでエラーが発生しました:', err);
+      process.exit(1);
+    });
+}
+
+module.exports = { runMigration };
