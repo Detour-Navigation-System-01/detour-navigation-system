@@ -1,0 +1,43 @@
+### ユーザーAPIのテスト（BaseController対応版）
+@baseUrl = http://localhost:3001/api
+
+### ユーザー一覧を取得
+GET {{baseUrl}}/users
+Content-Type: application/json
+
+### ページネーションとソートでユーザー一覧を取得
+GET {{baseUrl}}/users?page=1&limit=5&sort=username&order=asc
+Content-Type: application/json
+
+### フィルターでユーザー一覧を取得
+GET {{baseUrl}}/users?username=test
+Content-Type: application/json
+
+### ユーザーを作成
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "password123",
+  "first_name": "テスト",
+  "last_name": "ユーザー"
+}
+
+### 特定のユーザーを取得
+GET {{baseUrl}}/users/14
+Content-Type: application/json
+
+### ユーザー情報を更新
+PUT {{baseUrl}}/users/1
+Content-Type: application/json
+
+{
+  "first_name": "更新済",
+  "last_name": "テストユーザー"
+}
+
+### ユーザーを削除
+DELETE {{baseUrl}}/users/12
+Content-Type: application/json

@@ -1,12 +1,20 @@
-const express = require('express');
-const app = express();
-const PORT = 3001;
+// アプリケーションのエントリーポイント
+// server.jsをインポートして、サーバーを起動する
 
-app.get('/', (req, res) => {
-  res.send('Hello from backend!');
-});
+// Docker環境のためのDB接続設定
+// Docker環境ではDBホスト名は'localhost'ではなく'db'であることを明示的に設定
+process.env.DB_HOST = 'db';
+process.env.DB_PORT = '5432';
+process.env.DB_USER = 'postgres';
+process.env.DB_PASSWORD = 'password';
+process.env.DB_NAME = 'wanderdb';
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+console.log('🚀 バックエンドアプリケーションを起動します...');
+console.log('💾 DB接続設定:', {
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER
 });
+require('./server');
 
