@@ -1,0 +1,41 @@
+# テスト用認証API呼び出しファイル
+@baseUrl = http://localhost:3001/api
+
+### ユーザー登録
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "nakanishi1",
+  "email": "nakanishi1@example.com",
+  "password": "securePassword123",
+  "first_name": "younosuke",
+  "last_name": "nakanishi"
+}
+
+### ユーザーログイン（ユーザー名）
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "nakanishi1",
+  "password": "securePassword123"
+}
+
+### ユーザーログイン（メールアドレス）
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "nakanishi1@example.com",
+  "password": "securePassword123"
+}
+
+### パスワード変更
+PUT {{baseUrl}}/auth/password/14
+Content-Type: application/json
+
+{
+  "currentPassword": "securePassword123",
+  "newPassword": "IamSoSleepy"
+}
