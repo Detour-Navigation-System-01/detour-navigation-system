@@ -52,25 +52,40 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleUserLogin}>
-      <input
-        type="email"
-        placeholder="メールアドレス"
-        value={userEmail}
-        onChange={(inputEvent) => setUserEmail(inputEvent.target.value)}
-        required
-      />
-      <br />
-      <input
-        type="password"
-        placeholder="パスワード"
-        value={userPassword}
-        onChange={(inputEvent) => setUserPassword(inputEvent.target.value)}
-        required
-      />
-      <br />
-      <button type="submit">ログイン</button>
-      <p>{statusMessage}</p>
-    </form>
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <form
+        onSubmit={handleUserLogin}
+        className="bg-white p-8 rounded shadow-md w-full max-w-sm"
+      >
+        <h2 className="text-2xl font-semibold text-center mb-6">ログイン</h2>
+
+        <input
+          type="email"
+          placeholder="メールアドレス"
+          value={userEmail}
+          onChange={(e) => setUserEmail(e.target.value)}
+          required
+          className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+        />
+
+        <input
+          type="password"
+          placeholder="パスワード"
+          value={userPassword}
+          onChange={(e) => setUserPassword(e.target.value)}
+          required
+          className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+        />
+
+        <button
+          type="submit"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
+        >
+          ログイン
+        </button>
+
+        <p className="mt-4 text-center text-sm text-red-500">{statusMessage}</p>
+      </form>
+    </div>
   );
 }
