@@ -1,7 +1,7 @@
 -- ファイル名: backend/src/db/migrations/002-create-places-table.sql
 CREATE TABLE places (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
+  name VARCHAR(100) NOT NULL UNIQUE,  -- UNIQUE制約を追加
   description TEXT,
   category VARCHAR(50),
   address VARCHAR(255),

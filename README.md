@@ -81,73 +81,78 @@ backend/
 ├── src/                  # アプリケーション本体
 │   ├── app.js           # Express アプリケーション設定
 │   ├── server.js        # サーバー起動エントリーポイント
+│   ├── index.js         # アプリケーションエントリーポイント
 │   │
 │   ├── routes/          # APIルート定義
 │   │   ├── index.js     # ルートルーティング（/api/）
-│   │   ├── navigation.js # ナビゲーション関連API（/api/navigation/）
-│   │   ├── users.js     # ユーザー関連API（/api/users/）
-│   │   ├── favorites.js #沖に離スポット管理API
-│   │   ├── auth.js      #認証，ログインAPI
+│   │   ├── navigation.js # ナビゲーション関連API
+│   │   ├── user.js      # ユーザー関連API
+│   │   ├── places.js    # 場所・スポット管理API
+│   │   ├── auth.js      # 認証・ログインAPI
+│   │   └── api/         # API バージョン管理
 │   │
-│   ├── controllers/     # ビジネスロジック処理
-│   │   ├── navigationController.js  # ルート計算・遠回りアルゴリズム
-│   │   ├── userController.js        # ユーザー管理処理
-│   │   ├── authController.js      # 認証関連処理
-│   │   ├── favoriteController.js  # お気に入り処理作
+│   ├── controllers/     # コントローラー層（リクエスト処理・レスポンス生成）
+│   │   ├── BaseController.js    # 基底コントローラー
+│   │   ├── userController.js    # ユーザー管理
+│   │   ├── authController.js    # 認証処理
+│   │   ├── placeController.js   # 場所管理
+│   │   └── navigationController.js # ルート計算
 │   │
-│   ├── models/          # データベース操作（ORM/クエリ）
-│   │   ├── User.js      # ユーザーテーブル操作
-│   │   ├── Route.js     # ルート情報テーブル操作
-│   │   ├── Favorite.js  # お気に入り処理操作
+│   ├── services/        # サービス層（ビジネスロジック）
+│   │   ├── userService.js    # ユーザー関連ビジネスロジック
+│   │   ├── authService.js    # 認証関連ビジネスロジック
+│   │   ├── placeService.js   # 場所関連ビジネスロジック
+│   │   ├── mapService.js     # 地図API連携（外部APIとの連携）
+│   │   └── routeService.js   # 経路計算サービス
+│   │
+│   ├── repositories/    # リポジトリ層（データアクセス）
+│   │   ├── BaseRepository.js # 基底リポジトリ
+│   │   ├── UserRepository.js # ユーザーデータアクセス
+│   │   └── PlaceRepository.js # 場所データアクセス
+│   │
+│   ├── models/          # データモデル
+│   │   ├── User.js      # ユーザーモデル
+│   │   └── Place.js     # 場所モデル
 │   │
 │   ├── middleware/      # ミドルウェア
-│   │   ├── auth.js      # 認証チェック
-│   │   ├── validation.js # 入力値検証
-│   │   ├── cors.js      # CORS設定
-│   │   └── errorHandler.js # エラーハンドリング
+│   │   ├── errorHandler.js # エラーハンドリング
+│   │   └── validation.js   # 入力検証
 │   │
-│   ├── services/        # 外部サービス連携
-│   │   ├── mapService.js    # 地図API連携（Google Maps等）
-│   │   ├── routeService.js  # ルート計算サービス
-│   │   └── placeService.js  # 観光スポット情報取得
+│   ├── database/        # データベース初期化・管理
+│   │   └── init.js      # DB初期化処理
 │   │
-│   ├── utils/           # 共通ユーティリティ
-│   │   ├── database.js  # DB接続設定
-│   │   ├── logger.js    # ログ出力設定
-│   │   ├── helpers.js   # 汎用ヘルパー関数
-│   │   └── constants.js # 定数定義
+│   ├── db/              # データベーススキーマ
+│   │   ├── migrations/  # テーブル定義SQL
+│   │   │   ├── 001-create-users-table.sql
+│   │   │   ├── 002-create-places-table.sql
+│   │   │   ├── 003-create-favorites-table.sql
+│   │   │   └── 004-add-spatial-extensions.sql
+│   │   │
+│   │   └── seeds/      # 初期データSQL
+│   │       ├── 001-seed-users.sql
+│   │       └── 002-seed-places.sql
 │   │
-│   └── config/          # 設定ファイル
-│       ├── database.js  # DB設定
-│       ├── auth.js      # 認証設定
-│       └── app.js       # アプリ全体設定
+│   ├── utils/          # ユーティリティ
+│   │   ├── db.js       # データベース接続
+│   │   ├── run-migration.js # マイグレーション実行
+│   │   └── run-seeds.js    # シード実行
+│   │
+│   └── config/         # 設定ファイル
+│       └── database.js # データベース設定
 │
-├── tests/               # テストコード
-│   ├── unit/           # 単体テスト
-│   ├── integration/    # 結合テスト
-│   └── fixtures/       # テスト用データ
-│
-├── .env                 # バックエンド環境変数
-├── Dockerfile           # バックエンドDocker設定
-├── package.json         # 依存関係・スクリプト
-└── nodemon.json         # 開発時自動再起動設定
+├── Dockerfile          # バックエンドDocker設定
+└── package.json        # 依存関係・スクリプト
 
-db/
-├── init/                # データベース初期化
-│   ├── 01-create-tables.sql     # テーブル作成SQL
-│   ├── 02-insert-sample-data.sql # サンプルデータ投入
-│   └── 03-create-indexes.sql    # インデックス作成
-│
-├── migrations/          # データベースマイグレーション
-│   ├── 001-initial-schema.sql
-│   ├── 002-add-user-preferences.sql
-│   └── 003-add-place-categories.sql
-│
-├── seeds/               # 初期データ
-│   ├── users.sql
-│   ├── places.sql
-│   └── categories.sql
-│
+tests/
+└── api/              # APIテスト
+    ├── users.http    # ユーザーAPIテスト
+    ├── auth.http     # 認証APIテスト
+    └── places.http   # 場所APIテスト
+
+db/                   # PostgreSQLデータ
+├── base/             # PostgreSQLデータファイル
+├── global/           # PostgreSQL内部ファイル
+└── pg_wal/           # トランザクションログ
 └── backups/             # バックアップファイル置き場
 
 初回はビルドする
@@ -166,182 +171,111 @@ PostgreSQL → localhost:5432 で接続可能
 
 ## バックエンド開発スケジュール
 
-バックエンドの実装は以下のステップで段階的に進めていきます。各ステップで視覚的なフィードバックを確認しながら進めます。
+### 🎯 現在の進捗状況
 
-### フェーズ1: 基本構造の構築と動作確認
+✅ **完成済み（フェーズ1-3）**
+- Express + PostgreSQL基盤
+- ユーザー・場所のCRUD API
+- リポジトリ・サービス・コントローラー層
+- 近隣検索機能（earthdistance使用）
 
-1. **基本的なExpressサーバーの構築**
-   - 単純なHello World APIの作成
-   - 基本的なルーティング
-   - 動作確認方法: ブラウザ/Postmanでレスポンス確認
+❌ **未実装の重要機能**
+- JWT認証・保護されたルート
+- 経路計算・遠回りアルゴリズム
+- WebSocketリアルタイム通信
+- ファイルアップロード
 
-2. **データベース接続の確認**
-   - PostgreSQL接続テスト
-   - 単純なクエリの実行
-   - 動作確認方法: コンソールログで接続成功と結果表示
+### 🔧 改善された実装計画
 
-### フェーズ2: 基本的なCRUD操作の実装
+#### フェーズ4A: 中核機能の先行実装
 
-3. **ユーザーテーブル作成と基本操作**
-   - テーブル作成スクリプト
-   - 基本的なCRUD操作の関数実装
-   - 動作確認方法: 各操作後のデータをコンソールに表示
+1. **外部API連携の基礎実装** ⭐ 最優先
+   - 目標: 外部経路計算APIの動作確認
+   - エンドポイント: `GET /api/routes/test` → 外部API接続テスト
+   - 実装内容:
+     - OSRM API または Google Maps API の接続テスト
+     - 環境変数設定 (.env にAPIキー追加)
+     - エラーハンドリング（API障害時の対応）
 
-4. **基本的なRESTful API実装**
-   - ユーザー登録/取得/更新/削除API
-   - リクエスト処理とレスポンス形式統一
-   - 動作確認方法: Postmanでリクエスト送信とレスポンス検証
+2. **基本経路計算API実装** ⭐ 高優先
+   - エンドポイント: `POST /api/routes/calculate`
+   - 実装内容:
+     - RouteController, RouteService, RouteRepository の作成
+     - 基本的な経路計算ロジック
+     - 計算結果のデータベース保存
 
-### フェーズ3: アーキテクチャの段階的改善
+3. **JWT認証の実装**
+   - 保護されたルート例:
+     - `GET /api/routes/history` → 要認証
+     - `POST /api/routes/save` → 要認証
+   - 実装内容:
+     - JWT トークン生成・検証
+     - 認証ミドルウェア作成
+     - ログイン時のトークン発行
 
-5. **コード分割とルーティング整理**
-   - ルーターの分離
-   - 基本的なエラーハンドリング
-   - 動作確認方法: 各ルート動作とエラーレスポンス確認
+#### フェーズ4B: 高度機能の実装
 
-6. **リポジトリパターンの導入**
-   - データアクセス層の実装
-   - リポジトリをAPIルートと接続
-   - 動作確認方法: リポジトリを通したデータ取得を確認
+1. **遠回りアルゴリズムの実装**
+   - 段階的な実装:
+     - Step1: 基本的な迂回（距離を1.2-2.0倍に）
+     - Step2: 興味深い場所を経由点として組み込み
+     - Step3: ユーザーの嗜好学習
+   - 実装内容:
+     - 複数経路候補の生成
+     - 場所(places)データとの組み合わせ
+     - 遠回り度による経路調整
 
-7. **サービス層の追加**
-   - ビジネスロジックの分離
-   - バリデーション実装
-   - 動作確認方法: 正常系と異常系の処理を確認
+2. **WebSocketリアルタイム通信** ⭐ ナビに必須
+   - 新機能: `/ws/navigation/:sessionId` → リアルタイム位置更新
+   - 実装内容:
+     - Socket.io導入
+     - ナビゲーションセッション管理
+     - 位置情報のリアルタイム送受信
 
-8. **コントローラーの導入**
-   - リクエスト処理とサービス呼び出しの分離
-   - 統一したレスポンス形式
-   - 動作確認方法: 各エンドポイントの動作確認
+3. **ファイル管理機能** ⭐ 写真機能に必須
+   - エンドポイント:
+     - `POST /api/places/:id/photos` → 写真アップロード
+     - `GET /api/places/:id/photos` → 写真一覧
+   - 実装内容:
+     - multer による画像アップロード
+     - 画像リサイズ・最適化
+     - ファイルパス管理
 
-### フェーズ4: 機能拡張と洗練
+#### フェーズ5: 品質向上
 
-9. **認証機能の実装**
-   - JWT認証の導入
-   - 保護されたルートの作成
-   - 動作確認方法: トークン認証フローの確認
+1. **エラーハンドリング・ログ強化**
+   - 統一レスポンス形式の徹底
+   - 集中エラーハンドリング
+   - 構造化ログ実装
 
-10. **遠回りルート計算機能**
-    - 基本的な経路計算
-    - 遠回りアルゴリズムの実装
-    - 動作確認方法: テストデータでの経路生成結果確認
+2. **データベース最適化**
+   - 必要なインデックス追加
+   - 空間検索の性能改善
+   - クエリ最適化
 
-11. **データベース最適化**
-    - インデックス作成
-    - クエリ最適化
-    - 動作確認方法: クエリ実行時間の計測
+3. **基本的なテスト実装**
+   - 重要機能の単体テスト
+   - API統合テスト
+   - テスト実行環境
 
-12. **エラーハンドリングとロギング強化**
-    - 集中型エラーハンドリング
-    - ロギング機能の実装
-    - 動作確認方法: 各種エラーシナリオのテスト
+### 🚨 重要な事前準備
 
-### フェーズ5: 品質向上とテスト
+**今すぐやるべきこと**:
 
-13. **単体テストの作成**
-    - サービス層のテスト
-    - リポジトリのモックテスト
-    - 動作確認方法: テスト実行結果
+1. **外部API の選択・準備**
+   - OSRM（無料、自己ホスト可能）
+   - Google Maps API（有料、高機能）
+   - Mapbox API（フリータイヤーあり）
 
-14. **統合テストの追加**
-    - エンドツーエンドAPIテスト
-    - 実際のデータベースを使ったテスト
-    - 動作確認方法: 統合テスト実行結果
+2. **開発用APIキー取得**
+   - 本格実装前にAPIキーを準備
 
-15. **ドキュメント生成**
-    - API仕様書の自動生成
-    - コード内ドキュメントの充実
-    - 動作確認方法: 生成されたドキュメントの確認
-
-16. **テスト一元管理**
-    - テスト関連ファイルの集約
-    - テスト実行スクリプトの整備
-    - テスト運用の簡素化
-    - 動作確認方法: scripts/test/test-tools.batでテスト実行
-
-### テスト管理体系
-
-プロジェクトのテストは以下のように整理されています：
-
-```
-tests/
-├── api/           # API HTTPテスト & 実行ツール
-│   ├── api-test.js    # API実行CLIツール
-│   ├── users.http     # ユーザーAPI HTTPテスト
-│   ├── auth.http      # 認証API HTTPテスト
-│   └── places.http    # 場所API HTTPテスト
-│
-├── unit/          # ユニットテスト
-│   └── controller-test.js  # コントローラーテスト
-│
-├── db/            # データベース接続テスト
-│   ├── db-connection-test.js  # 通常環境DB接続テスト
-│   ├── docker-db-test.js      # Docker環境DB接続テスト
-│   └── db-test-route.js       # DBテストAPIルート（参照用）
-│
-└── models/        # モデルテスト
-    └── test-user-model.js     # ユーザーモデルテスト
-```
-
-> **注意**: Docker環境との互換性のため、一部のテストファイル（特にルートに関連するもの）は元の場所にも残されています。これは、Docker内でのパス参照が異なるためです。
-
-テスト実行は以下のスクリプトで行えます：
-
-```
-scripts/test/
-├── test-tools.bat            # テスト一括実行ツール（推奨）
-├── run-api-test.bat          # APIテスト実行
-├── run-controller-test.bat   # コントローラーテスト実行
-├── run-db-test.bat           # DB接続テスト実行
-├── run-docker-db-test.bat    # Docker環境DBテスト実行
-└── run-user-model-test.bat   # ユーザーモデルテスト実行
-```
-
-#### プロジェクト運用スクリプト
-
-プロジェクトでは以下のスクリプトを利用できます：
-
-##### 1. テスト関連スクリプト
-
-```
-scripts/test/test-tools.bat           # テスト実行の統合メニュー【推奨】
-```
-
-##### 2. データベース管理スクリプト
-
-```
-scripts/database-tools.bat            # データベース操作の統合メニュー【推奨】
-```
-
-個別のマイグレーションスクリプト：
-
-```
-scripts/database/
-├── run-migration.bat         # 通常のマイグレーション実行
-├── run-migration-debug.bat   # 診断情報付きマイグレーション
-└── run-migration-direct.bat  # 直接マイグレーション実行
-```
-
-Docker環境でのマイグレーション用：
-
-```
-backend/docker-init-migration.sh   # Docker内部でのマイグレーション実行
-```
-
-##### ショートカット
-
-プロジェクトのルートディレクトリには、以下のショートカットファイルも用意されています：
-
-```
-database-tools.bat            # scripts/database-tools.bat へのショートカット
-```
-
-##### 推奨される運用方法
-
-1. テスト実行: `scripts/test/test-tools.bat` を使用
-2. DB操作: `scripts/database-tools.bat` を使用
-3. API試験: VS Codeの場合は `tests/api/*.http` ファイルを使用
-
+3. **WebSocket ライブラリの選択**
+   ```bash
+   npm install socket.io
+   # または
+   npm install ws
+   ```
 ### 進め方
 
 各ステップは以下の流れで進めていきます：
