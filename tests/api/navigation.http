@@ -1,0 +1,36 @@
+# ナビゲーションAPI呼び出しテストファイル
+@baseUrl = http://localhost:3001/api
+
+### 外部API接続テスト（東京駅→皇居）
+GET {{baseUrl}}/routes/test
+Content-Type: application/json
+
+### 接続テストをレスポンスヘッダー付きで確認
+GET {{baseUrl}}/routes/test
+Content-Type: application/json
+Accept: application/json
+
+### バージョン1 API経由での接続テスト
+GET {{baseUrl}}/v1/routes/test
+Content-Type: application/json
+
+### カスタム経路計算テスト（実装後に使用）
+# POST {{baseUrl}}/routes/calculate
+# Content-Type: application/json
+# 
+# {
+#   "origin": {
+#     "lat": 35.6812,
+#     "lng": 139.7671
+#   },
+#   "destination": {
+#     "lat": 35.6853,
+#     "lng": 139.7528
+#   },
+#   "detourLevel": 1
+# }
+
+### 経路履歴取得テスト（認証実装後に使用）
+# GET {{baseUrl}}/routes/history
+# Content-Type: application/json
+# Authorization: Bearer YOUR_JWT_TOKEN
