@@ -74,9 +74,7 @@ export default function NavigationButtons() {
       <button style={{ ...sharedButtonStyle, top: "200px" }} onClick={() => router.push("/login")}>
         profileボタン
       </button>
-      <button style={{ ...sharedButtonStyle, top: "300px" }} onClick={() => router.push("/gallery")}>
-        galleryボタン
-      </button>
+      
       <button style={{ ...sharedButtonStyle, top: "400px" }} onClick={() => router.push("/camera")}>
         cameraボタン
       </button>

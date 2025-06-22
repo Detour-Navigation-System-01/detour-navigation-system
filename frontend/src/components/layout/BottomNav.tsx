@@ -13,7 +13,7 @@ export default function BottomNav() {
       label: 'Preservation Spot',
       icon: '/icons/preserve.png',
     },
-    { href: '/profile', label: 'my profile', icon: '/icons/profile.png' },
+    { href: '/login', label: 'my profile', icon: '/icons/profile.png' },
   ];
 
   return (
