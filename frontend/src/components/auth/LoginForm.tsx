@@ -24,9 +24,8 @@ export default function LoginForm() {
 
     try {
       const responseData = await fetcher<{
-        success: boolean; 
-        userId?: number; 
-        message?: string;
+        message: string;
+        data?:{ user:{ id:number;username:string}};
       }>(
         '/api/auth/login',
         {
@@ -38,8 +37,8 @@ export default function LoginForm() {
         }
       );
 
-      if (responseData.success) {
-        setStatusMessage(`ログイン成功！ユーザーID: ${responseData.userId}`);
+      if (responseData.data?.user) {
+        setStatusMessage(`ようこそ、${ responseData.data.user.username}さん！`);
         // TODO: トークン保存やリダイレクトなど
         routerInstance.push('/profile');
       } else {

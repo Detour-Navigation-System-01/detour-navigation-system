@@ -1,3 +1,9 @@
+/**
+ * データベースルーターのテスト用スクリプト
+ * 
+ * このスクリプトはExpressルーターとして実装され、
+ * /api/db-testエンドポイントを提供します。
+ */
 const express = require('express');
 const router = express.Router();
 const db = require('../utils/db');
@@ -28,8 +34,9 @@ router.get('/db-test', async (req, res) => {
     
     res.status(500).json({
       success: false,
-      message: 'データベース接続に失敗しました',
-      error: error.message
+      message: 'データベース接続中にエラーが発生しました',
+      error: error.message,
+      databaseHost: process.env.DB_HOST || 'デフォルト(db)'
     });
   }
 });

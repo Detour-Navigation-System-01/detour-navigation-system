@@ -1,7 +1,7 @@
 "use client";
 
 import MapView from "./MapView";
-import NavigationButtons from "@/components/NavigationButtons/NavigationButtons";
+import NavigationButtons from "@/components/navigationButtons/NavigationButtons";
 
 export default function Map() {
   return (
