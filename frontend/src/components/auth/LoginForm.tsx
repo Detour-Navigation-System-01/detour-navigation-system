@@ -38,7 +38,7 @@ export default function LoginForm() {
       );
 
       if (responseData.data?.user) {
-        setStatusMessage(`ようこそ、${data.data.user.username}さん！`);
+        setStatusMessage(`ようこそ、${responseData.data.user.username}さん！`);
         // TODO: トークン保存やリダイレクトなど
         routerInstance.push('/profile');
       } else {
