@@ -11,6 +11,7 @@
 import { useState } from 'react';
 import { fetcher } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import styles from './SigupForm.module.css'
 
 export default function SignupForm() {
   const router = useRouter();
@@ -47,20 +48,19 @@ export default function SignupForm() {
       setMessage('通信エラーが発生しました');
     }
   };
-
+  
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-semibold mb-6 text-center">新規登録</h2>
+    <div className={styles.container}>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <h2 className={styles.heading}>新規登録</h2>
 
-        <input name="username" placeholder="ユーザー名" required value={form.username} onChange={handleChange} className="w-full border px-3 py-2 mb-4 rounded" />
-        <input name="email" type="email" placeholder="メールアドレス" required value={form.email} onChange={handleChange} className="w-full border px-3 py-2 mb-4 rounded" />
-        <input name="password" type="password" placeholder="パスワード" required value={form.password} onChange={handleChange} className="w-full border px-3 py-2 mb-4 rounded" />
-        <button type="submit" className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded">
-          登録
-        </button>
+        <input name="username" placeholder="ユーザー名" required value={form.username} onChange={handleChange} className={styles.input} />
+        <input name="email" type="email" placeholder="メールアドレス" required value={form.email} onChange={handleChange} className={styles.input} />
+        <input name="password" type="password" placeholder="パスワード" required value={form.password} onChange={handleChange} className={styles.input} />
 
-        <p className="mt-4 text-center text-sm text-red-500">{message}</p>
+        <button type="submit" className={styles.button}>登録</button>
+
+        <p className={styles.message}>{message}</p>
       </form>
     </div>
   );
