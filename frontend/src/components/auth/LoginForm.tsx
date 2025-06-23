@@ -1,17 +1,10 @@
-/**
- * @fileoverview ログインフォームコンポーネント
- * @description ユーザー認証のためのログインフォーム機能を提供
- * @author 作成者名
- * @created YYYY-MM-DD
- * @updated YYYY-MM-DD
- * @version 1.0.0
- */
-
 'use client';
 
 import { useState } from 'react';
 import { fetcher } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import styles from './LoginForm.module.css'; 
+import Link from 'next/link';
 
 export default function LoginForm() {
   const routerInstance = useRouter();
@@ -24,23 +17,18 @@ export default function LoginForm() {
 
     try {
       const responseData = await fetcher<{
-        success: boolean; 
-        userId?: number; 
-        message?: string;
-      }>(
-        '/api/auth/login',
-        {
-          method: 'POST',
-          body: JSON.stringify({ 
-            email: userEmail, 
-            password: userPassword 
-          }),
-        }
-      );
+        message: string;
+        data?: { user: { id: number; username: string } };
+      }>('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: userEmail,
+          password: userPassword,
+        }),
+      });
 
-      if (responseData.success) {
-        setStatusMessage(`ログイン成功！ユーザーID: ${responseData.userId}`);
-        // TODO: トークン保存やリダイレクトなど
+      if (responseData.data?.user) {
+        setStatusMessage(`ようこそ、${responseData.data.user.username}さん！`);
         routerInstance.push('/profile');
       } else {
         setStatusMessage(responseData.message || 'ログイン失敗');
@@ -52,12 +40,9 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <form
-        onSubmit={handleUserLogin}
-        className="bg-white p-8 rounded shadow-md w-full max-w-sm"
-      >
-        <h2 className="text-2xl font-semibold text-center mb-6">ログイン</h2>
+    <div className={styles.container}>
+      <form onSubmit={handleUserLogin} className={styles.form}>
+        <h2 className={styles.heading}>ログイン</h2>
 
         <input
           type="email"
@@ -65,7 +50,7 @@ export default function LoginForm() {
           value={userEmail}
           onChange={(e) => setUserEmail(e.target.value)}
           required
-          className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+          className={styles.input}
         />
 
         <input
@@ -74,17 +59,18 @@ export default function LoginForm() {
           value={userPassword}
           onChange={(e) => setUserPassword(e.target.value)}
           required
-          className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+          className={styles.input}
         />
 
-        <button
-          type="submit"
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
-        >
+        <button type="submit" className={styles.button}>
           ログイン
         </button>
 
-        <p className="mt-4 text-center text-sm text-red-500">{statusMessage}</p>
+        <p className={styles.message}>{statusMessage}</p>
+
+        <p className={styles.link}>
+          アカウントをお持ちでない方は <Link href="/signup">こちら</Link> から登録してください。
+        </p>
       </form>
     </div>
   );
