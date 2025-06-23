@@ -1,5 +1,5 @@
 // アプリケーションのエントリーポイント
-// server.jsをインポートして、サーバーを起動する
+// データベース初期化後にサーバーを起動する
 
 // Docker環境のためのDB接続設定
 // Docker環境ではDBホスト名は'localhost'ではなく'db'であることを明示的に設定
@@ -16,5 +16,24 @@ console.log('💾 DB接続設定:', {
   database: process.env.DB_NAME,
   user: process.env.DB_USER
 });
-require('./server');
+
+// データベース初期化とサーバー起動
+const { initializeDatabase } = require('./database/init');
+
+// データベース初期化後にサーバーを起動
+async function startApplication() {
+  try {
+    // データベースの初期化（マイグレーションとシードデータの投入）
+    await initializeDatabase();
+    
+    // サーバーの起動
+    require('./server');
+  } catch (error) {
+    console.error('❌ アプリケーション起動中にエラーが発生しました:', error);
+    process.exit(1);
+  }
+}
+
+// アプリケーションを開始
+startApplication();
 

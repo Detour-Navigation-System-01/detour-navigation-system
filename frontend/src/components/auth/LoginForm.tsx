@@ -1,17 +1,10 @@
-/**
- * @fileoverview ログインフォームコンポーネント
- * @description ユーザー認証のためのログインフォーム機能を提供
- * @author 作成者名
- * @created YYYY-MM-DD
- * @updated YYYY-MM-DD
- * @version 1.0.0
- */
-
 'use client';
 
 import { useState } from 'react';
 import { fetcher } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import styles from './LoginForm.module.css'; 
+import Link from 'next/link';
 
 export default function LoginForm() {
   const routerInstance = useRouter();
@@ -24,23 +17,18 @@ export default function LoginForm() {
 
     try {
       const responseData = await fetcher<{
-        success: boolean; 
-        userId?: number; 
-        message?: string;
-      }>(
-        '/api/auth/login',
-        {
-          method: 'POST',
-          body: JSON.stringify({ 
-            email: userEmail, 
-            password: userPassword 
-          }),
-        }
-      );
+        message: string;
+        data?: { user: { id: number; username: string } };
+      }>('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: userEmail,
+          password: userPassword,
+        }),
+      });
 
-      if (responseData.success) {
-        setStatusMessage(`ログイン成功！ユーザーID: ${responseData.userId}`);
-        // TODO: トークン保存やリダイレクトなど
+      if (responseData.data?.user) {
+        setStatusMessage(`ようこそ、${responseData.data.user.username}さん！`);
         routerInstance.push('/profile');
       } else {
         setStatusMessage(responseData.message || 'ログイン失敗');
@@ -52,25 +40,38 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleUserLogin}>
-      <input
-        type="email"
-        placeholder="メールアドレス"
-        value={userEmail}
-        onChange={(inputEvent) => setUserEmail(inputEvent.target.value)}
-        required
-      />
-      <br />
-      <input
-        type="password"
-        placeholder="パスワード"
-        value={userPassword}
-        onChange={(inputEvent) => setUserPassword(inputEvent.target.value)}
-        required
-      />
-      <br />
-      <button type="submit">ログイン</button>
-      <p>{statusMessage}</p>
-    </form>
+    <div className={styles.container}>
+      <form onSubmit={handleUserLogin} className={styles.form}>
+        <h2 className={styles.heading}>ログイン</h2>
+
+        <input
+          type="email"
+          placeholder="メールアドレス"
+          value={userEmail}
+          onChange={(e) => setUserEmail(e.target.value)}
+          required
+          className={styles.input}
+        />
+
+        <input
+          type="password"
+          placeholder="パスワード"
+          value={userPassword}
+          onChange={(e) => setUserPassword(e.target.value)}
+          required
+          className={styles.input}
+        />
+
+        <button type="submit" className={styles.button}>
+          ログイン
+        </button>
+
+        <p className={styles.message}>{statusMessage}</p>
+
+        <p className={styles.link}>
+          アカウントをお持ちでない方は <Link href="/signup">こちら</Link> から登録してください。
+        </p>
+      </form>
+    </div>
   );
 }
