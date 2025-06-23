@@ -116,6 +116,26 @@ Content-Type: application/json
   "routeType": "normal"
 }
 
+### RouteService - 経路計算して保存2
+POST {{baseUrl}}/routes/save
+Content-Type: application/json
+
+{
+  "name": "越中島駅から豊洲キャンパスへのルート",
+  "description": "テスト用ルート",
+  "origin": {
+    "lat": 35.667953356386896,
+    "lng": 139.79265406072273
+  },
+  "destination": {
+    "lat": 35.66069879583367,
+    "lng": 139.79480768096218
+  },
+  "profile": "driving",
+  "detourLevel": 1,
+  "routeType": "normal"
+}
+
 ### RouteService - 代替経路を計算
 POST {{baseUrl}}/routes/alternatives
 Content-Type: application/json
