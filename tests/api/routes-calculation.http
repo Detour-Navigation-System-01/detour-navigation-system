@@ -1,0 +1,143 @@
+# 経路計算API呼び出しテストファイル
+@baseUrl = http://localhost:3001/api
+
+### 接続テスト - デフォルト（東京駅→皇居）
+GET {{baseUrl}}/routes/test
+Content-Type: application/json
+
+### 経路計算 - 東京駅から皇居
+POST {{baseUrl}}/routes/calculate
+Content-Type: application/json
+
+{
+  "origin": {
+    "lat": 35.6812,
+    "lng": 139.7671
+  },
+  "destination": {
+    "lat": 35.6853,
+    "lng": 139.7528
+  },
+  "profile": "driving",
+  "includeSteps": true
+}
+
+### 経路計算 - 東京駅から浅草
+POST {{baseUrl}}/routes/calculate
+Content-Type: application/json
+
+{
+  "origin": {
+    "lat": 35.6812,
+    "lng": 139.7671
+  },
+  "destination": {
+    "lat": 35.7147,
+    "lng": 139.7967
+  },
+  "profile": "driving",
+  "includeSteps": true
+}
+
+### 経路計算 - 経由地点あり（渋谷→新宿→上野）
+POST {{baseUrl}}/routes/calculate
+Content-Type: application/json
+
+{
+  "origin": {
+    "lat": 35.6580,
+    "lng": 139.7016
+  },
+  "destination": {
+    "lat": 35.7140,
+    "lng": 139.7767
+  },
+  "waypoints": [
+    {
+      "lat": 35.6938,
+      "lng": 139.7034
+    }
+  ],
+  "profile": "driving",
+  "includeSteps": true
+}
+
+### 経路計算 - 移動手段を指定（徒歩）
+POST {{baseUrl}}/routes/calculate
+Content-Type: application/json
+
+{
+  "origin": {
+    "lat": 35.6812,
+    "lng": 139.7671
+  },
+  "destination": {
+    "lat": 35.6853,
+    "lng": 139.7528
+  },
+  "profile": "walking",
+  "includeSteps": true
+}
+
+### 経路計算 - 代替経路を取得
+POST {{baseUrl}}/routes/calculate-alternatives
+Content-Type: application/json
+
+{
+  "origin": {
+    "lat": 35.6812,
+    "lng": 139.7671
+  },
+  "destination": {
+    "lat": 35.6853,
+    "lng": 139.7528
+  },
+  "numAlternatives": 2,
+  "profile": "driving"
+}
+
+### RouteService - 経路計算して保存
+POST {{baseUrl}}/routes/save
+Content-Type: application/json
+
+{
+  "name": "東京駅から皇居へのルート",
+  "description": "テスト用ルート",
+  "origin": {
+    "lat": 35.6812,
+    "lng": 139.7671
+  },
+  "destination": {
+    "lat": 35.6853,
+    "lng": 139.7528
+  },
+  "profile": "driving",
+  "detourLevel": 1,
+  "routeType": "normal"
+}
+
+### RouteService - 代替経路を計算
+POST {{baseUrl}}/routes/alternatives
+Content-Type: application/json
+
+{
+  "origin": {
+    "lat": 35.6812,
+    "lng": 139.7671
+  },
+  "destination": {
+    "lat": 35.6853,
+    "lng": 139.7528
+  },
+  "numAlternatives": 3,
+  "profile": "driving"
+}
+
+### RouteService - 経路詳細を取得（ID指定）
+GET {{baseUrl}}/routes/1
+Content-Type: application/json
+
+### RouteService - 経路履歴を取得（認証済みユーザー向け）
+# GET {{baseUrl}}/routes/history
+# Content-Type: application/json
+# Authorization: Bearer YOUR_JWT_TOKEN
