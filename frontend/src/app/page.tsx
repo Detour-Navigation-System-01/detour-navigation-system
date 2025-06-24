@@ -17,11 +17,16 @@ const DynamicMapComponent = dynamic(() => import("../components/map/Map"), {
 
 export default function Home() {
   return (
-    <main>
-      <h1>遠回りナビゲーションシステム</h1>
-      <div style={{ height: "100vh", width: "100vw", margin: 0, padding: 0 }}>
-        <DynamicMapComponent />
-      </div>
+    <main
+      style={{
+        height: "100vh",
+        width: "100vw",
+        margin: 0,
+        padding: 0,
+        overflow: "hidden",
+      }}
+    >
+      <DynamicMapComponent />
     </main>
   );
 }
