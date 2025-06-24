@@ -1,19 +1,19 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const { AppError } = require('./errorHandler');
+const SECRET_KEY = process.env.JWT_SECRET || 'your_jwt_secret';
 
-exports.verifyToken = (req, res, next) => {
+module.exports = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: '認証トークンが必要です' });
+    return next(new AppError('認証トークンが必要です', 401));
   }
 
   const token = authHeader.split(' ')[1];
-
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // 後続で req.user.id などが使えるようになる
+    const decoded = jwt.verify(token, SECRET_KEY);
+    req.user = decoded; // ここに userId や username が入る
     next();
   } catch (err) {
-    return res.status(401).json({ message: '無効なトークンです' });
+    return next(new AppError('トークンの検証に失敗しました', 403));
   }
 };

@@ -1,24 +1,3 @@
-/* 
-書き方
-import { fetcher } from '@/lib/api';
-
-const data = await fetcher<T>(path, options);
-
-
-await fetcher<返り値の型>(APIパス文字列, {
-  method: 'HTTPメソッド',
-  body: JSON.stringify({
-    キー1: 値1,
-    キー2: 値2,
-    ...
-  })
-});
-
-
-const data = await fetcher<返り値の型>('/api/エンドポイント');
-
-*/
-
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
 export const fetcher = async <T = unknown>(

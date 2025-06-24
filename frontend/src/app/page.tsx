@@ -7,11 +7,11 @@
  * @version 1.0.1
  */
 
-"use client";
+'use client';
 
-import dynamic from "next/dynamic";
+import dynamic from 'next/dynamic';
 
-const DynamicMapComponent = dynamic(() => import("../components/map/Map"), {
+const DynamicMapComponent = dynamic(() => import('../components/map/Map'), {
   ssr: false,
 });
 

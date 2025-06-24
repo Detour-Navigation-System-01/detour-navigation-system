@@ -5,6 +5,7 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const { validateUserData } = require('../middleware/validation');
 const { validateIdParam } = require('../middleware/validation');
+const authenticate = require('../middleware/auth');
 
 /**
  * @route POST /api/auth/login
@@ -26,5 +27,9 @@ router.post('/register', validateUserData, authController.register);
  * @access Private
  */
 router.put('/password/:id', validateIdParam, authController.changePassword);
+
+
+router.get('/me', authenticate, authController.getMe);
+
 
 module.exports = router;

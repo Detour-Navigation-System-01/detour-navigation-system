@@ -1,9 +1,9 @@
-'use client';
-
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Image from 'next/image';
+import './BottomNav.css';
 
 export default function BottomNav() {
+<<<<<<< HEAD
   const pathname = usePathname();
 
   const tabs = [
@@ -16,51 +16,38 @@ export default function BottomNav() {
     { href: '/login', label: 'my profile', icon: '/icons/profile.png' },
   ];
 
+=======
+>>>>>>> 8f21bdf0e44a345ddb7a740d92be4f2fa76935e3
   return (
-    <nav
-      style={{
-        position: 'fixed',
-        bottom: 0,
-        width: '100%',
-        height: '64px',
-        backgroundColor: '#d8f5e3',
-        borderTop: '1px solid #ccc',
-        display: 'flex',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        zIndex: 999,
-      }}
-    >
-      {tabs.map((tab) => {
-        const isActive = pathname === tab.href;
-        return (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textDecoration: 'none',
-              color: isActive ? '#000' : '#888',
-              fontSize: '12px',
-            }}
-          >
-            <img
-              src={tab.icon}
-              alt={tab.label}
-              style={{
-                width: 24,
-                height: 24,
-                marginBottom: 4,
-                filter: isActive ? 'none' : 'grayscale(100%)',
-              }}
-            />
-            {tab.label}
-          </Link>
-        );
-      })}
+    <nav className="bottom-nav">
+      <Link href="/">
+        <div className="nav-item">
+          <Image src="/icons/map.svg" alt="Map Icon" width={24} height={24} />
+          <span>Map</span>
+        </div>
+      </Link>
+      <Link href="/preservation">
+        <div className="nav-item">
+          <Image
+            src="/icons/preserve.svg"
+            alt="Preservation Icon"
+            width={24}
+            height={24}
+          />
+          <span>Preserve</span>
+        </div>
+      </Link>
+      <Link href="/profile">
+        <div className="nav-item">
+          <Image
+            src="/icons/profile.svg"
+            alt="Profile Icon"
+            width={24}
+            height={24}
+          />
+          <span>Profile</span>
+        </div>
+      </Link>
     </nav>
   );
 }

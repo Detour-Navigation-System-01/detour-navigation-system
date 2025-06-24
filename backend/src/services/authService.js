@@ -98,7 +98,26 @@ class AuthService {
       throw new AppError('パスワード変更に失敗しました', 500);
     }
   }
+
+    /**
+   * ユーザー情報取得
+   * @param {number} userId - ユーザーID
+   * @returns {Promise<Object>} ユーザー情報
+   */
+  async getUserById(userId) {
+    const user = await userService.getUserById(userId);
+    if (!user) {
+      throw new AppError('ユーザーが見つかりません', 404);
+    }
+    return user;
+  }
+
+
 }
+
+
+
+
 
 // シングルトンとしてエクスポート
 module.exports = new AuthService();
