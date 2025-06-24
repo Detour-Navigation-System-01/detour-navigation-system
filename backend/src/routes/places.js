@@ -2,7 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const placeController = require('../controllers/placeController');
-const { validatePlaceData, validateIdParam } = require('../middleware/validation');
+const { validateIdParam, validatePlaceData } = require('../middleware/validation'); 
+const { uploadImage } = require('../middleware/uploadMiddleware'); // 新しいミドルウェアをインポート
 
 /**
  * 場所管理API
@@ -30,37 +31,6 @@ router.get('/places/category/:category', placeController.getPlacesByCategory);
 // 近隣の場所を検索
 router.get('/places/nearby', placeController.getNearbyPlaces);
 
-router.get('/search-by-bounds', async (req, res) => {
-    const { north, south, east, west } = req.query;
-    
-if (!north || !south || !east || !west ||
-      isNaN(north) || isNaN(south) || isNaN(east) || isNaN(west)) {
-    return res.status(400).json({ error: 'Missing or invalid geographic coordinates. Please provide valid north, south, east, and west parameters.' });
-}
-const latNorth = parseFloat(north);
-const latSouth = parseFloat(south);
-const lngEast = parseFloat(east);
-const lngWest = parseFloat(west);
-try {
-    // 2. データベースクエリの実行
-    const queryText = `
-      SELECT id, name, description, category, address, prefecture, lat, lng, image_url
-      FROM places
-      WHERE lat <= $1 AND lat >= $2
-        AND lng <= $3 AND lng >= $4;
-    `;
-    const queryParams = [latNorth, latSouth, lngEast, lngWest];
-
-    const { rows } = await db.query(queryText, queryParams);
-
-    // 3. レスポンスの送信
-    // 取得した行データをJSON形式でクライアントに返す
-    res.json(rows);
-
-  } catch (err) {
-    console.error('Error executing query', err.stack);
-    res.status(500).json({ error: 'An error occurred while fetching places.' });
-  }
-});
-
+// '/upload-image' パスで、uploadImageミドルウェアを使ってファイルを受け取り、controllerで処理
+router.post('/upload-image', uploadImage, placeController.uploadPlaceImage);
 module.exports = router;

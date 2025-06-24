@@ -4,6 +4,9 @@ const BaseController = require('./BaseController');
 const { catchAsync } = require('../middleware/errorHandler');
 const placeService = require('../services/placeService');
 
+const Place = require('../models/Place');
+const path = require('path');
+
 /**
  * 場所コントローラークラス
  * 場所関連のリクエストを処理
@@ -79,7 +82,7 @@ class PlaceController extends BaseController {
       prefecture,
       lat,
       lng,
-      image_url
+      image_url: image_url || null // image_urlがない場合はnullをセット
     });
     
     // 成功レスポンスを送信
@@ -167,6 +170,33 @@ class PlaceController extends BaseController {
     console.log(`緯度: ${lat}, 経度: ${lng} の近隣場所を検索します (半径: ${radius}km)`);
     const places = await placeService.getNearbyPlaces(parseFloat(lat), parseFloat(lng), parseFloat(radius));
     
+    // 成功レスポンスを送信
+    return this.sendSuccess(res, {
+      message: '近隣の場所を取得しました',
+      data: places
+    });
+  });
+
+    /**
+   * @desc 画像をローカルにアップロードし、そのURLを返す
+   * @route POST /api/places/upload-image
+   * @access Public (テスト用)
+   */
+  uploadPlaceImage = catchAsync(async (req, res) => {
+    // uploadImageミドルウェアがreq.fileにファイル情報をセットしてくれる
+    if (!req.file) {
+      return this.sendError(res, {
+        statusCode: 400,
+        message: 'No image file uploaded.'
+      });
+    }
+
+    const fileName = req.file.filename; // multerが生成したファイル名
+    
+    // クライアントがアクセスするための完全なURLを構築
+    // 例: http://localhost:3001/images/your-uploaded-image.jpg
+    const imageUrl = `${req.protocol}://${req.get('host')}/images/${fileName}`;
+
     // 成功レスポンスを送信
     return this.sendSuccess(res, {
       message: '近隣の場所を取得しました',

@@ -1,0 +1,37 @@
+### 1. ローカル環境への画像アップロード
+# このリクエストで画像をサーバーにアップロードし、そのURLを取得します。
+POST http://localhost:3001/api/places/upload-image
+Content-Type: multipart/form-data; 
+
+Content-Disposition: form-data; name="image"; filename="testImage.png"
+Content-Type: image/png
+
+< C:/1bgit/detour-navigation-system/backend/photos/testImage.png
+# ↑↑↑ ここをあなたの画像ファイルの**実際のパス**に書き換えてください。
+# Windowsなら C:/Users/〇〇/Desktop/image.png のようにスラッシュで区切ります。
+# Mac/Linuxなら /Users/〇〇/Pictures/image.jpg のようにスラッシュで区切ります。
+
+###
+# 2. アップロードした画像URLを使って新しい場所を作成
+# 上記の画像アップロードリクエストが成功した後、そのレスポンスで得られたimageUrlを
+# ここの "image_url" の値として貼り付けてから、このリクエストを実行してください。
+POST http://localhost:3001/api/places/upload-image
+Content-Type: application/json
+
+{
+  "name": "VS Code Clientテストスポット",
+  "description": "REST Clientでアップロードした画像を紐付けたテストスポットです。",
+  "category": "Test",
+  "address": "東京都新宿区",
+  "prefecture": "東京都",
+  "lat": 35.6909,
+  "lng": 139.7006,
+  "image_url": "ここに↑のリクエストで得られたimageUrlを貼り付ける"
+  # 例: "http://localhost:3001/images/image-1719114678901-123456789.jpg"
+}
+
+###
+# 3. 作成した場所の情報を取得して画像URLを確認
+# 上記で作成した場所のID (レスポンスの "id" フィールド) をパスに含めて実行してください。
+GET http://localhost:3001/api/places/YOUR_PLACE_ID_HERE
+# 例: http://localhost:3001/api/places/1

@@ -6,6 +6,7 @@ const indexRoutes = require('./routes/index');
 // Docker環境との互換性のため相対パスを使用
 const dbTestRoutes = require('./routes/db-test');
 const placesRoutes = require('./routes/places');
+const path = require('path');
 
 // dotenv設定を読み込み
 require('dotenv').config();
@@ -25,6 +26,8 @@ if (process.env.NODE_ENV !== 'production') {
     next();
   });
 }
+
+app.use('/images', express.static(path.join(__dirname, '..', 'public', 'images')));
 
 // APIルート - 階層化されたルーティング
 app.use('/api', apiRoutes);

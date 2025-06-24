@@ -171,29 +171,5 @@ class PlaceRepository extends BaseRepository {
     }  }
 }
 
-  /**
-   * 指定された地理的範囲内の場所を検索
-   * @param {number} north - 北端緯度
-   * @param {number} south - 南端緯度
-   * @param {number} east - 東端経度
-   * @param {number} west - 西端経度
-   * @returns {Promise<Array>} 範囲内の場所オブジェクトの配列
-   */
-  async findByBounds(north, south, east, west) {
-    try {
-      const queryText = `
-        SELECT id, name, description, category, address, prefecture, lat, lng, image_url
-        FROM ${this.tableName}
-        WHERE lat <= $1 AND lat >= $2
-          AND lng <= $3 AND lng >= $4;
-      `;
-      const queryParams = [north, south, east, west];
-      const { rows } = await this.pool.query(queryText, queryParams); // this.pool を使用
-      return rows;
-    } catch (error) {
-      console.error(`${this.tableName}の範囲検索エラー:`, error);
-      throw error;
-    }
-  }
 
 module.exports = PlaceRepository;
