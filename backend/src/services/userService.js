@@ -7,6 +7,14 @@ const { AppError } = require('../middleware/errorHandler');
 /**
  * ユーザー関連のビジネスロジックを提供するサービス
  */
+
+//レスポンスから特定のフィールドを除外
+//DBに残したまま、クライアントには返さないようにする。
+function sanitizeUser(user) {
+  const { first_name, last_name, created_at, updated_at, ...rest } = user;
+  return rest;
+}
+
 class UserService {
   constructor() {
     this.userRepository = userRepository;
@@ -25,8 +33,13 @@ class UserService {
       const users = await this.userRepository.findAll(options);
       const total = await this.userRepository.count(filters);
       
+      // ここで整形
+    const sanitizedUsers = users.map(sanitizeUser);
+
+
       return {
-        data: users,
+        data: sanitizedUsers,
+        //data: users,
         total
       };
     } catch (error) {
@@ -47,7 +60,8 @@ class UserService {
       if (!user) {
         throw new AppError(`ID: ${userId} のユーザーは見つかりませんでした`, 404);
       }
-      return user;
+      return sanitizeUser(user);
+      //return user;
     } catch (error) {
       if (error instanceof AppError) throw error;
       console.error(`ユーザー取得エラー (ID: ${userId}):`, error);

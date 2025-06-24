@@ -66,16 +66,17 @@ class UserController extends BaseController {
    * 新しいユーザーを作成
    */
   createUser = catchAsync(async (req, res) => {
-    const { username, email, password, first_name, last_name } = req.body;
+    const { username, email, password, first_name, last_name, public_settings } = req.body; // ← public_settingsを追加
     
-    console.log('新しいユーザーを作成します:', { username, email });
+    console.log('新しいユーザーを作成します:', { username, email, public_settings }); // ← public_settingsを追加
     
     const newUser = await userService.createUser({
       username,
       email,
       password, // パスワードのハッシュ化はサービス→リポジトリで処理
       first_name,
-      last_name
+      last_name,
+      public_settings  // ← 追加
     });
     
     // 成功レスポンスを送信
@@ -93,7 +94,7 @@ class UserController extends BaseController {
     const userId = req.parsedId;
     
     // 更新可能なフィールド
-    const { username, email, first_name, last_name, password } = req.body;
+    const { username, email, first_name, last_name, password, public_settings } = req.body; // ← public_settingsを追加
     const updateData = {};
     
     // 指定されたフィールドのみ更新
@@ -102,6 +103,8 @@ class UserController extends BaseController {
     if (first_name !== undefined) updateData.first_name = first_name;
     if (last_name !== undefined) updateData.last_name = last_name;
     if (password !== undefined) updateData.password = password; // パスワードハッシュ化はサービス→リポジトリで処理
+    if (public_settings !== undefined) updateData.public_settings = public_settings; // ← public_settingsを追加
+
     
     console.log(`ユーザーID: ${userId} の情報を更新します`);
     const updatedUser = await userService.updateUser(userId, updateData);
