@@ -3,21 +3,8 @@ import Image from 'next/image';
 import './BottomNav.css';
 
 export default function BottomNav() {
-<<<<<<< HEAD
-  const pathname = usePathname();
 
-  const tabs = [
-    { href: '/', label: 'map', icon: '/icons/map.png' },
-    {
-      href: '/preservation',
-      label: 'Preservation Spot',
-      icon: '/icons/preserve.png',
-    },
-    { href: '/login', label: 'my profile', icon: '/icons/profile.png' },
-  ];
 
-=======
->>>>>>> 8f21bdf0e44a345ddb7a740d92be4f2fa76935e3
   return (
     <nav className="bottom-nav">
       <Link href="/">
