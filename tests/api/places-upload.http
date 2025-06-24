@@ -18,16 +18,31 @@ POST http://localhost:3001/api/places
 Content-Type: application/json
 
 {
-  "name": "東京タワー",
+  "name": "東京タワー2",
   "description": "東京のランドマーク",
   "category": "観光地",
   "address": "東京都港区芝公園4丁目2-8",
   "prefecture": "東京都",
   "lat": 35.6586,
   "lng": 139.7454,
-  "image_url": "http://localhost:3001/images/ファイル名.jpg"
+  "image_url": "http://localhost:3001/images/image-1750749368343-774252979.png"
+}
+
+### アップロード後に場所を作成（画像URL付き）2
+POST http://localhost:3001/api/places
+Content-Type: application/json
+
+{
+  "name": "芝浦公園",
+  "description": "東京のランドマーク",
+  "category": "観光地",
+  "address": "東京都港区芝公園4丁目2-8",
+  "prefecture": "東京都",
+  "lat": 35.6586,
+  "lng": 139.7454,
+  "image_url": "http://localhost:3001/images/image-1750750114063-247358797.png"
 }
 
 ### 画像付き場所の取得
-GET http://localhost:3001/api/places/1
+GET http://localhost:3001/api/places/5
 Accept: application/json
