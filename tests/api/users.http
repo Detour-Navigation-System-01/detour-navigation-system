@@ -22,7 +22,8 @@ Content-Type: application/json
   "email": "test@example.com",
   "password": "password123",
   "first_name": "テスト",
-  "last_name": "ユーザー"
+  "last_name": "ユーザー",
+  "public_settings" : true
 }
 
 ### 特定のユーザーを取得
