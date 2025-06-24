@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>保存済みルート表示テスト</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    
+    #container {
+      display: flex;
+      height: 100vh;
+    }
+    
+    #sidebar {
+      width: 300px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      overflow-y: auto;
+    }
+    
+    #map {
+      flex-grow: 1;
+      height: 100%;
+    }
+    
+    h1 {
+      font-size: 18px;
+      margin-top: 0;
+    }
+    
+    .route-item {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    .route-item:hover {
+      background-color: #f5f5f5;
+    }
+    
+    .route-item h3 {
+      margin: 0 0 5px 0;
+      font-size: 16px;
+    }
+    
+    .route-info {
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    
+    button {
+      padding: 8px 12px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 5px;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      background-color: #45a049;
+    }
+    
+    #route-details {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+    }
+      #api-url {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+    
+    .step-item {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-left: 3px solid #4CAF50;
+      padding-left: 10px;
+    }
+    
+    #filter-container {
+      margin: 15px 0;
+    }
+    
+    #route-type-filter {
+      padding: 5px;
+      width: 100%;
+      margin-top: 5px;
+    }
+    
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .route-item {
+      position: relative;
+      padding-left: 15px;
+    }
+    
+    .route-item::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+    }
+    
+    .route-type-normal::before {
+      background-color: #4CAF50; /* 緑色 */
+    }
+    
+    .route-type-detour::before {
+      background-color: #FF9800; /* オレンジ色 */
+    }
+    
+    .route-type-alternative::before {
+      background-color: #2196F3; /* 青色 */
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="sidebar">
+      <h1>保存済みルート表示テスト</h1>
+        <div>
+        <label for="api-url">API URL:</label>
+        <input type="text" id="api-url" value="http://localhost:3001/api" />
+      </div>
+      
+      <div class="button-group">
+        <button id="fetch-route-btn">単一ルート取得</button>
+        <button id="fetch-all-routes-btn">全ルート取得</button>
+        <button id="load-test-data-btn">テストデータ読み込み</button>
+      </div>
+      
+      <div id="filter-container">
+        <label for="route-type-filter">ルートタイプ表示フィルター:</label>
+        <select id="route-type-filter">
+          <option value="all">すべて</option>
+          <option value="normal">通常ルート</option>
+          <option value="detour">遠回りルート</option>
+          <option value="alternative">代替ルート</option>
+        </select>
+      </div>
+      
+      <div id="routes-list">
+        <!-- ルートリストがここに表示されます -->
+      </div>
+      
+      <div id="route-details">
+        <!-- 選択されたルートの詳細がここに表示されます -->
+      </div>
+    </div>
+    
+    <div id="map"></div>
+  </div>
+  
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  
+  <script>
+    // グローバル変数
+    let map;
+    let routeLayer = null;
+    let routes = [];
+      // 初期化
+    function init() {
+      // 地図の初期化
+      map = L.map('map').setView([35.6812, 139.7671], 13); // 東京駅を中心に
+      
+      // OpenStreetMap タイルレイヤーの追加
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+      
+      // イベントリスナーの設定
+      document.getElementById('fetch-route-btn').addEventListener('click', fetchSingleRoute);
+      document.getElementById('fetch-all-routes-btn').addEventListener('click', fetchAllRoutes);
+      document.getElementById('load-test-data-btn').addEventListener('click', loadTestData);
+      document.getElementById('route-type-filter').addEventListener('change', filterRoutes);
+    }
+      // 単一ルートをAPIから取得
+    async function fetchSingleRoute() {
+      try {
+        const apiUrl = document.getElementById('api-url').value;
+        const routeId = prompt('取得するルートのIDを入力してください:', '1');
+        
+        if (!routeId) return;
+        
+        const response = await fetch(`${apiUrl}/routes/${routeId}`);
+        
+        if (!response.ok) {
+          throw new Error(`API エラー: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success || !data.data) {
+          throw new Error('ルートデータが見つかりませんでした');
+        }
+        
+        // 取得したルートを配列に追加
+        routes = [data.data];
+        
+        // ルートリストを表示
+        displayRoutesList();
+        
+        // 最初のルートを表示
+        if (routes.length > 0) {
+          displayRoute(routes[0]);
+        }
+        
+      } catch (error) {
+        console.error('ルート取得エラー:', error);
+        alert(`ルートの取得に失敗しました: ${error.message}`);
+      }
+    }
+    
+    // 全ルートをAPIから取得
+    async function fetchAllRoutes() {
+      try {
+        const apiUrl = document.getElementById('api-url').value;
+        
+        // ログイン済みユーザーのルート履歴を取得する場合はこちら
+        // const response = await fetch(`${apiUrl}/routes/history`, {
+        //   headers: {
+        //     'Authorization': 'Bearer YOUR_JWT_TOKEN'
+        //   }
+        // });
+        
+        // 認証不要の場合はモック URL を使用（開発環境用）
+        // 実際の環境ではユースケースに合わせたエンドポイントに変更してください
+        const limit = prompt('取得する最大ルート数を入力してください（例: 10）:', '10');
+        
+        if (!limit) return;
+        
+        // 注意: これは開発中の仮実装です。実際のAPIエンドポイントに合わせて調整する必要があります
+        const response = await fetch(`${apiUrl}/routes?limit=${limit}`);
+        
+        if (!response.ok) {
+          throw new Error(`API エラー: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success || !data.data) {
+          throw new Error('ルートデータが見つかりませんでした');
+        }
+        
+        // 取得したルートを配列にセット
+        routes = Array.isArray(data.data) ? data.data : [data.data];
+        
+        // ルートリストを表示
+        displayRoutesList();
+        
+        // ルートが存在する場合、最初のルートを表示
+        if (routes.length > 0) {
+          displayRoute(routes[0]);
+        }
+        
+      } catch (error) {
+        console.error('ルート一覧取得エラー:', error);
+        alert(`ルート一覧の取得に失敗しました: ${error.message}`);
+      }
+    }
+      // テストデータを読み込む
+    function loadTestData() {
+      // サンプルルートデータ (APIから返されるデータ形式に準拠)
+      const sampleRoutes = [
+        {
+          id: 999,
+          name: 'サンプルルート（東京駅→皇居）',
+          description: 'テスト用のサンプルルート',
+          distance: 1500,
+          duration: 720,
+          route_type: 'normal',
+          detour_level: 1,
+          geometry: JSON.stringify([
+            { lat: 35.6812, lng: 139.7671 }, // 東京駅
+            { lat: 35.6820, lng: 139.7600 },
+            { lat: 35.6830, lng: 139.7580 },
+            { lat: 35.6840, lng: 139.7560 },
+            { lat: 35.6850, lng: 139.7540 },
+            { lat: 35.6853, lng: 139.7528 }  // 皇居
+          ]),
+          overview_polyline: "_wpwE}gqsXcB~G{A|EsAlEuApE",
+          steps: [
+            {
+              sequence: 1,
+              instruction: '東京駅を出て西に進みます',
+              distance: 500,
+              duration: 240,
+              start_lat: 35.6812,
+              start_lng: 139.7671,
+              maneuver: 'continue'
+            },
+            {
+              sequence: 2,
+              instruction: '和田倉門交差点を右折します',
+              distance: 700,
+              duration: 320,
+              start_lat: 35.6830,
+              start_lng: 139.7580,
+              maneuver: 'turn-right'
+            },
+            {
+              sequence: 3,
+              instruction: '皇居に到着しました',
+              distance: 300,
+              duration: 160,
+              start_lat: 35.6850,
+              start_lng: 139.7540,
+              maneuver: 'arrive'
+            }
+          ],
+          created_at: '2025-06-24T10:30:00Z'
+        },
+        {
+          id: 998,
+          name: '遠回りサンプルルート（東京駅→浅草）',
+          description: '遠回りのテストルート',
+          distance: 6500,
+          duration: 2400,
+          route_type: 'detour',
+          detour_level: 3,
+          geometry: JSON.stringify([
+            { lat: 35.6812, lng: 139.7671 }, // 東京駅
+            { lat: 35.6850, lng: 139.7600 },
+            { lat: 35.6900, lng: 139.7550 },
+            { lat: 35.6950, lng: 139.7650 },
+            { lat: 35.7000, lng: 139.7750 },
+            { lat: 35.7050, lng: 139.7850 },
+            { lat: 35.7100, lng: 139.7950 },
+            { lat: 35.7120, lng: 139.7980 }  // 浅草
+          ]),
+          overview_polyline: "_wpwE}gqsXaFtHuJhNkLjQuH~LaFjI",
+          steps: [
+            {
+              sequence: 1,
+              instruction: '東京駅を出て北に進みます',
+              distance: 1500,
+              duration: 600,
+              start_lat: 35.6812,
+              start_lng: 139.7671,
+              maneuver: 'continue'
+            },
+            {
+              sequence: 2,
+              instruction: '上野方面に進みます',
+              distance: 2500,
+              duration: 900,
+              start_lat: 35.6900,
+              start_lng: 139.7550,
+              maneuver: 'continue'
+            },
+            {
+              sequence: 3,
+              instruction: '浅草に向けて東に進みます',
+              distance: 2500,
+              duration: 900,
+              start_lat: 35.7000,
+              start_lng: 139.7750,
+              maneuver: 'turn-right'
+            }
+          ],
+          created_at: '2025-06-24T11:15:00Z'
+        },
+        {
+          id: 997,
+          name: '代替サンプルルート（東京→横浜）',
+          description: '代替経路のテストルート',
+          distance: 32000,
+          duration: 3600,
+          route_type: 'alternative',
+          detour_level: 1,
+          geometry: JSON.stringify([
+            { lat: 35.6812, lng: 139.7671 }, // 東京駅
+            { lat: 35.6500, lng: 139.7400 },
+            { lat: 35.6200, lng: 139.7200 },
+            { lat: 35.5900, lng: 139.7000 },
+            { lat: 35.5600, lng: 139.6800 },
+            { lat: 35.5300, lng: 139.6600 },
+            { lat: 35.4600, lng: 139.6300 }  // 横浜駅
+          ]),
+          overview_polyline: "_wpwE}gqsXjOzTrQ~WxTb[tW~^",
+          steps: [
+            {
+              sequence: 1,
+              instruction: '東京駅を出て南に進みます',
+              distance: 10000,
+              duration: 1200,
+              start_lat: 35.6812,
+              start_lng: 139.7671,
+              maneuver: 'continue'
+            },
+            {
+              sequence: 2,
+              instruction: '品川方面に進みます',
+              distance: 12000,
+              duration: 1300,
+              start_lat: 35.6200,
+              start_lng: 139.7200,
+              maneuver: 'continue'
+            },
+            {
+              sequence: 3,
+              instruction: '横浜に向けて南西に進みます',
+              distance: 10000,
+              duration: 1100,
+              start_lat: 35.5600,
+              start_lng: 139.6800,
+              maneuver: 'continue'
+            }
+          ],
+          created_at: '2025-06-24T09:45:00Z'
+        }
+      ];
+      
+      // テストデータをセット
+      routes = sampleRoutes;
+      
+      // ルートリストを表示
+      displayRoutesList();
+      
+      // 最初のルートを表示
+      if (routes.length > 0) {
+        displayRoute(routes[0]);
+      }
+    }
+      // ルートリストを表示
+    function displayRoutesList() {
+      const routesList = document.getElementById('routes-list');
+      routesList.innerHTML = '<h2>ルート一覧</h2>';
+      
+      if (routes.length === 0) {
+        routesList.innerHTML += '<p>ルートがありません</p>';
+        return;
+      }
+      
+      // 現在のフィルター値を取得
+      const filterValue = document.getElementById('route-type-filter').value;
+      
+      // フィルターに基づいてルートをフィルタリング
+      const filteredRoutes = filterValue === 'all' 
+        ? routes 
+        : routes.filter(route => route.route_type === filterValue);
+      
+      if (filteredRoutes.length === 0) {
+        routesList.innerHTML += `<p>「${filterValue}」タイプのルートはありません</p>`;
+        return;
+      }
+      
+      filteredRoutes.forEach((route, index) => {
+        const routeItem = document.createElement('div');
+        routeItem.className = `route-item route-type-${route.route_type || 'normal'}`;
+        
+        // ルートタイプに基づくラベル
+        let routeTypeLabel = '';
+        switch (route.route_type) {
+          case 'detour':
+            routeTypeLabel = `<span style="color:#FF9800">遠回り(Lv.${route.detour_level || 1})</span>`;
+            break;
+          case 'alternative':
+            routeTypeLabel = '<span style="color:#2196F3">代替</span>';
+            break;
+          default:
+            routeTypeLabel = '<span style="color:#4CAF50">通常</span>';
+        }
+        
+        routeItem.innerHTML = `
+          <h3>${route.name || 'ルート名なし'} ${routeTypeLabel}</h3>
+          <div class="route-info">距離: ${formatDistance(route.distance)}</div>
+          <div class="route-info">所要時間: ${formatDuration(route.duration)}</div>
+          <div class="route-info">作成: ${formatDate(route.created_at)}</div>
+        `;
+        
+        routeItem.addEventListener('click', () => {
+          displayRoute(route);
+        });
+        
+        routesList.appendChild(routeItem);
+      });
+      
+      document.getElementById('routes-list').scrollTo(0, 0);
+    }
+    
+    // ルートタイプでフィルタリング
+    function filterRoutes() {
+      displayRoutesList();
+    }
+      // ルートを地図上に表示
+    function displayRoute(route) {
+      // 既存のルートレイヤーをクリア
+      if (routeLayer) {
+        map.removeLayer(routeLayer);
+      }
+      
+      // 既存のマーカーをクリアする（グローバル変数に追加）
+      if (window.markers) {
+        window.markers.forEach(marker => map.removeLayer(marker));
+      }
+      window.markers = [];
+      
+      try {
+        // ジオメトリが文字列の場合はJSONとしてパース
+        let coordinates;
+        
+        if (typeof route.geometry === 'string') {
+          coordinates = JSON.parse(route.geometry);
+        } else {
+          coordinates = route.geometry;
+        }
+        
+        if (!Array.isArray(coordinates)) {
+          throw new Error('Invalid geometry format');
+        }
+        
+        // Leafletの座標形式に変換
+        const latLngs = coordinates.map(coord => [coord.lat, coord.lng]);
+        
+        // ルートタイプに基づく色の選択
+        let routeColor;
+        switch (route.route_type) {
+          case 'detour':
+            routeColor = '#FF9800'; // オレンジ
+            break;
+          case 'alternative':
+            routeColor = '#2196F3'; // 青
+            break;
+          default:
+            routeColor = '#4CAF50'; // 緑
+        }
+        
+        // ルートのポリラインを作成
+        routeLayer = L.polyline(latLngs, {
+          color: routeColor,
+          weight: 5,
+          opacity: 0.7
+        }).addTo(map);
+          // 地図の表示範囲をルートに合わせる
+        map.fitBounds(routeLayer.getBounds());
+        
+        // 出発地点と目的地点のマーカーを追加
+        if (latLngs.length > 0) {
+          // 出発地点 (緑色)
+          const startMarker = L.marker(latLngs[0], {
+            icon: L.divIcon({
+              className: 'origin-marker',
+              html: '<div style="background-color: green; border-radius: 50%; width: 12px; height: 12px;"></div>',
+              iconSize: [12, 12]
+            })
+          }).addTo(map).bindPopup(`出発地点: ${route.origin_name || '不明'}`);
+          
+          // 目的地点 (赤色)
+          const endMarker = L.marker(latLngs[latLngs.length - 1], {
+            icon: L.divIcon({
+              className: 'destination-marker',
+              html: '<div style="background-color: red; border-radius: 50%; width: 12px; height: 12px;"></div>',
+              iconSize: [12, 12]
+            })
+          }).addTo(map).bindPopup(`目的地点: ${route.destination_name || '不明'}`);
+          
+          // マーカーを保存
+          window.markers.push(startMarker, endMarker);
+          
+          // 経由地点があれば表示（route_waypointsがある場合）
+          if (route.waypoints && route.waypoints.length > 0) {
+            route.waypoints.forEach(waypoint => {
+              if (waypoint.lat && waypoint.lng) {
+                const waypointMarker = L.marker([waypoint.lat, waypoint.lng], {
+                  icon: L.divIcon({
+                    className: 'waypoint-marker',
+                    html: '<div style="background-color: blue; border-radius: 50%; width: 10px; height: 10px;"></div>',
+                    iconSize: [10, 10]
+                  })
+                }).addTo(map).bindPopup(`経由地点: ${waypoint.name || '不明'}`);
+                
+                window.markers.push(waypointMarker);
+              }
+            });
+          }
+        }
+        
+        // ルートの詳細情報を表示
+        displayRouteDetails(route);
+        
+      } catch (error) {
+        console.error('ルート表示エラー:', error);
+        alert(`ルートの表示に失敗しました: ${error.message}`);
+      }
+    }
+      // ルートの詳細情報を表示
+    function displayRouteDetails(route) {
+      const detailsContainer = document.getElementById('route-details');
+      
+      let stepsHtml = '';
+      
+      if (route.steps && route.steps.length > 0) {
+        route.steps.forEach(step => {
+          stepsHtml += `
+            <div class="step-item">
+              <div><strong>${step.sequence}. ${step.instruction}</strong></div>
+              <div>距離: ${formatDistance(step.distance)} / 時間: ${formatDuration(step.duration)}</div>
+            </div>
+          `;
+        });
+      }
+      
+      // ルートタイプに基づくラベルとスタイル
+      let routeTypeLabel = '';
+      let routeTypeStyle = '';
+      
+      switch (route.route_type) {
+        case 'detour':
+          routeTypeLabel = `遠回りルート（レベル ${route.detour_level || 1}）`;
+          routeTypeStyle = 'color: #FF9800; font-weight: bold;';
+          break;
+        case 'alternative':
+          routeTypeLabel = '代替ルート';
+          routeTypeStyle = 'color: #2196F3; font-weight: bold;';
+          break;
+        default:
+          routeTypeLabel = '通常ルート';
+          routeTypeStyle = 'color: #4CAF50; font-weight: bold;';
+      }
+      
+      // 経由地点情報
+      let waypointsHtml = '';
+      if (route.waypoints && route.waypoints.length > 0) {
+        waypointsHtml = '<h3>経由地点:</h3><ul>';
+        route.waypoints.forEach(waypoint => {
+          waypointsHtml += `<li>${waypoint.name || '名称不明'}</li>`;
+        });
+        waypointsHtml += '</ul>';
+      }
+      
+      detailsContainer.innerHTML = `
+        <h2>ルート詳細</h2>
+        <div><strong>ID:</strong> ${route.id || '不明'}</div>
+        <div><strong>名前:</strong> ${route.name || 'なし'}</div>
+        <div><strong>説明:</strong> ${route.description || 'なし'}</div>
+        <div><strong>タイプ:</strong> <span style="${routeTypeStyle}">${routeTypeLabel}</span></div>
+        <div><strong>距離:</strong> ${formatDistance(route.distance)}</div>
+        <div><strong>所要時間:</strong> ${formatDuration(route.duration)}</div>
+        <div><strong>作成日:</strong> ${formatDate(route.created_at)}</div>
+        
+        ${waypointsHtml}
+        
+        <h3>ステップ:</h3>
+        ${stepsHtml || '<div>ステップ情報がありません</div>'}
+        
+        <div style="margin-top: 20px; font-size: 12px; color: #777;">
+          <strong>注意:</strong> 保存されたルートはデータベースから取得されています。異なるルートタイプに応じて色分け表示されます。
+        </div>
+      `;
+    }
+    
+    // 距離のフォーマット (m -> km)
+    function formatDistance(meters) {
+      if (!meters) return '不明';
+      
+      if (meters < 1000) {
+        return `${meters}m`;
+      } else {
+        return `${(meters / 1000).toFixed(1)}km`;
+      }
+    }
+    
+    // 時間のフォーマット (秒 -> 時間:分)
+    function formatDuration(seconds) {
+      if (!seconds) return '不明';
+      
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      
+      if (hours > 0) {
+        return `${hours}時間${minutes}分`;
+      } else {
+        return `${minutes}分`;
+      }
+    }
+    
+    // 日付のフォーマット
+    function formatDate(dateString) {
+      if (!dateString) return '不明';
+      
+      const date = new Date(dateString);
+      return date.toLocaleString('ja-JP');
+    }
+    
+    // ページロード時に初期化
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

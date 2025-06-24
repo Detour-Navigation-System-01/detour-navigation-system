@@ -1,12 +1,13 @@
 // backend/src/services/placeService.js
+// 💡 コンストラクタエラーの修正
 
 const { AppError } = require('../middleware/errorHandler');
 const PlaceRepository = require('../repositories/PlaceRepository');
-const db = require('../utils/db');
 
 class PlaceService {
   constructor() {
-    this.placeRepository = new PlaceRepository(db, 'places');
+    // ❗ 修正：PlaceRepositoryは引数なしで初期化
+    this.placeRepository = new PlaceRepository(); // ✅ 正しい初期化方法
   }
 
   /**
@@ -18,7 +19,6 @@ class PlaceService {
     const { filters = {}, ...otherOptions } = options;
     
     try {
-      // 場所の取得とカウント
       const places = await this.placeRepository.findAll(options);
       const total = await this.placeRepository.count(filters);
       
@@ -53,21 +53,72 @@ class PlaceService {
    */
   async createPlace(placeData) {
     try {
-      const place = await this.placeRepository.create(placeData);
+      // 💡 数値フィールドの検証と変換
+      const validatedData = {
+        ...placeData,
+        lat: parseFloat(placeData.lat),
+        lng: parseFloat(placeData.lng)
+      };
+
+      // 座標の妥当性チェック
+      if (isNaN(validatedData.lat) || isNaN(validatedData.lng)) {
+        throw new AppError('有効な緯度・経度を入力してください', 400);
+      }
+
+      if (validatedData.lat < -90 || validatedData.lat > 90) {
+        throw new AppError('緯度は-90から90の間で入力してください', 400);
+      }
+
+      if (validatedData.lng < -180 || validatedData.lng > 180) {
+        throw new AppError('経度は-180から180の間で入力してください', 400);
+      }
+
+      const place = await this.placeRepository.create(validatedData);
+      console.log('✅ 場所作成成功:', place);
       return place;
     } catch (error) {
       if (error.code === '23505') { // PostgreSQLの一意制約違反
         throw new AppError('この場所の名前はすでに登録されています', 400);
       }
+      console.error('❌ 場所作成エラー:', error);
       throw new AppError('場所の登録に失敗しました', 500, error);
     }
   }
 
   /**
+   * 💡 座標から場所を検索または作成（RouteServiceから使用）
+   * @param {Object} coordData - 座標データ {lat, lng, name?}
+   * @returns {Object} 作成または取得された場所
+   */
+  async findOrCreatePlaceByCoordinates(coordData) {
+    try {
+      const { lat, lng, name } = coordData;
+      
+      // 既存の近い場所を検索（半径100m以内）
+      // TODO: 実装時はfindNearbyメソッドを使用
+      // const nearbyPlaces = await this.placeRepository.findNearby(lat, lng, 0.1);
+      // if (nearbyPlaces.length > 0) {
+      //   return nearbyPlaces[0]; // 最も近い場所を返す
+      // }
+
+      // 見つからない場合は新規作成
+      const placeData = {
+        name: name || `Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        category: 'coordinate',
+        description: 'Automatically created from coordinates'
+      };
+
+      return await this.createPlace(placeData);
+    } catch (error) {
+      console.error('座標からの場所作成エラー:', error);
+      throw error;
+    }
+  }
+
+  /**
    * 場所情報を更新
-   * @param {number} id - 場所ID
-   * @param {Object} updateData - 更新データ
-   * @returns {Object} 更新された場所
    */
   async updatePlace(id, updateData) {
     const place = await this.placeRepository.findById(id);
@@ -77,10 +128,18 @@ class PlaceService {
     }
     
     try {
+      // 数値フィールドがある場合は変換
+      if (updateData.lat !== undefined) {
+        updateData.lat = parseFloat(updateData.lat);
+      }
+      if (updateData.lng !== undefined) {
+        updateData.lng = parseFloat(updateData.lng);
+      }
+
       const updatedPlace = await this.placeRepository.update(id, updateData);
       return updatedPlace;
     } catch (error) {
-      if (error.code === '23505') { // PostgreSQLの一意制約違反
+      if (error.code === '23505') {
         throw new AppError('この場所の名前はすでに登録されています', 400);
       }
       throw new AppError('場所の更新に失敗しました', 500, error);
@@ -89,8 +148,6 @@ class PlaceService {
 
   /**
    * 場所を削除
-   * @param {number} id - 場所ID
-   * @returns {boolean} 削除の成功/失敗
    */
   async deletePlace(id) {
     const place = await this.placeRepository.findById(id);
@@ -110,9 +167,6 @@ class PlaceService {
 
   /**
    * カテゴリー別の場所を取得
-   * @param {string} category - カテゴリー
-   * @param {Object} options - 取得オプション
-   * @returns {Object} 取得結果と総件数
    */
   async getPlacesByCategory(category, options = {}) {
     const filters = { category, ...options.filters || {} };
@@ -133,18 +187,51 @@ class PlaceService {
 
   /**
    * 近隣の場所を検索
-   * @param {number} lat - 緯度
-   * @param {number} lng - 経度
-   * @param {number} radius - 検索範囲（km）
-   * @returns {Array} 近隣の場所一覧
    */
   async getNearbyPlaces(lat, lng, radius = 5) {
     try {
-      // PostgreSQLのEarthDistanceを使用した近傍検索を実装
       const places = await this.placeRepository.findNearby(lat, lng, radius);
       return places;
     } catch (error) {
-      throw new AppError('近隣の場所検索に失敗しました', 500, error);
+      console.warn('⚠️ 近隣検索でPostgreSQL拡張エラー、代替方法を使用:', error.message);
+      
+      // PostgreSQL拡張が使えない場合の代替実装
+      return await this._findNearbyFallback(lat, lng, radius);
+    }
+  }
+
+  /**
+   * 💡 近隣検索の代替実装（PostgreSQL拡張が使えない場合）
+   */
+  async _findNearbyFallback(lat, lng, radiusKm) {
+    try {
+      // 簡易的な境界ボックス検索
+      const latDelta = radiusKm / 111; // 約1度 = 111km
+      const lngDelta = radiusKm / (111 * Math.cos(lat * Math.PI / 180));
+
+      const query = `
+        SELECT *, 
+               SQRT(POWER(69.1 * (lat - $1), 2) + POWER(69.1 * ($2 - lng) * COS(lat / 57.3), 2)) AS distance
+        FROM places
+        WHERE lat BETWEEN $3 AND $4 
+          AND lng BETWEEN $5 AND $6
+        HAVING distance < $7
+        ORDER BY distance
+        LIMIT 50
+      `;
+
+      const params = [
+        lat, lng,
+        lat - latDelta, lat + latDelta,
+        lng - lngDelta, lng + lngDelta,
+        radiusKm
+      ];
+
+      const result = await this.placeRepository.pool.query(query, params);
+      return result.rows;
+    } catch (error) {
+      console.error('代替近隣検索エラー:', error);
+      return [];
     }
   }
 }
