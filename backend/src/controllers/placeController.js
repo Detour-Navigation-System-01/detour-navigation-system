@@ -175,9 +175,7 @@ class PlaceController extends BaseController {
       message: '近隣の場所を取得しました',
       data: places
     });
-  });
-
-    /**
+  });    /**
    * @desc 画像をローカルにアップロードし、そのURLを返す
    * @route POST /api/places/upload-image
    * @access Public (テスト用)
@@ -198,6 +196,14 @@ class PlaceController extends BaseController {
     const imageUrl = `${req.protocol}://${req.get('host')}/images/${fileName}`;
 
     // 成功レスポンスを送信
+    return this.sendSuccess(res, {
+      message: '画像がアップロードされました',
+      data: { 
+        fileName: fileName,
+        imageUrl: imageUrl,
+        path: `/images/${fileName}` 
+      }
+    });
     return this.sendSuccess(res, {
       message: '近隣の場所を取得しました',
       data: places

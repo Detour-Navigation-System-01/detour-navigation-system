@@ -1,0 +1,33 @@
+### 画像アップロードテスト
+# multipart/form-dataを使ってファイルをアップロード
+# VS CodeのREST Clientプラグインでは以下のように記述することでファイルをアップロードできます
+# ※実際のファイルのパスに変更してください
+
+POST http://localhost:3001/api/places/upload-image
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="sample.jpg"
+Content-Type: image/jpeg
+
+< ./path/to/your/sample.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### アップロード後に場所を作成（画像URL付き）
+POST http://localhost:3001/api/places
+Content-Type: application/json
+
+{
+  "name": "東京タワー",
+  "description": "東京のランドマーク",
+  "category": "観光地",
+  "address": "東京都港区芝公園4丁目2-8",
+  "prefecture": "東京都",
+  "lat": 35.6586,
+  "lng": 139.7454,
+  "image_url": "http://localhost:3001/images/ファイル名.jpg"
+}
+
+### 画像付き場所の取得
+GET http://localhost:3001/api/places/1
+Accept: application/json
