@@ -18,7 +18,10 @@ export default function LoginForm() {
     try {
       const responseData = await fetcher<{
         message: string;
-        data?: { user: { id: number; username: string } };
+        data?: { 
+          user: { id: number; username: string } 
+          token: string;  
+        };
       }>('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({
@@ -29,6 +32,7 @@ export default function LoginForm() {
 
       if (responseData.data?.user) {
         setStatusMessage(`ようこそ、${responseData.data.user.username}さん！`);
+        localStorage.setItem('jwt_token',responseData.data.token);
         routerInstance.push('/profile');
       } else {
         setStatusMessage(responseData.message || 'ログイン失敗');
