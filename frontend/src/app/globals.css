@@ -7,8 +7,6 @@
  * @version 1.0.0
  */
 
-@import 'tailwindcss';
-
 :root {
   --background-color: #ffffff;
   --foreground-color: #171717;
