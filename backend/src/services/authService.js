@@ -14,6 +14,8 @@ class AuthService {
    * @returns {Promise<Object>} 認証されたユーザー
    */
   async login(identifier, password) {
+    const jwt = require('jsonwebtoken');
+    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
     if (!identifier || !password) {
       throw new AppError('ユーザー名/メールアドレスとパスワードを入力してください', 400);
     }
@@ -22,10 +24,15 @@ class AuthService {
       const user = await userService.authenticateUser(identifier, password);
       
       // ここでJWTトークンの生成などを行うこともできる（将来的に実装予定）
-      
+      const token = jwt.sign(
+        {id: user.id,username: user.username},
+        JWT_SECRET,
+        {expiresIn: '1h'}
+      )
       return {
         user,
         // token: generatedToken
+        token
       };
     } catch (error) {
       // ログイン失敗時に詳細なエラーを表示しないようにする（セキュリティ強化）
