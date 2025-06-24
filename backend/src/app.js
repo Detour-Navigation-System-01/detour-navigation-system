@@ -5,6 +5,8 @@ const apiRoutes = require('./routes/api');
 const indexRoutes = require('./routes/index');
 // Docker環境との互換性のため相対パスを使用
 const dbTestRoutes = require('./routes/db-test');
+const placesRoutes = require('./routes/places');
+const path = require('path');
 
 // dotenv設定を読み込み
 require('dotenv').config();
@@ -25,12 +27,17 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
+app.use('/images', express.static(path.join(__dirname, '..', 'public', 'images')));
+
 // APIルート - 階層化されたルーティング
 app.use('/api', apiRoutes);
 
 // 開発用のレガシールート（互換性のため一時的に残す）
 app.use('/api', indexRoutes);
 app.use('/api', dbTestRoutes);
+
+// placesルート
+app.use('/api/places', placesRoutes);
 
 // ルートエンドポイント - ヘルスチェック用
 app.get('/', (req, res) => {

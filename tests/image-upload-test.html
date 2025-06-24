@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>画像アップロードテスト</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .container {
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 5px;
+    }
+    .preview {
+      margin-top: 20px;
+      border: 1px solid #eee;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .preview img {
+      max-width: 100%;
+      max-height: 300px;
+    }
+    .response {
+      margin-top: 20px;
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    input[type="file"] {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>画像アップロードテスト</h1>
+  
+  <div class="container">
+    <h2>画像をアップロード</h2>
+    <form id="uploadForm">
+      <input type="file" id="imageFile" accept="image/*" />
+      <button type="submit">アップロード</button>
+    </form>
+    
+    <div class="preview" id="previewContainer" style="display: none;">
+      <h3>プレビュー:</h3>
+      <img id="imagePreview" src="" alt="画像プレビュー" />
+    </div>
+    
+    <div class="response" id="responseContainer" style="display: none;">
+      <h3>レスポンス:</h3>
+      <pre id="responseData"></pre>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const uploadForm = document.getElementById('uploadForm');
+      const imageFile = document.getElementById('imageFile');
+      const imagePreview = document.getElementById('imagePreview');
+      const previewContainer = document.getElementById('previewContainer');
+      const responseContainer = document.getElementById('responseContainer');
+      const responseData = document.getElementById('responseData');
+      
+      // ファイル選択時にプレビュー表示
+      imageFile.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            imagePreview.src = e.target.result;
+            previewContainer.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+      
+      // フォーム送信処理
+      uploadForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        
+        if (!imageFile.files[0]) {
+          alert('画像ファイルを選択してください');
+          return;
+        }
+        
+        const formData = new FormData();
+        formData.append('image', imageFile.files[0]);
+        
+        try {
+          // APIエンドポイントにアップロード
+          const response = await fetch('http://localhost:3001/api/places/upload-image', {
+            method: 'POST',
+            body: formData
+          });
+          
+          const result = await response.json();
+          
+          // レスポンス表示
+          responseData.textContent = JSON.stringify(result, null, 2);
+          responseContainer.style.display = 'block';
+          
+          if (result.success) {
+            // 成功したらURLを表示
+            const uploadedUrl = result.data.imageUrl;
+            responseData.textContent += `\n\n画像URL: ${uploadedUrl}`;
+            
+            // この画像URLを使って場所を作成する例もここに追加できます
+          }
+        } catch (error) {
+          responseData.textContent = `エラー: ${error.message}`;
+          responseContainer.style.display = 'block';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
