@@ -1,4 +1,5 @@
 // backend/src/routes/user.js
+// どのURLでどのHTTPメソッドを受け付けるかの対応だけ
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');

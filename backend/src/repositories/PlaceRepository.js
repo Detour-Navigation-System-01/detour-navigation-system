@@ -1,7 +1,7 @@
 // backend/src/repositories/PlaceRepository.js
 
 const BaseRepository = require('./BaseRepository');
-const db = require('../utils/db');
+const pool = require('../utils/db');
 
 /**
  * 場所リポジトリクラス
@@ -9,7 +9,7 @@ const db = require('../utils/db');
  */
 class PlaceRepository extends BaseRepository {
   constructor() {
-    super(db, 'places'); // データベース接続とテーブル名を渡す
+    super(pool, 'places'); // データベース接続とテーブル名を渡す
   }
 
   /**
@@ -170,5 +170,6 @@ class PlaceRepository extends BaseRepository {
       throw error;
     }  }
 }
+
 
 module.exports = PlaceRepository;
