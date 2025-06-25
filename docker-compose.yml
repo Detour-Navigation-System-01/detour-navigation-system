@@ -25,7 +25,7 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=password
       - DB_NAME=wanderdb
-    command: node src/server.js
+  
     depends_on:
       db:
         condition: service_healthy

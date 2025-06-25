@@ -70,10 +70,19 @@ class PlaceController extends BaseController {
    * 新しい場所を作成
    */
   createPlace = catchAsync(async (req, res) => {
-    const { name, description, category, address, prefecture, lat, lng, image_url } = req.body;
+    const { name, description, category, address, prefecture, lat, lng, image_url, user_id } = req.body;
+    
+    const parsedUserId = parseInt(user_id, 10);
+    // user_idの妥当性チェック
+    if (isNaN(parsedUserId)) {
+      return this.sendError(res, {
+        statusCode: 400,
+        message: '有効なユーザーIDを指定してください。'
+      });
+    }
     
     console.log('新しい場所を登録します:', { name });
-    
+
     const newPlace = await placeService.createPlace({
       name,
       description,
@@ -82,7 +91,8 @@ class PlaceController extends BaseController {
       prefecture,
       lat,
       lng,
-      image_url: image_url || null // image_urlがない場合はnullをセット
+      image_url: image_url || null, // image_urlがない場合はnullをセット
+      user_id: parsedUserId
     });
     
     // 成功レスポンスを送信
@@ -207,6 +217,38 @@ class PlaceController extends BaseController {
     return this.sendSuccess(res, {
       message: '近隣の場所を取得しました',
       data: places
+    });
+  });
+
+  /**
+   * ユーザーIDを指定してそのアカウントの保存スポット情報だけを取得
+   */
+  getPlacesByUserId = catchAsync(async (req, res) => {
+    // validateIdParamミドルウェアで検証済みのユーザーIDを使用
+    const userId = req.parsedId;
+
+    console.log(`ユーザーID: ${userId} に紐づく場所情報を取得します`);
+
+    // クエリパラメータからページネーションオプションを取得
+    const { page, limit, offset } = this.getPaginationOptions(req.query);
+
+    const options = {
+      orderBy: 'created_at',
+      direction: 'desc',
+      limit,
+      offset
+    };
+
+    const result = await placeService.getPlacesByUserId(userId, options);
+    const places = result.data;
+
+    console.log(`ユーザーID: ${userId} のために ${places.length}件の場所情報を取得しました`);
+
+    // 成功レスポンスを送信
+    return this.sendSuccess(res, {
+      message: `ユーザーID: ${userId} に紐づく場所一覧を取得しました`,
+      data: places,
+      meta: this.createPaginationMeta(result.total, page, limit)
     });
   });
 }

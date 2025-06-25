@@ -234,6 +234,32 @@ class PlaceService {
       return [];
     }
   }
+
+  /**
+   * 指定されたユーザーIDに紐づく場所を取得
+   * @param {number} userId - ユーザーID
+   * @param {Object} options - 取得オプション（ソート、ページネーション、フィルタリング等）
+   * @returns {Object} 取得結果と総件数
+   */
+  async getPlacesByUserId(userId, options = {}) {
+    // ユーザーIDをフィルターとしてoptionsに結合
+    const filters = { user_id: userId, ...options.filters || {} };
+    const placeOptions = { ...options, filters };
+
+    try {
+      // placeRepositoryのfindAllメソッドを使って、user_idでフィルタリングして場所を取得
+      const places = await this.placeRepository.findAll(placeOptions);
+      const total = await this.placeRepository.count(filters); // フィルターされた総数を取得
+
+      return {
+        data: places,
+        total
+      };
+    } catch (error) {
+      console.error(`❌ ユーザーID: ${userId} の場所取得エラー:`, error);
+      throw new AppError(`ユーザーID: ${userId} の場所の取得に失敗しました`, 500, error);
+    }
+  }
 }
 
 // シングルトンインスタンスとしてエクスポート
