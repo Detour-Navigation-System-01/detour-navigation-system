@@ -243,7 +243,6 @@ class UserRepository extends BaseRepository {
       const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
       
       const query = `
-        // 変更後（public_settings を追加）
         SELECT id, username, email, first_name, last_name, created_at, updated_at, public_settings
         FROM ${this.tableName}
         ${whereClause}
