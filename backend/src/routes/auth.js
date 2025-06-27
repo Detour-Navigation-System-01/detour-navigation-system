@@ -29,7 +29,7 @@ router.post('/register', validateUserData, authController.register);
 router.put('/password/:id', validateIdParam, authController.changePassword);
 
 
-router.get('/me', authenticate, authController.getMe);
+router.get('/me', authenticate, authController.me);
 
 
 module.exports = router;

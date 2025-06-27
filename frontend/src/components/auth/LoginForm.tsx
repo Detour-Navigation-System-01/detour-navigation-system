@@ -33,7 +33,7 @@ export default function LoginForm() {
       if (responseData.data?.user) {
         setStatusMessage(`ようこそ、${responseData.data.user.username}さん！`);
         localStorage.setItem('jwt_token',responseData.data.token);
-        routerInstance.push('/profile');
+        routerInstance.push('/profile/${userId}');
       } else {
         setStatusMessage(responseData.message || 'ログイン失敗');
       }

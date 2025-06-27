@@ -35,7 +35,7 @@ export default function BottomNav() {
     { href: '/', label: 'Map', icon: '/icons/map.svg' },
     { href: '/preservation', label: 'Preserve', icon: '/icons/preserve.svg' },
     {
-      href: user ? `/user/${user.id}` : '/login',
+      href: user ? `/profile/${user.id}` : '/login',
       label: 'Profile',
       icon: '/icons/profile.svg',
     },    
