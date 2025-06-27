@@ -74,7 +74,24 @@ class AuthController extends BaseController {
       message: 'パスワードが正常に変更されました'
     });
   });
+
+  me = catchAsync(async (req, res) => {
+    const user = req.user;
+    if (!user) {
+      return this.sendError(res, { statusCode: 401, message: '未認証のユーザーです' });
+    }
+
+    return this.sendSuccess(res, {
+      message: '現在のユーザー情報を返します',
+      data: { user },
+    });
+  });
 }
+
+
+
+
+
 
 // シングルトンインスタンスとしてエクスポート
 module.exports = new AuthController();
