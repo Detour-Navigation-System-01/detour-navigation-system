@@ -1,40 +1,56 @@
+'use client';
 import Link from 'next/link';
 import Image from 'next/image';
 import './BottomNav.css';
+import { useEffect,useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { fetchCurrentUser } from '@/lib/auth';
+
+
+interface User{
+  id: number;
+  username: string;
+}
 
 export default function BottomNav() {
 
+  const pathname = usePathname();
+  const [user,setUser] = useState<User |null>(null);
 
+  useEffect(()=>{
+    const getUser = async()=>{
+      try{
+        const res = await fetchCurrentUser();
+        if(res?.data?.user){
+          setUser(res.data.user);
+        }
+      }catch(e){
+        console.warn('ユーザ情報取得失敗',e);
+      }
+    };
+    getUser();
+  },[]);
+
+  const tabs = [
+    { href: '/', label: 'Map', icon: '/icons/map.svg' },
+    { href: '/preservation', label: 'Preserve', icon: '/icons/preserve.svg' },
+    {
+      href: user ? `/user/${user.id}` : '/login',
+      label: 'Profile',
+      icon: '/icons/profile.svg',
+    },    
+  ];
+  
   return (
     <nav className="bottom-nav">
-      <Link href="/">
-        <div className="nav-item">
-          <Image src="/icons/map.svg" alt="Map Icon" width={24} height={24} />
-          <span>Map</span>
-        </div>
-      </Link>
-      <Link href="/preservation">
-        <div className="nav-item">
-          <Image
-            src="/icons/preserve.svg"
-            alt="Preservation Icon"
-            width={24}
-            height={24}
-          />
-          <span>Preserve</span>
-        </div>
-      </Link>
-      <Link href="/profile">
-        <div className="nav-item">
-          <Image
-            src="/icons/profile.svg"
-            alt="Profile Icon"
-            width={24}
-            height={24}
-          />
-          <span>Profile</span>
-        </div>
-      </Link>
+      {tabs.map(({ href, label, icon }) => (
+        <Link href={href} key={href}>
+          <div className={`nav-item ${pathname === href ? 'active' : ''}`}>
+            <Image src={icon} alt={`${label} Icon`} width={24} height={24} />
+            <span>{label}</span>
+          </div>
+        </Link>
+      ))}
     </nav>
   );
 }
