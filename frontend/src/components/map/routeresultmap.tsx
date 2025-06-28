@@ -338,16 +338,13 @@ export default function RouteResultMap() {
   const { center, zoom } = getMapSettings();
 
   return (
-    <div className="h-screen w-screen relative">
+    <div className="h-screen w-screen relative" style={{ height: "100vh", width: "100vw" }}>
       <MapContainer 
         center={center} 
         zoom={zoom} 
-        style={{ height: "500px", width: "100%" }}
+        style={{ height: "80%", width: "100%" }}
         className="z-0"
-  //       center={[35.681236, 139.767125]} 
-  // zoom={13} 
-  // style={{ height: "500px", width: "100%" }}
-      >
+       >
         <TileLayer
           attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -403,73 +400,33 @@ export default function RouteResultMap() {
         )}
       </MapContainer>
 
-      {/* 情報表示パネル */}
-      <div className="absolute top-4 left-4 bg-white p-6 rounded-xl shadow-lg z-[1000] min-w-[320px] max-w-[400px]">
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold mb-3 text-gray-800 flex items-center gap-2">
-            🧭 ナビゲーション情報
-          </h3>
-          
-          <div className="space-y-3 text-sm mb-4">
-            <div className="flex items-start gap-3">
-              <span className="w-3 h-3 bg-green-500 rounded-full mt-1 flex-shrink-0"></span>
-              <div>
-                <div className="font-medium text-gray-700">出発地</div>
-                <div className="text-gray-600">{fromParam}</div>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <span className="w-3 h-3 bg-red-500 rounded-full mt-1 flex-shrink-0"></span>
-              <div>
-                <div className="font-medium text-gray-700">目的地</div>
-                <div className="text-gray-600">{toParam}</div>
-              </div>
-            </div>
-            
-            {timeParam && (
-              <div className="flex items-start gap-3">
-                <span className="w-3 h-3 bg-yellow-500 rounded-full mt-1 flex-shrink-0"></span>
-                <div>
-                  <div className="font-medium text-gray-700">制限時間</div>
-                  <div className="text-gray-600">{timeParam}分</div>
-                </div>
-              </div>
-            )}
+      {/* 下部に固定された情報パネル（写真のスタイル） */}
+      <div className="absolute bottom-0 left-0 right-0 bg-white shadow-lg z-[1000]">
+        {/* 時間と距離の表示 */}
+        <div className="text-center py-4">
+          <div className="text-2xl font-bold text-gray-800 mb-1">
+            {duration ? formatDuration(duration) : '計算中...'} ({distance}km)
           </div>
           
-          <div className="border-t pt-4 space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600 font-medium">距離:</span>
-              <span className="text-lg font-semibold text-blue-600">{distance} km</span>
+          {timeParam && duration && (
+            <div className={`text-sm font-medium ${
+              duration <= parseInt(timeParam)
+                ? 'text-green-600'
+                : 'text-red-600'
+            }`}>
+              {duration <= parseInt(timeParam)
+                ? `制限時間内に到着可能`
+                : `制限時間を${duration - parseInt(timeParam)}分超過`
+              }
             </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600 font-medium">予想時間:</span>
-              <span className="text-lg font-semibold text-blue-600">
-                {duration ? formatDuration(duration) : '計算中...'}
-              </span>
-            </div>
-            
-            {timeParam && duration && (
-              <div className={`text-sm p-3 rounded-lg font-medium ${
-                duration <= parseInt(timeParam) 
-                  ? 'bg-green-100 text-green-800 border border-green-200' 
-                  : 'bg-red-100 text-red-800 border border-red-200'
-              }`}>
-                {duration <= parseInt(timeParam) 
-                  ? `✅ 制限時間内に到着可能です` 
-                  : `⚠️ 制限時間を${duration - parseInt(timeParam)}分超過します`
-                }
-              </div>
-            )}
-          </div>
+          )}
         </div>
         
-        <div className="flex gap-3 flex-wrap">
+        {/* ボタン */}
+        <div className="flex gap-3 px-4 pb-6">
           <button 
             onClick={() => window.history.back()}
-            className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors flex-1"
+            className="px-6 py-3 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 text-base font-medium transition-colors flex-1"
           >
             戻る
           </button>
@@ -479,9 +436,10 @@ export default function RouteResultMap() {
               console.log("🧭 ナビゲーション開始");
               alert("ナビゲーション開始！");
             }}
-            className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors flex-1"
+            className="px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 text-base font-medium transition-colors flex-1 flex items-center justify-center gap-2"
           >
-            ナビ開始
+            <span>▶</span>
+            ナビゲーションを開始する
           </button>
         </div>
       </div>

@@ -8,6 +8,7 @@ export default function TripInputForm() {
   const [to, setTo] = useState("");
   const [time, setTime] = useState("");
   const [searchHistory, setSearchHistory] = useState([]);
+  const [errors, setErrors] = useState({});
   const router = useRouter();
 
 
@@ -30,7 +31,39 @@ export default function TripInputForm() {
     loadSearchHistory();
   }, []);
 
+  // 入力値の検証
+  const validateInputs = () => {
+    const newErrors = {};
+
+    // 出発地の検証
+    if (!from.trim()) {
+      newErrors.from = "出発地を入力してください";
+    }
+
+    // 目的地の検証
+    if (!to.trim()) {
+      newErrors.to = "目的地を入力してください";
+    }
+
+    // 時間の検証（半角数字のみ）
+    if (time.trim() && !/^\d+$/.test(time.trim())) {
+      // 全角数字が含まれているかチェック
+      if (/[０-９]/.test(time.trim())) {
+        newErrors.time = `「${time.trim()}」は使用できません。時間は半角数字で入力してください（全角数字は使用できません）`;
+      } else {
+        newErrors.time = `「${time.trim()}」は使用できません。時間は半角数字のみで入力してください`;
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = () => {
+    if (!validateInputs()) {
+      return;
+    }
+
     alert(`出発: ${from}, 目的地: ${to}, 時間: ${time}`);
     
     // クエリパラメータ付きで navigation ページへ遷移
@@ -41,6 +74,10 @@ export default function TripInputForm() {
 
   const handleCurrentLocation = () => {
     setFrom("現在地");
+    // エラーをクリア
+    if (errors.from) {
+      setErrors(prev => ({ ...prev, from: undefined }));
+    }
   };
 
   // 履歴ボタンをクリックした時の処理
@@ -48,8 +85,42 @@ export default function TripInputForm() {
     // 出発地が空の場合は出発地に、そうでなければ目的地に設定
     if (from === "") {
       setFrom(placeName);
+      // エラーをクリア
+      if (errors.from) {
+        setErrors(prev => ({ ...prev, from: undefined }));
+      }
     } else {
       setTo(placeName);
+      // エラーをクリア
+      if (errors.to) {
+        setErrors(prev => ({ ...prev, to: undefined }));
+      }
+    }
+  };
+
+  // 時間入力の処理（すべての入力を受け付ける）
+  const handleTimeChange = (e) => {
+    const value = e.target.value;
+    setTime(value);
+    // エラーをクリア（入力中はエラーを表示しない）
+    if (errors.time) {
+      setErrors(prev => ({ ...prev, time: undefined }));
+    }
+  };
+
+  // 出発地変更時のエラークリア
+  const handleFromChange = (e) => {
+    setFrom(e.target.value);
+    if (errors.from && e.target.value.trim()) {
+      setErrors(prev => ({ ...prev, from: undefined }));
+    }
+  };
+
+  // 目的地変更時のエラークリア
+  const handleToChange = (e) => {
+    setTo(e.target.value);
+    if (errors.to && e.target.value.trim()) {
+      setErrors(prev => ({ ...prev, to: undefined }));
     }
   };
 
@@ -76,6 +147,11 @@ export default function TripInputForm() {
     width: "100%",
   };
 
+  const inputWrapperStyle = {
+    width: "100%",
+    minHeight: "3.5rem", // エラーメッセージ分の高さを確保
+  };
+
   const inputStyle = {
     width: "100%",
     padding: "0.8rem 1rem",
@@ -87,6 +163,18 @@ export default function TripInputForm() {
     outline: "none",
     transition: "all 0.2s ease-in-out",
     boxSizing: "border-box",
+  };
+
+  const inputErrorStyle = {
+    ...inputStyle,
+    border: "2px solid #ef4444",
+  };
+
+  const errorTextStyle = {
+    color: "#ef4444",
+    fontSize: "0.875rem",
+    marginTop: "0.25rem",
+    fontFamily: "Arial, Helvetica, sans-serif",
   };
 
   const currentLocationButtonStyle = {
@@ -171,45 +259,58 @@ export default function TripInputForm() {
       <div style={containerStyle}>
         <div style={formStyle}>
           {/* 出発地 */}
-          <div style={inputContainerStyle}>
-            <input
-              type="text"
-              placeholder="出発地"
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-              style={inputStyle}
-            />
-            <button
-              type="button"
-              onClick={handleCurrentLocation}
-              style={currentLocationButtonStyle}
-            >
-              <svg style={targetIconStyle} viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="3" fill="currentColor"/>
-                <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="2"/>
-                <path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-              現在地
-            </button>
+          <div style={inputWrapperStyle}>
+            <div style={inputContainerStyle}>
+              <input
+                type="text"
+                placeholder="出発地"
+                value={from}
+                onChange={handleFromChange}
+                style={errors.from ? inputErrorStyle : inputStyle}
+              />
+              <button
+                type="button"
+                onClick={handleCurrentLocation}
+                style={currentLocationButtonStyle}
+              >
+                <svg style={targetIconStyle} viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                  <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+                現在地
+              </button>
+            </div>
+            {errors.from && <div style={errorTextStyle}>{errors.from}</div>}
           </div>
 
           {/* 目的地 */}
-          <input
-            type="text"
-            placeholder="目的地"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            style={inputStyle}
-          />
+          <div style={inputWrapperStyle}>
+            <div style={inputContainerStyle}>
+              <input
+                type="text"
+                placeholder="目的地"
+                value={to}
+                onChange={handleToChange}
+                style={errors.to ? inputErrorStyle : inputStyle}
+              />
+            </div>
+            {errors.to && <div style={errorTextStyle}>{errors.to}</div>}
+          </div>
 
           {/* 移動時間 */}
-          <input
-            type="text"
-            placeholder="移動時間"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            style={inputStyle}
-          />
+          <div style={inputWrapperStyle}>
+            <div style={inputContainerStyle}>
+              <input
+                type="text"
+                placeholder="移動時間（分）"
+                value={time}
+                onChange={handleTimeChange}
+                style={errors.time ? inputErrorStyle : inputStyle}
+              />
+            </div>
+            {errors.time && <div style={errorTextStyle}>{errors.time}</div>}
+          </div>
 
           {/* 送信ボタン */}
           <button onClick={handleSubmit} style={submitButtonStyle}>
