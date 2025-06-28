@@ -18,7 +18,7 @@ export default function ProfilePage() {
         />
         <h2 style={nameStyle}>test</h2>
         <p style={idStyle}>test</p>
-        <Link href="/profile/edit">
+        <Link href="/profile/${user.id}/edit">
           <button style={editButtonStyle}>編集</button>
         </Link>
       </div>
