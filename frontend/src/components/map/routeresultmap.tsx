@@ -74,6 +74,41 @@ export default function RouteResultMap() {
     return false;
   };
 
+  // 現在地を取得する関数
+  const getCurrentLocation = async (): Promise<Coordinate> => {
+    console.log("📍 現在地取得開始");
+    
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        const errorMsg = "このブラウザでは位置情報が利用できません。";
+        console.error("❌ " + errorMsg);
+        reject(new Error(errorMsg));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coordinate = {
+            lat: pos.coords.latitude,
+            lon: pos.coords.longitude
+          };
+          console.log("✅ 現在地取得成功:", coordinate);
+          resolve(coordinate);
+        },
+        (err) => {
+          const errorMsg = "位置情報の取得に失敗しました: " + err.message;
+          console.error("❌ " + errorMsg);
+          reject(new Error(errorMsg));
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5分間キャッシュ
+        }
+      );
+    });
+  };
+
   // ジオコーディング関数（住所 → 座標）
   const geocodeAddress = async (address: string): Promise<Coordinate> => {
     console.log(`🔍 ジオコーディング開始: "${address}"`);
@@ -112,6 +147,15 @@ export default function RouteResultMap() {
     } catch (err) {
       console.error(`❌ ジオコーディング失敗 (${address}):`, err);
       throw err;
+    }
+  };
+
+  // 座標取得関数（現在地または住所に対応）
+  const getCoordinate = async (location: string): Promise<Coordinate> => {
+    if (location === "現在地") {
+      return await getCurrentLocation();
+    } else {
+      return await geocodeAddress(location);
     }
   };
 
@@ -234,11 +278,11 @@ export default function RouteResultMap() {
         initializeIcons();
         console.log("✅ Leaflet初期化完了");
         
-        // ステップ2: 出発地の座標取得
+        // ステップ2: 出発地の座標取得（現在地対応）
         if (!isMounted) return;
-        setStep("出発地の座標を取得中...");
-        console.log("🏠 出発地ジオコーディング開始");
-        const fromCoords = await geocodeAddress(fromParam);
+        setStep(fromParam === "現在地" ? "現在地を取得中..." : "出発地の座標を取得中...");
+        console.log("🏠 出発地座標取得開始");
+        const fromCoords = await getCoordinate(fromParam);
         if (!isMounted) return;
         setFromCoord(fromCoords);
         console.log("✅ 出発地座標設定完了");
@@ -247,7 +291,7 @@ export default function RouteResultMap() {
         if (!isMounted) return;
         setStep("目的地の座標を取得中...");
         console.log("🎯 目的地ジオコーディング開始");
-        const toCoords = await geocodeAddress(toParam);
+        const toCoords = await getCoordinate(toParam);
         if (!isMounted) return;
         setToCoord(toCoords);
         console.log("✅ 目的地座標設定完了");
@@ -370,7 +414,9 @@ export default function RouteResultMap() {
                   <span className="w-3 h-3 bg-green-500 rounded-full"></span>
                   <strong className="text-green-700">出発地</strong>
                 </div>
-                <div className="text-sm text-gray-700 mb-2">{fromParam}</div>
+                <div className="text-sm text-gray-700 mb-2">
+                  {fromParam === "現在地" ? "現在地" : fromParam}
+                </div>
                 <div className="text-xs text-gray-500">
                   緯度: {fromCoord.lat.toFixed(6)}<br />
                   経度: {fromCoord.lon.toFixed(6)}
