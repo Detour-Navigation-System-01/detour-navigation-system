@@ -1,8 +1,4 @@
 {
-  "dependencies": {
-    "express": "^5.1.0",
-    "multer": "^2.0.1"
-  },
   "name": "detour-navigation-system",
   "version": "1.0.0",
   "description": "高度情報演習1Bの遠回りナビゲーションシステム",
@@ -24,5 +20,14 @@
   "bugs": {
     "url": "https://github.com/Detour-Navigation-System-01/detour-navigation-system/issues"
   },
-  "homepage": "https://github.com/Detour-Navigation-System-01/detour-navigation-system#readme"
+  "homepage": "https://github.com/Detour-Navigation-System-01/detour-navigation-system#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "multer": "^2.0.1",
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.18"
+  }
 }
