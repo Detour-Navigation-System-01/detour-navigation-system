@@ -19,7 +19,7 @@ Content-Type: application/json
 
 {
   "name": "東京スカイツリー",
-  "user_id": "1",
+  "userId": "1",
   "description": "東京の観光名所として有名な高さ634mの電波塔",
   "category": "観光",
   "address": "東京都墨田区押上1丁目1−2",
@@ -59,13 +59,13 @@ Content-Type: application/json
 ### その後、user1が作成したもののみを取得
 
 ### ユーザー1がスポットを作成 (1/2)
-# user_id はコントローラー側で仮設定されます
+# userId はコントローラー側で仮設定されます
 POST {{baseUrl}}/places
 Content-Type: application/json
 
 {
   "name": "ユーザー1 - 最初のテストスポット",
-  "user_id": "1",
+  "userId": "1",
   "description": "これはユーザー1が作成した最初のテストスポットです。",
   "category": "テスト",
   "address": "東京都新宿区西新宿2-8-1",
@@ -76,13 +76,13 @@ Content-Type: application/json
 }
 
 ### ユーザー1がスポットを作成 (2/2)
-# user_id はコントローラー側で仮設定されます
+# userId はコントローラー側で仮設定されます
 POST {{baseUrl}}/places
 Content-Type: application/json
 
 {
   "name": "ユーザー1 - 二番目のテストスポット",
-  "user_id": "1",
+  "userId": "1",
   "description": "これはユーザー1が作成した二番目のテストスポットです。",
   "category": "テスト",
   "address": "東京都渋谷区神宮前1-8-8",
@@ -93,13 +93,13 @@ Content-Type: application/json
 }
 
 ### ユーザー2がスポットを作成 (1/1)
-# user_id はコントローラー側で仮設定されます (user_id=2 のスポットとして作成されます)
+# userId はコントローラー側で仮設定されます (userId=2 のスポットとして作成されます)
 POST {{baseUrl}}/places
 Content-Type: application/json
 
 {
   "name": "ユーザー2 - 唯一のテストスポット",
-  "user_id": "2",
+  "userId": "2",
   "description": "これはユーザー2が作成した唯一のテストスポットです。",
   "category": "テスト",
   "address": "神奈川県横浜市中区山下町2",

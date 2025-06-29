@@ -44,7 +44,7 @@ class RouteController {
       }
       
       // ユーザーIDの取得（認証済みの場合）
-      const userId = req.user ? req.user.id : null;
+      const userId = (req.user && req.user.id) || req.body.userId || null;
       
       // RouteServiceを使用して経路計算と保存
       const result = await this.routeService.calculateAndSaveRoute(
@@ -115,6 +115,8 @@ class RouteController {
           message: '目的地情報が必要です'
         });
       }
+
+      const userId = (req.user && req.user.id) || req.body.userId || null;
       
       // RouteServiceを使用して代替経路計算
       const result = await this.routeService.calculateAlternativeRoutes(
@@ -123,7 +125,10 @@ class RouteController {
           destination,
           profile
         },
-        { numAlternatives }
+        { 
+          userId,
+          numAlternatives 
+        }
       );
       
       // 結果に基づいてレスポンス

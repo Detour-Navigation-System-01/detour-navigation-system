@@ -57,8 +57,14 @@ class PlaceService {
       const validatedData = {
         ...placeData,
         lat: parseFloat(placeData.lat),
-        lng: parseFloat(placeData.lng)
+        lng: parseFloat(placeData.lng),
+        userId: placeData.userId
       };
+
+      if (!validatedData.userId) {
+        
+        throw new AppError('userIdが必要です', 400);
+      }
 
       // 座標の妥当性チェック
       if (isNaN(validatedData.lat) || isNaN(validatedData.lng)) {
@@ -91,8 +97,8 @@ class PlaceService {
    * @returns {Object} 作成または取得された場所
    */
   async findOrCreatePlaceByCoordinates(coordData) {
+    const { lat, lng, name, userId } = coordData;
     try {
-      const { lat, lng, name } = coordData;
       
       // 既存の近い場所を検索（半径100m以内）
       // TODO: 実装時はfindNearbyメソッドを使用
@@ -103,11 +109,12 @@ class PlaceService {
 
       // 見つからない場合は新規作成
       const placeData = {
-        name: name || `Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
+        name: name || `Location (${lat.toFixed(6)}, ${lng.toFixed(6)})`,
         lat: parseFloat(lat),
         lng: parseFloat(lng),
         category: 'coordinate',
-        description: 'Automatically created from coordinates'
+        description: 'Automatically created from coordinates',
+        userId: userId
       };
 
       return await this.createPlace(placeData);
@@ -243,11 +250,11 @@ class PlaceService {
    */
   async getPlacesByUserId(userId, options = {}) {
     // ユーザーIDをフィルターとしてoptionsに結合
-    const filters = { user_id: userId, ...options.filters || {} };
+    const filters = { userId: userId, ...options.filters || {} };
     const placeOptions = { ...options, filters };
 
     try {
-      // placeRepositoryのfindAllメソッドを使って、user_idでフィルタリングして場所を取得
+      // placeRepositoryのfindAllメソッドを使って、userIdでフィルタリングして場所を取得
       const places = await this.placeRepository.findAll(placeOptions);
       const total = await this.placeRepository.count(filters); // フィルターされた総数を取得
 

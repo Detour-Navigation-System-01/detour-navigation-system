@@ -70,10 +70,10 @@ class PlaceController extends BaseController {
    * 新しい場所を作成
    */
   createPlace = catchAsync(async (req, res) => {
-    const { name, description, category, address, prefecture, lat, lng, image_url, user_id } = req.body;
+    const { name, description, category, address, prefecture, lat, lng, image_url, userId } = req.body;
     
-    const parsedUserId = parseInt(user_id, 10);
-    // user_idの妥当性チェック
+    const parsedUserId = parseInt(userId, 10);
+    // userIdの妥当性チェック
     if (isNaN(parsedUserId)) {
       return this.sendError(res, {
         statusCode: 400,
@@ -92,7 +92,7 @@ class PlaceController extends BaseController {
       lat,
       lng,
       image_url: image_url || null, // image_urlがない場合はnullをセット
-      user_id: parsedUserId
+      userId: parsedUserId
     });
     
     // 成功レスポンスを送信
