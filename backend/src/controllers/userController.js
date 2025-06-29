@@ -46,11 +46,24 @@ class UserController extends BaseController {
   });
 
   /**
-   * 特定のユーザーを取得
+   * 特定のユーザーを取得（自分自身または管理者のみアクセス可能）
    */
   getUserById = catchAsync(async (req, res) => {
     // validateIdParamミドルウェアで検証済みのIDを使用
     const userId = req.parsedId;
+    // JWTから現在認証されているユーザーのIDを取得
+    const authenticatedUserId = req.user?.id;
+    
+    // 自分以外のユーザー情報へのアクセスをチェック（管理者権限チェックは今後実装）
+    if (authenticatedUserId !== userId) {
+      console.log(`認証ユーザーID: ${authenticatedUserId} が別のユーザーID: ${userId} の情報にアクセスしようとしています`);
+      // TODO: 管理者権限チェックを追加
+      // 現在は管理者機能未実装のため、自分自身の情報のみ取得可能
+      return this.sendError(res, {
+        statusCode: 403,
+        message: '他のユーザーの情報にアクセスする権限がありません'
+      });
+    }
     
     console.log(`ユーザーID: ${userId} の情報を取得します`);
     const user = await userService.getUserById(userId);
@@ -88,10 +101,22 @@ class UserController extends BaseController {
   });
 
   /**
-   * ユーザー情報を更新
+   * ユーザー情報を更新（自分自身または管理者のみ）
    */
   updateUser = catchAsync(async (req, res) => {
     const userId = req.parsedId;
+    // JWTから現在認証されているユーザーのIDを取得
+    const authenticatedUserId = req.user?.id;
+    
+    // 自分以外のユーザー情報の更新をチェック
+    if (authenticatedUserId !== userId) {
+      console.log(`認証ユーザーID: ${authenticatedUserId} が別のユーザーID: ${userId} の情報を更新しようとしています`);
+      // TODO: 管理者権限チェックを追加
+      return this.sendError(res, {
+        statusCode: 403,
+        message: '他のユーザーの情報を更新する権限がありません'
+      });
+    }
     
     // 更新可能なフィールド
     const { username, email, first_name, last_name, password, public_settings } = req.body; // ← public_settingsを追加
@@ -117,10 +142,22 @@ class UserController extends BaseController {
   });
 
   /**
-   * ユーザーを削除
+   * ユーザーを削除（自分自身または管理者のみ）
    */
   deleteUser = catchAsync(async (req, res) => {
     const userId = req.parsedId;
+    // JWTから現在認証されているユーザーのIDを取得
+    const authenticatedUserId = req.user?.id;
+    
+    // 自分以外のユーザーの削除をチェック
+    if (authenticatedUserId !== userId) {
+      console.log(`認証ユーザーID: ${authenticatedUserId} が別のユーザーID: ${userId} を削除しようとしています`);
+      // TODO: 管理者権限チェックを追加
+      return this.sendError(res, {
+        statusCode: 403,
+        message: '他のユーザーを削除する権限がありません'
+      });
+    }
     
     console.log(`ユーザーID: ${userId} を削除します`);
     await userService.deleteUser(userId);
