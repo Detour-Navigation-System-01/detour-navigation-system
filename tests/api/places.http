@@ -19,6 +19,7 @@ Content-Type: application/json
 
 {
   "name": "東京スカイツリー",
+  "userId": "1",
   "description": "東京の観光名所として有名な高さ634mの電波塔",
   "category": "観光",
   "address": "東京都墨田区押上1丁目1−2",
@@ -51,4 +52,64 @@ Content-Type: application/json
 
 ### 近隣の場所を検索
 GET {{baseUrl}}/places/nearby?lat=35.7100&lng=139.8107&radius=5
+Content-Type: application/json
+
+### user idを指定して、そのユーザが作成したスポットのみを取得
+### 最初にuser1が2個スポットを作成、user2が1個スポット作成してDBに保存する
+### その後、user1が作成したもののみを取得
+
+### ユーザー1がスポットを作成 (1/2)
+# userId はコントローラー側で仮設定されます
+POST {{baseUrl}}/places
+Content-Type: application/json
+
+{
+  "name": "ユーザー1 - 最初のテストスポット",
+  "userId": "1",
+  "description": "これはユーザー1が作成した最初のテストスポットです。",
+  "category": "テスト",
+  "address": "東京都新宿区西新宿2-8-1",
+  "prefecture": "東京都",
+  "lat": 35.6896,
+  "lng": 139.6923,
+  "image_url": "https://placehold.co/600x400/FF5733/ffffff?text=User1_Spot1"
+}
+
+### ユーザー1がスポットを作成 (2/2)
+# userId はコントローラー側で仮設定されます
+POST {{baseUrl}}/places
+Content-Type: application/json
+
+{
+  "name": "ユーザー1 - 二番目のテストスポット",
+  "userId": "1",
+  "description": "これはユーザー1が作成した二番目のテストスポットです。",
+  "category": "テスト",
+  "address": "東京都渋谷区神宮前1-8-8",
+  "prefecture": "東京都",
+  "lat": 35.6702,
+  "lng": 139.7032,
+  "image_url": "https://placehold.co/600x400/33FF57/ffffff?text=User1_Spot2"
+}
+
+### ユーザー2がスポットを作成 (1/1)
+# userId はコントローラー側で仮設定されます (userId=2 のスポットとして作成されます)
+POST {{baseUrl}}/places
+Content-Type: application/json
+
+{
+  "name": "ユーザー2 - 唯一のテストスポット",
+  "userId": "2",
+  "description": "これはユーザー2が作成した唯一のテストスポットです。",
+  "category": "テスト",
+  "address": "神奈川県横浜市中区山下町2",
+  "prefecture": "神奈川県",
+  "lat": 35.4475,
+  "lng": 139.6421,
+  "image_url": "https://placehold.co/600x400/3357FF/ffffff?text=User2_Spot1"
+}
+
+### User ID 1 が作成したスポットのみを取得
+# URLの `/user/1` は、データベースのユーザーID 1 を指定しています。
+GET {{baseUrl}}/places/user/1
 Content-Type: application/json

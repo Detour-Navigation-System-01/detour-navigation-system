@@ -60,8 +60,8 @@ class RouteService {
       console.log('🚀 経路計算開始:', { routeData, options });
 
       // 1. 出発地と目的地の処理
-      const originData = await this._resolveLocation(routeData.origin);
-      const destinationData = await this._resolveLocation(routeData.destination);
+      const originData = await this._resolveLocation(routeData.origin, options.userId);
+      const destinationData = await this._resolveLocation(routeData.destination, options.userId);
       
       console.log('📍 場所解決結果:', {
         origin: { id: originData.place.id, name: originData.place.name },
@@ -74,7 +74,7 @@ class RouteService {
       
       if (routeData.waypoints && routeData.waypoints.length > 0) {
         for (const point of routeData.waypoints) {
-          const pointData = await this._resolveLocation(point);
+          const pointData = await this._resolveLocation(point, options.userId);
           if (pointData.place) waypointPlaces.push(pointData.place);
           if (pointData.coords) waypoints.push(pointData.coords);
         }
@@ -117,7 +117,7 @@ class RouteService {
         description: routeData.description || '',
         origin_id: originData.place.id,        // ✅ 実際のDBのID
         destination_id: destinationData.place.id, // ✅ 実際のDBのID
-        user_id: options.userId || null,
+        userId: options.userId || null,
         
         // 検証済みの計算結果データ
         distance: validatedRouteData.distance,
@@ -190,7 +190,7 @@ class RouteService {
    * @param {Object|String|Number} location - 場所データ
    * @returns {Promise<Object>} {place, coords}
    */
-  async _resolveLocation(location) {
+  async _resolveLocation(location, userId) {
     if (!location) {
       throw new Error('場所情報が不正です');
     }
@@ -204,7 +204,8 @@ class RouteService {
         const place = await placeService.findOrCreatePlaceByCoordinates({
           lat: parseFloat(location.lat),
           lng: parseFloat(location.lng),
-          name: location.name
+          name: location.name,
+          userId: userId
         });
         
         console.log('✅ 座標から場所作成/取得成功:', place);
@@ -243,8 +244,8 @@ class RouteService {
   // 他のメソッドは既存のまま...
   async calculateAlternativeRoutes(routeData, options = {}) {
     try {
-      const originData = await this._resolveLocation(routeData.origin);
-      const destinationData = await this._resolveLocation(routeData.destination);
+      const originData = await this._resolveLocation(routeData.origin, options.userId);
+      const destinationData = await this._resolveLocation(routeData.destination, options.userId);
       
       const result = await this.mapService.calculateRouteAlternatives(
         originData.coords,
@@ -255,8 +256,9 @@ class RouteService {
         }
       );
       
-      if (!result.success) {
-        throw new Error(`代替経路計算に失敗しました: ${result.message}`);
+      if (!result.success || !result.data || !Array.isArray(result.data.routes)) {
+        console.error('❌ OSRM応答異常: ', result);
+        throw new Error(`代替経路が取得できませんでした`);
       }
       
       return {
