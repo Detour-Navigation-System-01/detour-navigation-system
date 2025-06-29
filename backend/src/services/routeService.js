@@ -64,8 +64,8 @@ class RouteService {
       const destinationData = await this._resolveLocation(routeData.destination, options.userId);
       
       console.log('📍 場所解決結果:', {
-        origin: { id: originData.place.id, name: originData.place.name },
-        destination: { id: destinationData.place.id, name: destinationData.place.name }
+        origin: originData.coords,
+        destination: destinationData.coords
       });
       
       // 2. 経由地の処理
@@ -113,11 +113,15 @@ class RouteService {
       
       // 7. 経路データの準備
       const routeToSave = {
-        name: routeData.name || `${originData.place.name || '出発地'} から ${destinationData.place.name || '目的地'} への経路`,
+        name: routeData.name || '新しい経路',
         description: routeData.description || '',
-        origin_id: originData.place.id,        // ✅ 実際のDBのID
-        destination_id: destinationData.place.id, // ✅ 実際のDBのID
         userId: options.userId || null,
+
+        // ✅ 緯度経度を直接保存
+        origin_lat: parseFloat(originData.coords.lat),
+        origin_lng: parseFloat(originData.coords.lng),
+        destination_lat: parseFloat(destinationData.coords.lat),
+        destination_lng: parseFloat(destinationData.coords.lng),
         
         // 検証済みの計算結果データ
         distance: validatedRouteData.distance,
@@ -128,6 +132,7 @@ class RouteService {
         route_type: routeData.routeType || this.routeTypes.NORMAL,
         detour_level: routeData.detourLevel || 1,
         
+        //必要に応じて修正
         waypoints: waypointPlaces.map((place, index) => ({
           place_id: place.id,
           sequence: index + 1
@@ -146,7 +151,7 @@ class RouteService {
         maneuver: step.maneuver || null
       })) : [];
 
-      console.log('💾 データベース保存開始:', {
+      /*console.log('💾 データベース保存開始:', {
         routeData: {
           origin_id: routeToSave.origin_id,
           destination_id: routeToSave.destination_id,
@@ -154,7 +159,7 @@ class RouteService {
           duration: routeToSave.duration
         },
         stepsCount: processedSteps.length
-      });
+      });*/
       
       // 9. RouteRepositoryを使って経路とステップを保存
       const savedRoute = await this.routeRepository.createWithSteps(
@@ -199,43 +204,19 @@ class RouteService {
     
     // 座標オブジェクトの場合
     if (location.lat !== undefined && location.lng !== undefined) {
-      try {
-        // ✅ 修正：実際のデータベースに場所を作成
-        const place = await placeService.findOrCreatePlaceByCoordinates({
-          lat: parseFloat(location.lat),
-          lng: parseFloat(location.lng),
-          name: location.name,
-          userId: userId
-        });
-        
-        console.log('✅ 座標から場所作成/取得成功:', place);
-        
-        return {
-          place: place,
-          coords: { lat: location.lat, lng: location.lng }
-        };
-      } catch (error) {
-        console.error('❌ 座標からの場所作成エラー:', error);
-        throw new Error('場所の作成に失敗しました: ' + error.message);
-      }
+      return {
+        place: null,
+        coords: { lat: location.lat, lng: location.lng }
+      };
     }
     
     // 場所IDの場合
     if (typeof location === 'number' || (typeof location === 'string' && !isNaN(location))) {
-      try {
-        // ✅ 修正：実際のデータベースから場所を取得
         const place = await placeService.getPlaceById(parseInt(location));
-        
-        console.log('✅ IDから場所取得成功:', place);
-        
         return {
           place: place,
           coords: { lat: place.lat, lng: place.lng }
         };
-      } catch (error) {
-        console.error('❌ 場所取得エラー:', error);
-        throw new Error('指定された場所が見つかりません: ' + error.message);
-      }
     }
     
     throw new Error('不正な場所フォーマットです');

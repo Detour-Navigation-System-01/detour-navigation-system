@@ -42,6 +42,12 @@ class RouteController {
           message: '目的地情報が必要です'
         });
       }
+
+      // 出発地・目的地の緯度・経度をそれぞれ取得
+      const originLat = origin.lat;
+      const originLng = origin.lng;
+      const destinationLat = destination.lat;
+      const destinationLng = destination.lng;
       
       // ユーザーIDの取得（認証済みの場合）
       const userId = (req.user && req.user.id) || req.body.userId || null;
@@ -56,7 +62,11 @@ class RouteController {
           name,
           description,
           routeType,
-          detourLevel
+          detourLevel,
+          originLat, // 出発地の緯度
+          originLng, // 出発地の経度
+          destinationLat, // 目的地の緯度
+          destinationLng, // 目的地の経度
         },
         { userId }
       );
