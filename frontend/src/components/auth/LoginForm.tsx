@@ -3,14 +3,16 @@
 import { useState } from 'react';
 import { fetcher } from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import styles from './LoginForm.module.css'; 
+import styles from './LoginForm.module.css';
 import Link from 'next/link';
+import { useAuth } from '@/lib/AuthContext'; // ← 追加（任意）
 
 export default function LoginForm() {
-  const routerInstance = useRouter();
+  const router = useRouter();
   const [userEmail, setUserEmail] = useState('');
   const [userPassword, setUserPassword] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  const { setUser } = useAuth(); // ← 追加（任意）
 
   const handleUserLogin = async (formEvent: React.FormEvent) => {
     formEvent.preventDefault();
@@ -18,22 +20,33 @@ export default function LoginForm() {
     try {
       const responseData = await fetcher<{
         message: string;
-        data?: { 
-          user: { id: number; username: string } 
-          token: string;  
+        data?: {
+          user: {
+            id: number;
+            username: string;
+            email: string;
+            first_name: string;
+            last_name: string;
+            created_at: string;
+            updated_at: string;
+            public_settings: boolean;
+          };
         };
       }>('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({
+          
           email: userEmail,
           password: userPassword,
         }),
       });
 
-      if (responseData.data?.user) {
-        setStatusMessage(`ようこそ、${responseData.data.user.username}さん！`);
-        localStorage.setItem('jwt_token',responseData.data.token);
-        routerInstance.push('/profile/${userId}');
+      const user = responseData.data?.user;
+
+      if (user) {
+        setStatusMessage(`ようこそ、${user.username}さん！`);
+        setUser(user); // ← グローバルに保存（任意）
+        router.push(`/profile/${user.id}`);
       } else {
         setStatusMessage(responseData.message || 'ログイン失敗');
       }

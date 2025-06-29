@@ -23,6 +23,10 @@ export default function ProfilePage() {
         </Link>
       </div>
 
+      <Link href="/logout">
+       <button style={logoutButtonStyle}>ログアウト</button>
+      </Link>
+
       {/* 設定トグル */}
       <div style={settingsContainer}>
         <SettingToggle label="自分の保存したスポットを外部に公開する" />
@@ -104,3 +108,15 @@ const toggleStyle: React.CSSProperties = {
   width: '20px',
   height: '20px',
 };
+
+const logoutButtonStyle: React.CSSProperties = {
+  backgroundColor: '#ccc',
+  color: '#000',
+  padding: '10px 24px',
+  fontSize: '16px',
+  border: 'none',
+  borderRadius: '12px',
+  cursor: 'pointer',
+  marginTop: '8px',
+};
+

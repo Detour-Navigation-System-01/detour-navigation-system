@@ -31,5 +31,8 @@ router.put('/password/:id', validateIdParam, authController.changePassword);
 
 router.get('/me', authenticate, authController.me);
 
+// ログアウトエンドポイント
+router.post('/logout', authController.logout);
+
 
 module.exports = router;

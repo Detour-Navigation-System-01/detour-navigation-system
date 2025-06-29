@@ -18,16 +18,23 @@ class AuthController extends BaseController {
    */
   login = catchAsync(async (req, res) => {
     const { username, email, password } = req.body;
-    
-    // usernameまたはemailのどちらかを識別子として使用
     const identifier = username || email;
-    
+
     console.log(`ユーザー認証を試行します: ${identifier}`);
     const result = await authService.login(identifier, password);
-    
+
+    // JWTをCookieにセット
+    res.cookie('token', result.token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 1000 * 60 * 60 
+    });
+
     return this.sendSuccess(res, {
       message: 'ログインに成功しました',
-      data: result
+      data: { user: result.user } // tokenは送らない（セキュリティ向上）
     });
   });
 
@@ -86,10 +93,23 @@ class AuthController extends BaseController {
       data: { user },
     });
   });
+
+    /**
+   * ユーザーログアウト
+   */
+  logout = catchAsync(async (req, res) => {
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/', // 必須！ログイン時と同じpathにすること
+    });
+    return this.sendSuccess(res, {
+      message: 'ログアウトしました'
+    });
+  });
+  
 }
-
-
-
 
 
 
