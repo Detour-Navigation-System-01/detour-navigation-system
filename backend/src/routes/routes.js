@@ -176,9 +176,9 @@ router.post('/calculate-alternatives', async (req, res) => {
 /**
  * @route   POST /api/routes/save
  * @desc    経路を計算して保存する（新しいRouteController使用）
- * @access  Public
+ * @access  Private（認証必要）
  */
-router.post('/save', (req, res) => routeController.calculateRoute(req, res));
+router.post('/save', authenticate, (req, res) => routeController.calculateRoute(req, res));
 
 /**
  * @route   POST /api/routes/alternatives
@@ -196,9 +196,9 @@ router.get('/history', authenticate, (req, res) => routeController.getRouteHisto
 
 /**
  * @route   GET /api/routes/:id
- * @desc    経路の詳細を取得する
- * @access  Public
+ * @desc    経路の詳細を取得する（自分が作成した経路のみアクセス可）
+ * @access  Private（認証必要）
  */
-router.get('/:id', (req, res) => routeController.getRouteDetails(req, res));
+router.get('/:id', authenticate, (req, res) => routeController.getRouteDetails(req, res));
 
 module.exports = router;

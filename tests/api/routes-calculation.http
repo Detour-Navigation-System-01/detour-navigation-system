@@ -1,6 +1,6 @@
 # 経路計算API呼び出しテストファイル
 @baseUrl = http://localhost:3001/api
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJuYWthbmlzaGkxIiwiaWF0IjoxNzE5NjE5ODM0LCJleHAiOjE3MTk2MjM0MzR9.YOUR_SIGNATURE_HERE
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkyIiwiaWF0IjoxNzUxMjA1NTYzLCJleHAiOjE3NTEyMDkxNjN9.w8GOTH2lTS7wc-wId-jhkj6qjtdd4UMNnKb1GRem9Ns
 
 ### 接続テスト - デフォルト（東京駅→皇居）
 GET {{baseUrl}}/routes/test
@@ -97,14 +97,14 @@ Content-Type: application/json
   "profile": "driving"
 }
 
-### RouteService - 経路計算して保存
+### RouteService - 経路計算して保存（JWT認証が必要）
 POST {{baseUrl}}/routes/save
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 {
   "name": "新しい経路",
   "description": "テスト用ルート",
-  "userId": 3,
   "origin": {
     "lat": 35.6812,
     "lng": 139.7671
@@ -118,14 +118,14 @@ Content-Type: application/json
   "routeType": "normal"
 }
 
-### RouteService - 経路計算して保存2
+### RouteService - 経路計算して保存2（JWT認証が必要）
 POST {{baseUrl}}/routes/save
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 {
   "name": "越中島駅から豊洲キャンパスへのルート2",
   "description": "テスト用ルート",
-  "userId": 1,
   "origin": {
     "lat": 35.667953356386896,
     "lng": 139.79265406072273
@@ -134,7 +134,7 @@ Content-Type: application/json
     "lat": 35.66069879583367,
     "lng": 139.79480768096218
   },
-  "profile": "driving",
+  "profile": "walking",
   "detourLevel": 1,
   "routeType": "normal"
 }
@@ -157,9 +157,10 @@ Content-Type: application/json
   "userId": 1
 }
 
-### RouteService - 経路詳細を取得（ID指定）
-GET {{baseUrl}}/routes/1
+### RouteService - 経路詳細を取得（ID指定）（JWT認証が必要）
+GET {{baseUrl}}/routes/2
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 ### RouteService - 経路履歴を取得（認証済みユーザー向け）
 GET {{baseUrl}}/routes/history

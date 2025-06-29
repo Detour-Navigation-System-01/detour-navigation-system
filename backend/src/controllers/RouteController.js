@@ -49,8 +49,16 @@ class RouteController {
       const destinationLat = destination.lat;
       const destinationLng = destination.lng;
       
-      // ユーザーIDの取得（認証済みの場合）
-      const userId = (req.user && req.user.id) || req.body.userId || null;
+      // 認証済みユーザーのIDを取得
+      const userId = req.user?.id;
+      
+      // ユーザーIDがない場合はエラー（このエンドポイントは認証が必須）
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: '経路保存にはログインが必要です'
+        });
+      }
       
       // RouteServiceを使用して経路計算と保存
       const result = await this.routeService.calculateAndSaveRoute(
@@ -235,11 +243,29 @@ class RouteController {
         });
       }
       
+      // JWTから現在認証されているユーザーのIDを取得
+      const authenticatedUserId = req.user?.id;
+      if (!authenticatedUserId) {
+        return res.status(401).json({
+          success: false,
+          message: '経路の詳細取得にはログインが必要です'
+        });
+      }
+      
       // RouteServiceを使用して詳細を取得
       const result = await this.routeService.getRouteDetails(routeId);
       
       // 結果に基づいてレスポンス
       if (result.success) {
+        // 自分の経路かどうか確認
+        const route = result.data;
+        if (route.userId !== authenticatedUserId) {
+          return res.status(403).json({
+            success: false,
+            message: '他のユーザーの経路にアクセスする権限がありません'
+          });
+        }
+        
         return res.status(200).json({
           success: true,
           message: result.message,
