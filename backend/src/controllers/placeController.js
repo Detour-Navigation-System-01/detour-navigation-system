@@ -333,6 +333,39 @@ class PlaceController extends BaseController {
       meta: this.createPaginationMeta(result.total, page, limit)
     });
   });
+
+  /**
+   * 公開設定ONのユーザーのスポットを取得
+   */
+  getPublicPlaces = catchAsync(async (req, res) => {
+    console.log('公開設定ONのユーザーのスポット一覧取得処理を開始します');
+    
+    // クエリパラメータからオプションを取得
+    const { page, limit, offset } = this.getPaginationOptions(req.query);
+    const { sort, direction } = this.getSortOptions(req.query, 'created_at');
+    const filters = this.getFilterOptions(req.query, ['name', 'category', 'prefecture']);
+    
+    // サービスにオプションを渡して場所取得
+    const options = { 
+      orderBy: sort, 
+      direction, 
+      limit, 
+      offset, 
+      filters 
+    };
+    
+    const result = await placeService.getPublicPlaces(options);
+    const places = result.data;
+    
+    console.log(`${places.length}件の公開スポットを取得しました`);
+    
+    // 成功レスポンスを送信
+    return this.sendSuccess(res, {
+      message: '公開設定ONのユーザーのスポット一覧を取得しました',
+      data: places,
+      meta: this.createPaginationMeta(result.total, page, limit)
+    });
+  });
 }
 
 // シングルトンインスタンスとしてエクスポート

@@ -2,7 +2,7 @@
 @baseUrl = http://localhost:3001/api
 
 // ログイン後に取得したJWTトークンを保存するための変数
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkxIiwiaWF0IjoxNzUxMTkyMzQxLCJleHAiOjE3NTExOTU5NDF9.xCbbqg0PmfHKDXLaCxDCnqf2kwW99InSXrJpiEIAlGg
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwidXNlcm5hbWUiOiJuYWthbmlzaGkyIiwiaWF0IjoxNzUxMjA0MzgyLCJleHAiOjE3NTEyMDc5ODJ9.drrRK59fSjolyeIShAfPNNys8OpUFh5K-LrEjFY4Arg
 
 ### 場所一覧を取得
 GET {{baseUrl}}/places
@@ -108,7 +108,7 @@ Content-Type: application/json
 Authorization: Bearer {{authToken}}
 
 {
-  "name": "別のユーザー - テストスポット",
+  "name": "別のユーザー - テストスポット2",
   "description": "これは別のユーザーが作成したテストスポットです。",
   "category": "テスト",
   "address": "神奈川県横浜市中区山下町2",
@@ -129,4 +129,25 @@ Authorization: Bearer {{authToken}}
 # ここで返されるスポット一覧から、自分が作成したスポットIDを確認し、
 # 以下の更新・削除テストに使用してください。
 GET {{baseUrl}}/places/user/3
+Content-Type: application/json
+
+### 公開設定ONのユーザーが作成したスポットのみを取得
+# 認証なしで公開可能な情報のみ取得するエンドポイント
+GET {{baseUrl}}/places/public
+Content-Type: application/json
+
+### 公開設定ONのユーザーが作成したスポットを、カテゴリを指定して取得
+GET {{baseUrl}}/places/public?category=テスト
+Content-Type: application/json
+
+### 公開設定ONのユーザーが作成したスポットを、名前で検索（部分一致）
+GET {{baseUrl}}/places/public?name=テスト
+Content-Type: application/json
+
+### 公開設定ONのユーザーが作成したスポットを、ページネーションとソートで取得
+GET {{baseUrl}}/places/public?page=1&limit=3&sort=created_at&order=desc
+Content-Type: application/json
+
+### 公開設定ONのユーザーが作成したスポットを、都道府県で絞り込み
+GET {{baseUrl}}/places/public?prefecture=東京都
 Content-Type: application/json

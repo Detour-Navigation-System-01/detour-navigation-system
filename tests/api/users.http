@@ -2,7 +2,7 @@
 @baseUrl = http://localhost:3001/api
 
 // ログイン後に取得したJWTトークンを保存するための変数
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkxIiwiaWF0IjoxNzUxMTkxNjE3LCJleHAiOjE3NTExOTUyMTd9.77Aah85j0izBRsWX3CPAk2cdmsAT-ICfh9zHwUNEDwk
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwidXNlcm5hbWUiOiJuYWthbmlzaGkyIiwiaWF0IjoxNzUxMjAzNzkzLCJleHAiOjE3NTEyMDczOTN9.LLi_F-ErMaYYmF0b2-muzVM8kUjjrOuclkrv_42X3i0
 
 ### ユーザーログイン - トークンの取得
 POST {{baseUrl}}/auth/login
@@ -51,6 +51,24 @@ Authorization: Bearer {{authToken}}
 {
   "first_name": "修正",
   "last_name": "中西"
+}
+
+### 公開設定をONに変更する (JWT認証が必要)
+PUT {{baseUrl}}/users/4
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "public_settings": true
+}
+
+### 公開設定をOFFに変更する (JWT認証が必要)
+PUT {{baseUrl}}/users/4
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "public_settings": false
 }
 
 ### 他のユーザーの情報を更新しようとする (権限エラーになるはず)
