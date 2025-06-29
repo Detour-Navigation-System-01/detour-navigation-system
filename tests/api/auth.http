@@ -1,6 +1,9 @@
 # テスト用認証API呼び出しファイル
 @baseUrl = http://localhost:3001/api
 
+// ログイン後に取得したJWTトークンを保存するための変数
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkxIiwiaWF0IjoxNzUxMTg1OTM4LCJleHAiOjE3NTExODk1Mzh9.9SFhWdY9c_g4dJAWF66NKExCHRmZqR83sTYIqLaKZTQ
+
 ### ユーザー登録
 POST {{baseUrl}}/auth/register
 Content-Type: application/json
@@ -22,6 +25,8 @@ Content-Type: application/json
   "password": "securePassword123"
 }
 
+// ログイン成功したらレスポンスからトークンをコピーして @authToken 変数に設定してください
+
 ### ユーザーログイン（メールアドレス）
 POST {{baseUrl}}/auth/login
 Content-Type: application/json
@@ -31,11 +36,20 @@ Content-Type: application/json
   "password": "securePassword123"
 }
 
-### パスワード変更
-PUT {{baseUrl}}/auth/password/14
+### パスワード変更 (JWT認証が必要)
+PUT {{baseUrl}}/auth/password/3
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 {
   "currentPassword": "securePassword123",
   "newPassword": "IamSoSleepy"
 }
+
+### 現在のユーザー情報を取得 (JWT認証が必要)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{authToken}}
+
+### ユーザーの経路履歴を取得 (JWT認証が必要)
+GET {{baseUrl}}/routes/history
+Authorization: Bearer {{authToken}}

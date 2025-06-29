@@ -1,5 +1,6 @@
 # ナビゲーションAPI呼び出しテストファイル
 @baseUrl = http://localhost:3001/api
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJuYWthbmlzaGkxIiwiaWF0IjoxNzE5NjE5ODM0LCJleHAiOjE3MTk2MjM0MzR9.YOUR_SIGNATURE_HERE
 
 ### 外部API接続テスト（東京駅→皇居）
 GET {{baseUrl}}/routes/test
@@ -30,7 +31,9 @@ Content-Type: application/json
 #   "detourLevel": 1
 # }
 
-### 経路履歴取得テスト（認証実装後に使用）
-# GET {{baseUrl}}/routes/history
-# Content-Type: application/json
-# Authorization: Bearer YOUR_JWT_TOKEN
+### ユーザーの経路履歴を取得 (JWT認証が必要)
+GET {{baseUrl}}/routes/history
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+# 注: テスト前に auth.http でログインを行い、取得したトークンを @authToken 変数に設定してください

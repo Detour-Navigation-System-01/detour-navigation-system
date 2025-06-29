@@ -1,5 +1,6 @@
 # 経路計算API呼び出しテストファイル
 @baseUrl = http://localhost:3001/api
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJuYWthbmlzaGkxIiwiaWF0IjoxNzE5NjE5ODM0LCJleHAiOjE3MTk2MjM0MzR9.YOUR_SIGNATURE_HERE
 
 ### 接続テスト - デフォルト（東京駅→皇居）
 GET {{baseUrl}}/routes/test
@@ -161,6 +162,8 @@ GET {{baseUrl}}/routes/1
 Content-Type: application/json
 
 ### RouteService - 経路履歴を取得（認証済みユーザー向け）
-# GET {{baseUrl}}/routes/history
-# Content-Type: application/json
-# Authorization: Bearer YOUR_JWT_TOKEN
+GET {{baseUrl}}/routes/history
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+# 注: ログイン後に取得したJWTトークンを上部の @authToken 変数に設定してください

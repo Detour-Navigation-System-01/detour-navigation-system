@@ -200,9 +200,7 @@ class RouteRepository extends BaseRepository {
     
     try {
       const query = `
-        SELECT r.*, 
-               p1.name as origin_name, p1.lat as origin_lat, p1.lng as origin_lng,
-               p2.name as destination_name, p2.lat as destination_lat, p2.lng as destination_lng
+        SELECT r.*
         FROM routes r
         WHERE r.userId = $1
         ORDER BY r.created_at DESC

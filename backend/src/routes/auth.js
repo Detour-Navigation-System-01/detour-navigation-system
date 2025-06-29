@@ -26,7 +26,7 @@ router.post('/register', validateUserData, authController.register);
  * @desc パスワード変更
  * @access Private
  */
-router.put('/password/:id', validateIdParam, authController.changePassword);
+router.put('/password/:id', authenticate, validateIdParam, authController.changePassword);
 
 
 router.get('/me', authenticate, authController.me);

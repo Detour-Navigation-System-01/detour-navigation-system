@@ -6,6 +6,7 @@ const express = require('express');
 const router = express.Router();
 const MapService = require('../services/mapService');
 const RouteController = require('../controllers/RouteController');
+const authenticate = require('../middleware/auth'); // 認証ミドルウェアのインポート
 
 // サービスとコントローラーのインスタンス作成
 const mapService = new MapService();
@@ -191,7 +192,7 @@ router.post('/alternatives', (req, res) => routeController.calculateAlternatives
  * @desc    ユーザーの経路履歴を取得する
  * @access  Private（認証必要）
  */
-router.get('/history', (req, res) => routeController.getRouteHistory(req, res));
+router.get('/history', authenticate, (req, res) => routeController.getRouteHistory(req, res));
 
 /**
  * @route   GET /api/routes/:id
