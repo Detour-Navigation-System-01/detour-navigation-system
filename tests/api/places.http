@@ -2,7 +2,7 @@
 @baseUrl = http://localhost:3001/api
 
 ### 場所一覧を取得
-GET {{baseUrl}}/places
+GET {{baseUrl}}/places/4
 Content-Type: application/json
 
 ### ページネーションとソートで場所一覧を取得
