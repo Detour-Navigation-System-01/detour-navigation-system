@@ -103,7 +103,7 @@ Content-Type: application/json
 {
   "name": "新しい経路",
   "description": "テスト用ルート",
-  "userId": 1,
+  "userId": 3,
   "origin": {
     "lat": 35.6812,
     "lng": 139.7671

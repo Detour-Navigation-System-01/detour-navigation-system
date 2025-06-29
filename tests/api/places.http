@@ -2,7 +2,7 @@
 @baseUrl = http://localhost:3001/api
 
 ### 場所一覧を取得
-GET {{baseUrl}}/places/4
+GET {{baseUrl}}/places
 Content-Type: application/json
 
 ### ページネーションとソートで場所一覧を取得
@@ -64,9 +64,9 @@ POST {{baseUrl}}/places
 Content-Type: application/json
 
 {
-  "name": "ユーザー1 - 最初のテストスポット",
-  "userId": "1",
-  "description": "これはユーザー1が作成した最初のテストスポットです。",
+  "name": "ユーザー3 - 最初のテストスポット",
+  "userId": "3",
+  "description": "これはユーザー3が作成した最初のテストスポットです。",
   "category": "テスト",
   "address": "東京都新宿区西新宿2-8-1",
   "prefecture": "東京都",
@@ -81,9 +81,9 @@ POST {{baseUrl}}/places
 Content-Type: application/json
 
 {
-  "name": "ユーザー1 - 二番目のテストスポット",
-  "userId": "1",
-  "description": "これはユーザー1が作成した二番目のテストスポットです。",
+  "name": "ユーザー3 - 二番目のテストスポット",
+  "userId": "3",
+  "description": "これはユーザー3が作成した2番目のテストスポットです。",
   "category": "テスト",
   "address": "東京都渋谷区神宮前1-8-8",
   "prefecture": "東京都",
