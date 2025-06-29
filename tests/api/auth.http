@@ -2,7 +2,7 @@
 @baseUrl = http://localhost:3001/api
 
 // ログイン後に取得したJWTトークンを保存するための変数
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkxIiwiaWF0IjoxNzUxMTg5MjI0LCJleHAiOjE3NTExOTI4MjR9.xfetN4RJlkYAcVzhNz1ZHQ0dQHee4MSaHULddtZDPaU
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkxIiwiaWF0IjoxNzUxMTg5NzQ2LCJleHAiOjE3NTExOTMzNDZ9.z1W8C3Z8lddge5WIIGSkAllEjgBSXcTSc3ATt_5gBzY
 
 ### ユーザー登録
 POST {{baseUrl}}/auth/register

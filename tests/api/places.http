@@ -1,5 +1,8 @@
-### 場所APIのテスト
+### 場所APIのテスト（JWT認証対応版）
 @baseUrl = http://localhost:3001/api
+
+// ログイン後に取得したJWTトークンを保存するための変数
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkxIiwiaWF0IjoxNzUxMTkyMzQxLCJleHAiOjE3NTExOTU5NDF9.xCbbqg0PmfHKDXLaCxDCnqf2kwW99InSXrJpiEIAlGg
 
 ### 場所一覧を取得
 GET {{baseUrl}}/places
@@ -13,13 +16,13 @@ Content-Type: application/json
 GET {{baseUrl}}/places?name=観光
 Content-Type: application/json
 
-### 場所を作成
+### 場所を作成（JWT認証が必要）
 POST {{baseUrl}}/places
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 {
   "name": "東京スカイツリー",
-  "userId": "1",
   "description": "東京の観光名所として有名な高さ634mの電波塔",
   "category": "観光",
   "address": "東京都墨田区押上1丁目1−2",
@@ -30,21 +33,27 @@ Content-Type: application/json
 }
 
 ### 特定の場所を取得
-GET {{baseUrl}}/places/1
+GET {{baseUrl}}/places/{{myPlaceId}}
 Content-Type: application/json
 
-### 場所情報を更新
-PUT {{baseUrl}}/places/1
+### 場所情報を更新（JWT認証が必要）
+# ↓↓↓ 必ずUser ID 3が作成したスポットIDに変更してください ↓↓↓
+# 修正済み: データベースのカラム名はuser_idではなくuserIdでした
+@myPlaceId = 4
+
+PUT {{baseUrl}}/places/{{myPlaceId}}
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 {
   "description": "更新された説明文",
   "image_url": "https://example.com/updated-skytree.jpg"
 }
 
-### 場所を削除
-DELETE {{baseUrl}}/places/1
+### 場所を削除（JWT認証が必要）
+DELETE {{baseUrl}}/places/{{myPlaceId}}
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 ### カテゴリー別の場所を取得
 GET {{baseUrl}}/places/category/観光
@@ -58,58 +67,66 @@ Content-Type: application/json
 ### 最初にuser1が2個スポットを作成、user2が1個スポット作成してDBに保存する
 ### その後、user1が作成したもののみを取得
 
-### ユーザー1がスポットを作成 (1/2)
-# userId はコントローラー側で仮設定されます
+### ユーザー3がスポットを作成 (1/2) - JWT認証が必要
+# JWTトークンのユーザーIDが使用されます
 POST {{baseUrl}}/places
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 {
   "name": "ユーザー3 - 最初のテストスポット",
-  "userId": "3",
   "description": "これはユーザー3が作成した最初のテストスポットです。",
   "category": "テスト",
   "address": "東京都新宿区西新宿2-8-1",
   "prefecture": "東京都",
   "lat": 35.6896,
   "lng": 139.6923,
-  "image_url": "https://placehold.co/600x400/FF5733/ffffff?text=User1_Spot1"
+  "image_url": "https://placehold.co/600x400/FF5733/ffffff?text=User3_Spot1"
 }
 
-### ユーザー1がスポットを作成 (2/2)
-# userId はコントローラー側で仮設定されます
+### ユーザー3がスポットを作成 (2/2) - JWT認証が必要
+# JWTトークンのユーザーIDが使用されます
 POST {{baseUrl}}/places
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 {
   "name": "ユーザー3 - 二番目のテストスポット",
-  "userId": "3",
   "description": "これはユーザー3が作成した2番目のテストスポットです。",
   "category": "テスト",
   "address": "東京都渋谷区神宮前1-8-8",
   "prefecture": "東京都",
   "lat": 35.6702,
   "lng": 139.7032,
-  "image_url": "https://placehold.co/600x400/33FF57/ffffff?text=User1_Spot2"
+  "image_url": "https://placehold.co/600x400/33FF57/ffffff?text=User3_Spot2"
 }
 
-### ユーザー2がスポットを作成 (1/1)
-# userId はコントローラー側で仮設定されます (userId=2 のスポットとして作成されます)
+### 別のユーザーでログイン後、スポットを作成してみる
+# 別のユーザーでログインしてから @authToken を更新し、このリクエストを実行してください
 POST {{baseUrl}}/places
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 {
-  "name": "ユーザー2 - 唯一のテストスポット",
-  "userId": "2",
-  "description": "これはユーザー2が作成した唯一のテストスポットです。",
+  "name": "別のユーザー - テストスポット",
+  "description": "これは別のユーザーが作成したテストスポットです。",
   "category": "テスト",
   "address": "神奈川県横浜市中区山下町2",
   "prefecture": "神奈川県",
   "lat": 35.4475,
   "lng": 139.6421,
-  "image_url": "https://placehold.co/600x400/3357FF/ffffff?text=User2_Spot1"
+  "image_url": "https://placehold.co/600x400/3357FF/ffffff?text=OtherUser_Spot1"
 }
 
-### User ID 1 が作成したスポットのみを取得
-# URLの `/user/1` は、データベースのユーザーID 1 を指定しています。
-GET {{baseUrl}}/places/user/1
+### 現在認証中のユーザー（トークンの所有者）自身が作成した場所を取得
+# フロントエンド向けの使いやすいエンドポイント
+GET {{baseUrl}}/places/me/places
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### User ID 3 が作成したスポットのみを取得
+# URLの `/user/3` は、現在のトークンで認証されているユーザーID 3 を指定しています。
+# ここで返されるスポット一覧から、自分が作成したスポットIDを確認し、
+# 以下の更新・削除テストに使用してください。
+GET {{baseUrl}}/places/user/3
 Content-Type: application/json

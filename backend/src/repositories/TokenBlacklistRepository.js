@@ -1,4 +1,5 @@
 // backend/src/repositories/TokenBlacklistRepository.js
+// 対応するマイグレーションファイル: backend/src/db/migrations/007-create-token-blacklist.sql
 
 const BaseRepository = require('./BaseRepository');
 const pool = require('../utils/db');
