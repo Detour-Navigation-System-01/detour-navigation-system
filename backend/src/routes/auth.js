@@ -28,7 +28,18 @@ router.post('/register', validateUserData, authController.register);
  */
 router.put('/password/:id', authenticate, validateIdParam, authController.changePassword);
 
+/**
+ * @route POST /api/auth/logout
+ * @desc ユーザーログアウト（トークンを無効化）
+ * @access Private
+ */
+router.post('/logout', authenticate, authController.logout);
 
+/**
+ * @route GET /api/auth/me
+ * @desc 現在のユーザー情報を取得
+ * @access Private
+ */
 router.get('/me', authenticate, authController.me);
 
 

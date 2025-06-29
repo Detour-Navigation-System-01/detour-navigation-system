@@ -2,7 +2,7 @@
 @baseUrl = http://localhost:3001/api
 
 // ログイン後に取得したJWTトークンを保存するための変数
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkxIiwiaWF0IjoxNzUxMTg1OTM4LCJleHAiOjE3NTExODk1Mzh9.9SFhWdY9c_g4dJAWF66NKExCHRmZqR83sTYIqLaKZTQ
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkxIiwiaWF0IjoxNzUxMTg5MjI0LCJleHAiOjE3NTExOTI4MjR9.xfetN4RJlkYAcVzhNz1ZHQ0dQHee4MSaHULddtZDPaU
 
 ### ユーザー登録
 POST {{baseUrl}}/auth/register
@@ -52,4 +52,13 @@ Authorization: Bearer {{authToken}}
 
 ### ユーザーの経路履歴を取得 (JWT認証が必要)
 GET {{baseUrl}}/routes/history
+Authorization: Bearer {{authToken}}
+
+### ユーザーログアウト (JWT認証が必要)
+# トークンを無効化（ブラックリストに追加）します
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{authToken}}
+
+### ログアウト後のトークン検証（無効化されたトークンでアクセス - 401エラーになるはず）
+GET {{baseUrl}}/auth/me
 Authorization: Bearer {{authToken}}
