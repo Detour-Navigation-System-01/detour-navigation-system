@@ -18,8 +18,8 @@ POST {{baseUrl}}/users
 Content-Type: application/json
 
 {
-  "username": "testuser",
-  "email": "test@example.com",
+  "username": "testuser2",
+  "email": "test@example2.com",
   "password": "password123",
   "first_name": "テスト",
   "last_name": "ユーザー",
@@ -40,5 +40,5 @@ Content-Type: application/json
 }
 
 ### ユーザーを削除
-DELETE {{baseUrl}}/users/12
+DELETE {{baseUrl}}/users/1
 Content-Type: application/json

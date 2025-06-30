@@ -101,8 +101,9 @@ POST {{baseUrl}}/routes/save
 Content-Type: application/json
 
 {
-  "name": "東京駅から皇居へのルート",
+  "name": "新しい経路",
   "description": "テスト用ルート",
+  "userId": 3,
   "origin": {
     "lat": 35.6812,
     "lng": 139.7671
@@ -121,8 +122,9 @@ POST {{baseUrl}}/routes/save
 Content-Type: application/json
 
 {
-  "name": "越中島駅から豊洲キャンパスへのルート",
+  "name": "越中島駅から豊洲キャンパスへのルート2",
   "description": "テスト用ルート",
+  "userId": 1,
   "origin": {
     "lat": 35.667953356386896,
     "lng": 139.79265406072273
@@ -142,15 +144,16 @@ Content-Type: application/json
 
 {
   "origin": {
-    "lat": 35.6812,
-    "lng": 139.7671
+    "lat": 35.68125,
+    "lng": 139.76715
   },
   "destination": {
-    "lat": 35.6853,
-    "lng": 139.7528
+    "lat": 35.68535,
+    "lng": 139.75285
   },
   "numAlternatives": 3,
-  "profile": "driving"
+  "profile": "driving",
+  "userId": 1
 }
 
 ### RouteService - 経路詳細を取得（ID指定）
