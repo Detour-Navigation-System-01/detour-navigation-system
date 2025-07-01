@@ -18,12 +18,14 @@ POST {{baseUrl}}/users
 Content-Type: application/json
 
 {
-  "username": "testuser",
-  "email": "test@example.com",
+  "username": "testuser55",
+  "email": "test55@example.com",
   "password": "password123",
   "first_name": "テスト",
   "last_name": "ユーザー",
-  "public_settings" : true
+  "public_settings" : true,
+  "profile_image": "image_2.jpg"
+
 }
 
 ### 特定のユーザーを取得

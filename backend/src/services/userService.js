@@ -33,8 +33,15 @@ class UserService {
       const users = await this.userRepository.findAll(options);
       const total = await this.userRepository.count(filters);
       
-      // ここで整形
-    const sanitizedUsers = users.map(sanitizeUser);
+      const sanitizedUsers = users.map(user => {
+        if (user.profile_image) {
+          // もし既にURLが含まれている場合は付けない
+          if (!user.profile_image.startsWith('http')) {
+            user.profile_image = `http://localhost:3001/images/${user.profile_image}`;
+          }
+        }
+        return sanitizeUser(user);
+      });
 
 
       return {
@@ -60,6 +67,13 @@ class UserService {
       if (!user) {
         throw new AppError(`ID: ${userId} のユーザーは見つかりませんでした`, 404);
       }
+
+    // ここでprofile_imageのURLを組み立てる
+    if (user.profile_image && !user.profile_image.startsWith('http')) {
+      user.profile_image = `http://localhost:3001/images/${user.profile_image}`;
+    }
+
+
       return sanitizeUser(user);
       //return user;
     } catch (error) {

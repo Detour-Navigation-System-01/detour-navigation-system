@@ -66,18 +66,20 @@ class UserController extends BaseController {
    * 新しいユーザーを作成
    */
   createUser = catchAsync(async (req, res) => {
-    const { username, email, password, first_name, last_name, public_settings } = req.body; // ← public_settingsを追加
-    
-    console.log('新しいユーザーを作成します:', { username, email, public_settings }); // ← public_settingsを追加
-    
+    const { username, email, password, first_name, last_name, public_settings, profile_image } = req.body;
+
+    console.log('新しいユーザーを作成します:', { username, email, public_settings, profile_image }); // ← デバッグにも追加
+
     const newUser = await userService.createUser({
       username,
       email,
-      password, // パスワードのハッシュ化はサービス→リポジトリで処理
+      password,
       first_name,
       last_name,
-      public_settings  // ← 追加
+      public_settings,
+      profile_image  // ← これを追加！
     });
+
     
     // 成功レスポンスを送信
     return this.sendSuccess(res, {

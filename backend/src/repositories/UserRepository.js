@@ -243,7 +243,7 @@ class UserRepository extends BaseRepository {
       const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
       
       const query = `
-        SELECT id, username, email, first_name, last_name, created_at, updated_at, public_settings
+        SELECT id, username, email, first_name, last_name, created_at, updated_at, public_settings, profile_image
         FROM ${this.tableName}
         ${whereClause}
         ORDER BY created_at DESC
@@ -267,7 +267,7 @@ class UserRepository extends BaseRepository {
       
       // 変更後（public_settings を追加）
       let query = `
-        SELECT id, username, email, first_name, last_name, created_at, updated_at, public_settings
+        SELECT id, username, email, first_name, last_name, created_at, updated_at, public_settings, profile_image
         FROM ${this.tableName} 
         ORDER BY ${orderBy} ${direction}
       `;
