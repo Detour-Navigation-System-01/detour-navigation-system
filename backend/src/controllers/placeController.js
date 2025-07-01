@@ -70,18 +70,18 @@ class PlaceController extends BaseController {
    * 新しい場所を作成
    */
   createPlace = catchAsync(async (req, res) => {
-    const { name, description, category, address, prefecture, lat, lng, image_url, userId } = req.body;
+    const { name, description, category, address, prefecture, lat, lng, image_url } = req.body;
     
-    const parsedUserId = parseInt(userId, 10);
-    // userIdの妥当性チェック
-    if (isNaN(parsedUserId)) {
+    // JWTから認証済みユーザーのIDを取得
+    const authUserId = req.user?.id;
+    if (!authUserId) {
       return this.sendError(res, {
-        statusCode: 400,
-        message: '有効なユーザーIDを指定してください。'
+        statusCode: 401,
+        message: '認証されていないユーザーです'
       });
     }
     
-    console.log('新しい場所を登録します:', { name });
+    console.log(`認証ユーザーID: ${authUserId} が新しい場所を登録します:`, { name });
 
     const newPlace = await placeService.createPlace({
       name,
@@ -92,7 +92,7 @@ class PlaceController extends BaseController {
       lat,
       lng,
       image_url: image_url || null, // image_urlがない場合はnullをセット
-      userId: parsedUserId
+      userId: authUserId // 認証済みユーザーIDを使用
     });
     
     // 成功レスポンスを送信
@@ -104,10 +104,28 @@ class PlaceController extends BaseController {
   });
 
   /**
-   * 場所情報を更新
+   * 場所情報を更新（作成者のみ可能）
    */
   updatePlace = catchAsync(async (req, res) => {
     const placeId = req.parsedId;
+    const authUserId = req.user?.id;
+    
+    // 更新前に場所の所有者チェック
+    const place = await placeService.getPlaceById(placeId);
+    
+    // デバッグ情報を出力（データベースのカラム名はuserId）
+    console.log(`場所の所有者チェック - 場所ID: ${placeId}, 場所データ:`, place);
+    console.log(`認証ユーザーID: ${authUserId} (型: ${typeof authUserId})`);
+    
+    // 場所の作成者IDと認証ユーザーIDが一致するかチェック（型変換を行う、フィールド名はuserIdを使用）
+    if (parseInt(place.userid) !== authUserId) {
+      console.log(`認証ユーザーID: ${authUserId} が他のユーザーの場所ID: ${placeId} (所有者ID: ${place.userid}) を更新しようとしています`);
+      return this.sendError(res, {
+        statusCode: 403,
+        message: 'この場所を更新する権限がありません'
+      });
+    }
+    
     const { name, description, category, address, prefecture, lat, lng, image_url } = req.body;
     
     // 更新データをオブジェクトに集約
@@ -121,7 +139,7 @@ class PlaceController extends BaseController {
     if (lng !== undefined) updateData.lng = lng;
     if (image_url !== undefined) updateData.image_url = image_url;
     
-    console.log(`場所ID: ${placeId} の情報を更新します`);
+    console.log(`場所ID: ${placeId} の情報を更新します (ユーザーID: ${authUserId})`);
     const updatedPlace = await placeService.updatePlace(placeId, updateData);
     
     // 成功レスポンスを送信
@@ -132,12 +150,29 @@ class PlaceController extends BaseController {
   });
 
   /**
-   * 場所を削除
+   * 場所を削除（作成者のみ可能）
    */
   deletePlace = catchAsync(async (req, res) => {
     const placeId = req.parsedId;
+    const authUserId = req.user?.id;
     
-    console.log(`場所ID: ${placeId} を削除します`);
+    // 削除前に場所の所有者チェック
+    const place = await placeService.getPlaceById(placeId);
+    
+    // デバッグ情報を出力（データベースのカラム名はuserId）
+    console.log(`場所の所有者チェック - 場所ID: ${placeId}, 場所データ:`, place);
+    console.log(`認証ユーザーID: ${authUserId} (型: ${typeof authUserId})`);
+    
+    // 場所の作成者IDと認証ユーザーIDが一致するかチェック（型変換を行う、フィールド名はuserIdを使用）
+    if (parseInt(place.userid) !== authUserId) {
+      console.log(`認証ユーザーID: ${authUserId} が他のユーザーの場所ID: ${placeId} (所有者ID: ${place.userid}) を削除しようとしています`);
+      return this.sendError(res, {
+        statusCode: 403,
+        message: 'この場所を削除する権限がありません'
+      });
+    }
+    
+    console.log(`場所ID: ${placeId} を削除します (ユーザーID: ${authUserId})`);
     await placeService.deletePlace(placeId);
     
     // 成功レスポンスを送信
@@ -188,9 +223,18 @@ class PlaceController extends BaseController {
   });    /**
    * @desc 画像をローカルにアップロードし、そのURLを返す
    * @route POST /api/places/upload-image
-   * @access Public (テスト用)
+   * @access Private (認証済みユーザーのみ)
    */
   uploadPlaceImage = catchAsync(async (req, res) => {
+    // 認証ユーザーIDの確認
+    const authUserId = req.user?.id;
+    if (!authUserId) {
+      return this.sendError(res, {
+        statusCode: 401,
+        message: '認証されていないユーザーです'
+      });
+    }
+    
     // uploadImageミドルウェアがreq.fileにファイル情報をセットしてくれる
     if (!req.file) {
       return this.sendError(res, {
@@ -247,6 +291,77 @@ class PlaceController extends BaseController {
     // 成功レスポンスを送信
     return this.sendSuccess(res, {
       message: `ユーザーID: ${userId} に紐づく場所一覧を取得しました`,
+      data: places,
+      meta: this.createPaginationMeta(result.total, page, limit)
+    });
+  });
+
+  /**
+   * 現在認証されているユーザー自身の登録場所を取得
+   */
+  getPlacesByCurrentUser = catchAsync(async (req, res) => {
+    // JWTから認証済みユーザーのIDを取得
+    const authUserId = req.user?.id;
+    if (!authUserId) {
+      return this.sendError(res, {
+        statusCode: 401,
+        message: '認証されていないユーザーです'
+      });
+    }
+
+    console.log(`現在のユーザーID: ${authUserId} に紐づく場所情報を取得します`);
+
+    // クエリパラメータからページネーションオプションを取得
+    const { page, limit, offset } = this.getPaginationOptions(req.query);
+
+    const options = {
+      orderBy: 'created_at',
+      direction: 'desc',
+      limit,
+      offset
+    };
+
+    const result = await placeService.getPlacesByUserId(authUserId, options);
+    const places = result.data;
+
+    console.log(`現在のユーザーID: ${authUserId} のために ${places.length}件の場所情報を取得しました`);
+
+    // 成功レスポンスを送信
+    return this.sendSuccess(res, {
+      message: '自分が登録した場所一覧を取得しました',
+      data: places,
+      meta: this.createPaginationMeta(result.total, page, limit)
+    });
+  });
+
+  /**
+   * 公開設定ONのユーザーのスポットを取得
+   */
+  getPublicPlaces = catchAsync(async (req, res) => {
+    console.log('公開設定ONのユーザーのスポット一覧取得処理を開始します');
+    
+    // クエリパラメータからオプションを取得
+    const { page, limit, offset } = this.getPaginationOptions(req.query);
+    const { sort, direction } = this.getSortOptions(req.query, 'created_at');
+    const filters = this.getFilterOptions(req.query, ['name', 'category', 'prefecture']);
+    
+    // サービスにオプションを渡して場所取得
+    const options = { 
+      orderBy: sort, 
+      direction, 
+      limit, 
+      offset, 
+      filters 
+    };
+    
+    const result = await placeService.getPublicPlaces(options);
+    const places = result.data;
+    
+    console.log(`${places.length}件の公開スポットを取得しました`);
+    
+    // 成功レスポンスを送信
+    return this.sendSuccess(res, {
+      message: '公開設定ONのユーザーのスポット一覧を取得しました',
       data: places,
       meta: this.createPaginationMeta(result.total, page, limit)
     });

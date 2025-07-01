@@ -51,7 +51,7 @@ class User {  /**
    */
   static async update(id, userData) {
     // 更新可能なフィールドのバリデーション（ビジネスルールとして）
-    const allowedFields = ['username', 'email', 'first_name', 'last_name', 'password'];
+    const allowedFields = ['username', 'email', 'first_name', 'last_name', 'password', 'public_settings'];
     const updateData = {};
     
     // 許可されたフィールドのみを抽出

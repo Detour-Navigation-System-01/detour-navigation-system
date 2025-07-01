@@ -1,44 +1,92 @@
-### ユーザーAPIのテスト（BaseController対応版）
+### ユーザーAPIのテスト（JWT認証対応版）
 @baseUrl = http://localhost:3001/api
 
-### ユーザー一覧を取得
+// ログイン後に取得したJWTトークンを保存するための変数
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwidXNlcm5hbWUiOiJuYWthbmlzaGkyIiwiaWF0IjoxNzUxMjAzNzkzLCJleHAiOjE3NTEyMDczOTN9.LLi_F-ErMaYYmF0b2-muzVM8kUjjrOuclkrv_42X3i0
+
+### ユーザーログイン - トークンの取得
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "nakanishi1",
+  "password": "securePassword123"
+}
+
+// ログイン成功したらレスポンスからトークンをコピーして上部の @authToken 変数に設定してください
+
+### ユーザー一覧を取得 (JWT認証が必要)
 GET {{baseUrl}}/users
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
-### ページネーションとソートでユーザー一覧を取得
-GET {{baseUrl}}/users?page=1&limit=5&sort=username&order=asc
+### 自分自身のユーザー情報を取得 (JWT認証が必要)
+GET {{baseUrl}}/users/3
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
-### フィルターでユーザー一覧を取得
-GET {{baseUrl}}/users?username=test
+### 他のユーザーの情報を取得しようとする (権限エラーになるはず)
+GET {{baseUrl}}/users/1
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
-### ユーザーを作成
+### ユーザーを作成 (公開API - 認証不要)
 POST {{baseUrl}}/users
 Content-Type: application/json
 
 {
-  "username": "testuser2",
-  "email": "test@example2.com",
+  "username": "testuser3",
+  "email": "test3@example.com",
   "password": "password123",
-  "first_name": "テスト",
-  "last_name": "ユーザー",
-  "public_settings" : true
+  "first_name": "テスト3",
+  "last_name": "ユーザー3",
+  "public_settings": true
 }
 
-### 特定のユーザーを取得
-GET {{baseUrl}}/users/14
+### 自分自身のユーザー情報を更新 (JWT認証が必要)
+PUT {{baseUrl}}/users/3
 Content-Type: application/json
-
-### ユーザー情報を更新
-PUT {{baseUrl}}/users/1
-Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 {
-  "first_name": "更新済",
-  "last_name": "テストユーザー"
+  "first_name": "修正",
+  "last_name": "中西"
 }
 
-### ユーザーを削除
+### 公開設定をONに変更する (JWT認証が必要)
+PUT {{baseUrl}}/users/4
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "public_settings": true
+}
+
+### 公開設定をOFFに変更する (JWT認証が必要)
+PUT {{baseUrl}}/users/4
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "public_settings": false
+}
+
+### 他のユーザーの情報を更新しようとする (権限エラーになるはず)
+PUT {{baseUrl}}/users/1
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "first_name": "不正な",
+  "last_name": "更新"
+}
+
+### 自分自身のユーザーを削除 (JWT認証が必要)
+DELETE {{baseUrl}}/users/3
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### 他のユーザーを削除しようとする (権限エラーになるはず)
 DELETE {{baseUrl}}/users/1
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
