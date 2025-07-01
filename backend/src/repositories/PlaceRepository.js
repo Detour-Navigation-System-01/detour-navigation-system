@@ -169,6 +169,127 @@ class PlaceRepository extends BaseRepository {
       console.error(`カテゴリー ${category} の場所検索エラー:`, error);
       throw error;
     }  }
+
+  /**
+   * 公開設定ONのユーザーのスポットを取得する
+   * @param {Object} options - 検索オプション
+   * @returns {Promise<Array>} 検索結果
+   */
+  async findPublicPlaces(options = {}) {
+    const { 
+      orderBy = 'created_at', 
+      direction = 'DESC', 
+      limit = 10, 
+      offset = 0,
+      filters = {} 
+    } = options;
+    
+    // クエリの構築
+    let query = `
+      SELECT p.*, 
+        CASE WHEN p.image_url IS NOT NULL AND p.image_url <> '' THEN true ELSE false END AS has_image
+      FROM ${this.tableName} p
+      INNER JOIN users u ON p.userid = u.id
+      WHERE u.public_settings = true
+    `;
+    
+    // フィルター条件の追加
+    const filterConditions = [];
+    const queryParams = [];
+    let paramCounter = 1;
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (key === 'category') {
+          filterConditions.push(`p.category = $${paramCounter}`);
+          queryParams.push(value);
+          paramCounter++;
+        } else if (key === 'prefecture') {
+          filterConditions.push(`p.prefecture = $${paramCounter}`);
+          queryParams.push(value);
+          paramCounter++;
+        } else if (key === 'name') {
+          filterConditions.push(`p.name ILIKE $${paramCounter}`);
+          queryParams.push(`%${value}%`);
+          paramCounter++;
+        }
+      }
+    });
+    
+    if (filterConditions.length > 0) {
+      query += ` AND ${filterConditions.join(' AND ')}`;
+    }
+    
+    query += ` ORDER BY p.${orderBy} ${direction}`;
+    
+    if (limit) {
+      query += ` LIMIT $${paramCounter++}`;
+      queryParams.push(limit);
+    }
+    
+    if (offset) {
+      query += ` OFFSET $${paramCounter++}`;
+      queryParams.push(offset);
+    }
+    
+    try {
+      const result = await this.pool.query(query, queryParams);
+      return result.rows;
+    } catch (error) {
+      console.error('公開スポットの検索エラー:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 公開設定ONのユーザーのスポットの総数を取得
+   * @param {Object} filters - フィルター条件
+   * @returns {Promise<number>} 総数
+   */
+  async countPublicPlaces(filters = {}) {
+    // クエリの構築
+    let query = `
+      SELECT COUNT(*) 
+      FROM ${this.tableName} p
+      INNER JOIN users u ON p.userid = u.id
+      WHERE u.public_settings = true
+    `;
+    
+    // フィルター条件の追加
+    const filterConditions = [];
+    const queryParams = [];
+    let paramCounter = 1;
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (key === 'category') {
+          filterConditions.push(`p.category = $${paramCounter}`);
+          queryParams.push(value);
+          paramCounter++;
+        } else if (key === 'prefecture') {
+          filterConditions.push(`p.prefecture = $${paramCounter}`);
+          queryParams.push(value);
+          paramCounter++;
+        } else if (key === 'name') {
+          filterConditions.push(`p.name ILIKE $${paramCounter}`);
+          queryParams.push(`%${value}%`);
+          paramCounter++;
+        }
+      }
+    });
+    
+    if (filterConditions.length > 0) {
+      query += ` AND ${filterConditions.join(' AND ')}`;
+    }
+    
+    try {
+      const result = await this.pool.query(query, queryParams);
+      return parseInt(result.rows[0].count, 10);
+    } catch (error) {
+      console.error('公開スポットの総数取得エラー:', error);
+      throw error;
+    }
+  }
 }
 
 

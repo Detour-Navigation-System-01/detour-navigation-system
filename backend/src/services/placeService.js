@@ -267,6 +267,28 @@ class PlaceService {
       throw new AppError(`ユーザーID: ${userId} の場所の取得に失敗しました`, 500, error);
     }
   }
+
+  /**
+   * 公開設定ONのユーザーのスポットを取得
+   * @param {Object} options - 取得オプション（ソート、ページネーション、フィルタリング等）
+   * @returns {Object} 取得結果と総件数
+   */
+  async getPublicPlaces(options = {}) {
+    const { filters = {}, ...otherOptions } = options;
+    
+    try {
+      const places = await this.placeRepository.findPublicPlaces(options);
+      const total = await this.placeRepository.countPublicPlaces(filters);
+      
+      return {
+        data: places,
+        total
+      };
+    } catch (error) {
+      console.error('❌ 公開スポットの取得エラー:', error);
+      throw new AppError('公開スポットの取得に失敗しました', 500, error);
+    }
+  }
 }
 
 // シングルトンインスタンスとしてエクスポート

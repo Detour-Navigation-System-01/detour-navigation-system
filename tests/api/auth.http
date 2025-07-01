@@ -1,13 +1,16 @@
 # テスト用認証API呼び出しファイル
 @baseUrl = http://localhost:3001/api
 
+// ログイン後に取得したJWTトークンを保存するための変数
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkyIiwiaWF0IjoxNzUxMzM5MDY2LCJleHAiOjE3NTEzNDI2NjZ9._ZRK3xuAPNz9o6vFBaLipqn8DQlkW01MTKIJP5TpidM
+
 ### ユーザー登録
 POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "username": "nakanishi1",
-  "email": "nakanishi1@example.com",
+  "username": "nakanishi2",
+  "email": "nakanishi2@example.com",
   "password": "securePassword123",
   "first_name": "younosuke",
   "last_name": "nakanishi"
@@ -18,9 +21,11 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "username": "nakanishi1",
+  "username": "nakanishi2",
   "password": "securePassword123"
 }
+
+// ログイン成功したらレスポンスからトークンをコピーして @authToken 変数に設定してください
 
 ### ユーザーログイン（メールアドレス）
 POST {{baseUrl}}/auth/login
@@ -31,11 +36,29 @@ Content-Type: application/json
   "password": "securePassword123"
 }
 
-### パスワード変更
-PUT {{baseUrl}}/auth/password/14
+### パスワード変更 (JWT認証が必要)
+PUT {{baseUrl}}/auth/password/3
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 {
   "currentPassword": "securePassword123",
   "newPassword": "IamSoSleepy"
 }
+
+### 現在のユーザー情報を取得 (JWT認証が必要)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{authToken}}
+
+### ユーザーの経路履歴を取得 (JWT認証が必要)
+GET {{baseUrl}}/routes/history
+Authorization: Bearer {{authToken}}
+
+### ユーザーログアウト (JWT認証が必要)
+# トークンを無効化（ブラックリストに追加）します
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{authToken}}
+
+### ログアウト後のトークン検証（無効化されたトークンでアクセス - 401エラーになるはず）
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{authToken}}

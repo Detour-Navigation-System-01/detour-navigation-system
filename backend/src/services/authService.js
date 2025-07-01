@@ -2,6 +2,9 @@
 
 const userService = require('./userService');
 const { AppError } = require('../middleware/errorHandler');
+const tokenBlacklistRepo = require('../repositories/TokenBlacklistRepository');
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 /**
  * 認証関連の機能を提供するサービス
@@ -14,8 +17,6 @@ class AuthService {
    * @returns {Promise<Object>} 認証されたユーザー
    */
   async login(identifier, password) {
-    const jwt = require('jsonwebtoken');
-    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
     if (!identifier || !password) {
       throw new AppError('ユーザー名/メールアドレスとパスワードを入力してください', 400);
     }
@@ -112,7 +113,50 @@ class AuthService {
     return user;
   }
 
+  /**
+   * トークンを無効化（ブラックリストに追加）
+   * @param {string} token - 無効化するJWTトークン
+   * @param {Object} user - トークンのペイロード（デコード済み）
+   * @returns {Promise<Object>} 無効化されたトークン情報
+   */
+  async invalidateToken(token, user) {
+    try {
+      // トークンのデコード（有効期限などの情報を取得）
+      const decoded = jwt.decode(token);
+      if (!decoded) {
+        throw new AppError('無効なトークンです', 400);
+      }
+      
+      // ブラックリストに追加
+      return await tokenBlacklistRepo.addToBlacklist(token, decoded);
+    } catch (error) {
+      console.error('トークン無効化エラー:', error);
+      throw error;
+    }
+  }
 
+  /**
+   * ユーザーのすべてのトークンを無効化（ブラックリストに追加）
+   * @param {number} userId - 無効化するユーザーのID
+   * @returns {Promise<Object>} 無効化されたトークン情報
+   */
+  async invalidateAllUserTokens(userId) {
+    try {
+      // ユーザーIDの存在確認
+      await userService.getUserById(userId);
+      
+      // トークンのデフォルト有効期限を現在から24時間後に設定
+      // （通常のトークン有効期限より十分長くする）
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 24);
+      
+      // ブラックリストに追加
+      return await tokenBlacklistRepo.blacklistAllUserTokens(userId, expiresAt);
+    } catch (error) {
+      console.error(`ユーザーID: ${userId} のトークン無効化エラー:`, error);
+      throw error;
+    }
+  }
 }
 
 

@@ -1,5 +1,6 @@
 # 経路計算API呼び出しテストファイル
 @baseUrl = http://localhost:3001/api
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkyIiwiaWF0IjoxNzUxMzQwNTA3LCJleHAiOjE3NTEzNDQxMDd9.nLoeO65fK9MHUuFI02RSRMzUDmZAyDrpKK5Cr8WkMsc
 
 ### 接続テスト - デフォルト（東京駅→皇居）
 GET {{baseUrl}}/routes/test
@@ -96,14 +97,14 @@ Content-Type: application/json
   "profile": "driving"
 }
 
-### RouteService - 経路計算して保存
+### RouteService - 経路計算して保存（JWT認証が必要）
 POST {{baseUrl}}/routes/save
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 {
   "name": "新しい経路",
   "description": "テスト用ルート",
-  "userId": 3,
   "origin": {
     "lat": 35.6812,
     "lng": 139.7671
@@ -112,19 +113,18 @@ Content-Type: application/json
     "lat": 35.6853,
     "lng": 139.7528
   },
-  "profile": "driving",
-  "detourLevel": 1,
-  "routeType": "normal"
+  "profile": "walking",
+  "requestedDuration": 10000
 }
 
-### RouteService - 経路計算して保存2
+### RouteService - 経路計算して保存2（JWT認証が必要）
 POST {{baseUrl}}/routes/save
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 {
   "name": "越中島駅から豊洲キャンパスへのルート2",
   "description": "テスト用ルート",
-  "userId": 1,
   "origin": {
     "lat": 35.667953356386896,
     "lng": 139.79265406072273
@@ -133,9 +133,8 @@ Content-Type: application/json
     "lat": 35.66069879583367,
     "lng": 139.79480768096218
   },
-  "profile": "driving",
-  "detourLevel": 1,
-  "routeType": "normal"
+  "profile": "walking",
+  "requestedDuration": 1200
 }
 
 ### RouteService - 代替経路を計算
@@ -156,11 +155,34 @@ Content-Type: application/json
   "userId": 1
 }
 
-### RouteService - 経路詳細を取得（ID指定）
-GET {{baseUrl}}/routes/1
+### RouteService - 経路詳細を取得（ID指定）（JWT認証が必要）
+GET {{baseUrl}}/routes/2
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 ### RouteService - 経路履歴を取得（認証済みユーザー向け）
-# GET {{baseUrl}}/routes/history
-# Content-Type: application/json
-# Authorization: Bearer YOUR_JWT_TOKEN
+GET {{baseUrl}}/routes/history
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### RouteService - 所要時間が短すぎる場合のエラーテスト（JWT認証が必要）
+POST {{baseUrl}}/routes/save
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "name": "所要時間が短すぎる経路",
+  "description": "最短経路より短い所要時間を指定するとエラーになるはず",
+  "origin": {
+    "lat": 35.6812,
+    "lng": 139.7671
+  },
+  "destination": {
+    "lat": 35.6853,
+    "lng": 139.7528
+  },
+  "profile": "walking",
+  "requestedDuration": 1000
+}
+
+# 注: ログイン後に取得したJWTトークンを上部の @authToken 変数に設定してください
