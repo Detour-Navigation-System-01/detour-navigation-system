@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>遠回りルート計算テスト</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .controls {
+            width: 300px;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: white;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        input[type="text"], 
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 500;
+            margin-top: 5px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .btn-secondary {
+            background-color: #95a5a6;
+        }
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        .card {
+            background-color: white;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .route-info {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .route-info h3 {
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+        .route-info p {
+            margin: 5px 0;
+        }
+        .route-info span {
+            font-weight: bold;
+        }
+        .coords-display {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.8);
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+        .legend {
+            position: absolute;
+            bottom: 40px;
+            left: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            z-index: 1000;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            margin-right: 8px;
+            border-radius: 2px;
+        }
+        .error {
+            color: #c0392b;
+            background-color: #fadbd8;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .success {
+            color: #27ae60;
+            background-color: #d4f5e2;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        #loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255,255,255,0.8);
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            text-align: center;
+            z-index: 2000;
+        }
+        #loading img {
+            width: 30px;
+            height: 30px;
+        }
+        .preset-locations {
+            margin-top: 15px;
+        }
+        .preset-btn {
+            background-color: #2ecc71;
+            margin-bottom: 5px;
+            font-size: 12px;
+            padding: 8px;
+        }
+        .preset-btn:hover {
+            background-color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>遠回りルート計算テスト</h1>
+    </div>
+    <div class="container">
+        <div class="controls">
+            <div class="card">
+                <h3>ルート設定</h3>
+                <div class="form-group">
+                    <label for="origin">出発地の座標 (緯度,経度)</label>
+                    <input type="text" id="origin" placeholder="35.6812,139.7671 (東京駅)">
+                </div>
+                <div class="form-group">
+                    <label for="destination">目的地の座標 (緯度,経度)</label>
+                    <input type="text" id="destination" placeholder="35.6853,139.7528 (皇居)">
+                </div>
+                <div class="form-group">
+                    <label for="profile">移動手段</label>
+                    <select id="profile">
+                        <option value="walking">徒歩</option>
+                        <option value="cycling">自転車</option>
+                        <option value="driving">車</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="requestedDuration">希望所要時間 (秒)</label>
+                    <input type="number" id="requestedDuration" placeholder="例: 1800 (30分)">
+                </div>
+                <button id="calculateBtn">経路を計算</button>
+                <button id="calculateMinRouteBtn" class="btn-secondary">最短経路を計算</button>
+                
+                <div class="preset-locations">
+                    <h4>プリセット位置</h4>
+                    <button class="preset-btn" data-origin="35.6812,139.7671" data-dest="35.6853,139.7528">東京駅→皇居</button>
+                    <button class="preset-btn" data-origin="35.6580,139.7016" data-dest="35.6938,139.7034">渋谷→新宿</button>
+                    <button class="preset-btn" data-origin="35.7147,139.7967" data-dest="35.7140,139.7767">浅草→上野</button>
+                    <button class="preset-btn" data-origin="35.6095,139.6698" data-dest="35.6585,139.7454">三軒茶屋→六本木</button>
+                </div>
+            </div>
+            
+            <div id="routeInfo" class="card route-info" style="display: none;">
+                <h3>ルート情報</h3>
+                <div id="routeDetails"></div>
+                <div id="debugInfo" style="font-size: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd;"></div>
+            </div>
+            
+            <div id="error" class="error" style="display: none;"></div>
+            <div id="success" class="success" style="display: none;"></div>
+        </div>
+        
+        <div class="map-container">
+            <div id="map"></div>
+            <div id="loading">
+                <p>計算中...</p>
+                <img src="https://i.gifer.com/ZKZx.gif" alt="Loading">
+            </div>
+            <div class="coords-display" id="coords"></div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #3498db; height: 4px;"></div>
+                    <div>最短経路</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #e74c3c; height: 4px;"></div>
+                    <div>遠回り経路</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #2ecc71; border-radius: 50%; width: 8px; height: 8px;"></div>
+                    <div>出発地</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #e74c3c; border-radius: 50%; width: 8px; height: 8px;"></div>
+                    <div>目的地</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // API Base URL
+        const API_BASE_URL = 'http://localhost:3001/api';
+        
+        // マップの初期化
+        const map = L.map('map').setView([35.6812, 139.7671], 13);
+        
+        // OpenStreetMapタイルレイヤーを追加
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // マーカーとルートレイヤーを格納する変数
+        let originMarker = null;
+        let destinationMarker = null;
+        let shortestRouteLayer = null;
+        let detourRouteLayer = null;
+        
+        // 座標表示の更新
+        map.on('mousemove', (e) => {
+            document.getElementById('coords').textContent = 
+                `緯度: ${e.latlng.lat.toFixed(6)}, 経度: ${e.latlng.lng.toFixed(6)}`;
+        });
+        
+        // 地図上でクリックした場所の座標を入力フィールドに設定
+        map.on('click', (e) => {
+            const coords = `${e.latlng.lat.toFixed(6)},${e.latlng.lng.toFixed(6)}`;
+            
+            if (!document.getElementById('origin').value) {
+                document.getElementById('origin').value = coords;
+                showMarker(e.latlng, 'origin');
+            } else if (!document.getElementById('destination').value) {
+                document.getElementById('destination').value = coords;
+                showMarker(e.latlng, 'destination');
+            } else {
+                // 両方すでに入力されている場合は、出発地をリセットして新しい値を設定
+                clearMarkers();
+                document.getElementById('origin').value = coords;
+                document.getElementById('destination').value = '';
+                showMarker(e.latlng, 'origin');
+            }
+        });
+        
+        // マーカーを表示する関数
+        function showMarker(latlng, type) {
+            if (type === 'origin') {
+                if (originMarker) map.removeLayer(originMarker);
+                originMarker = L.marker([latlng.lat, latlng.lng], {
+                    icon: L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div style="background-color: #2ecc71; width: 12px; height: 12px; border-radius: 50%;"></div>`,
+                        iconSize: [12, 12],
+                        iconAnchor: [6, 6]
+                    })
+                }).addTo(map).bindPopup('出発地');
+            } else if (type === 'destination') {
+                if (destinationMarker) map.removeLayer(destinationMarker);
+                destinationMarker = L.marker([latlng.lat, latlng.lng], {
+                    icon: L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div style="background-color: #e74c3c; width: 12px; height: 12px; border-radius: 50%;"></div>`,
+                        iconSize: [12, 12],
+                        iconAnchor: [6, 6]
+                    })
+                }).addTo(map).bindPopup('目的地');
+            }
+        }
+        
+        // マーカーをクリアする関数
+        function clearMarkers() {
+            if (originMarker) map.removeLayer(originMarker);
+            if (destinationMarker) map.removeLayer(destinationMarker);
+            originMarker = null;
+            destinationMarker = null;
+        }
+        
+        // ルートをクリアする関数
+        function clearRoutes() {
+            if (shortestRouteLayer) map.removeLayer(shortestRouteLayer);
+            if (detourRouteLayer) map.removeLayer(detourRouteLayer);
+            shortestRouteLayer = null;
+            detourRouteLayer = null;
+        }
+        
+        // すべてをクリアする関数
+        function clearAll() {
+            clearMarkers();
+            clearRoutes();
+            document.getElementById('routeInfo').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('success').style.display = 'none';
+        }
+        
+        // 入力座標を処理する関数
+        function parseCoords(coordStr) {
+            try {
+                const parts = coordStr.split(',');
+                if (parts.length !== 2) throw new Error("座標は「緯度,経度」の形式で入力してください");
+                
+                const lat = parseFloat(parts[0].trim());
+                const lng = parseFloat(parts[1].trim());
+                
+                if (isNaN(lat) || isNaN(lng)) throw new Error("無効な座標値です");
+                
+                return { lat, lng };
+            } catch (error) {
+                throw new Error(`座標の解析エラー: ${error.message}`);
+            }
+        }
+        
+        // エラー表示関数
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            document.getElementById('success').style.display = 'none';
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+        
+        // 成功表示関数
+        function showSuccess(message) {
+            const successEl = document.getElementById('success');
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            setTimeout(() => {
+                successEl.style.display = 'none';
+            }, 5000);
+        }
+        
+        // ローディング表示切替関数
+        function setLoading(isLoading) {
+            document.getElementById('loading').style.display = isLoading ? 'block' : 'none';
+        }
+        
+        // APIからルート計算する関数
+        async function calculateRoute(includeDetour = false) {
+            try {
+                clearRoutes();
+                document.getElementById('routeInfo').style.display = 'none';
+                
+                const originStr = document.getElementById('origin').value.trim();
+                const destStr = document.getElementById('destination').value.trim();
+                const profile = document.getElementById('profile').value;
+                const requestedDuration = includeDetour ? document.getElementById('requestedDuration').value : null;
+                
+                if (!originStr || !destStr) {
+                    showError('出発地と目的地の座標を入力してください');
+                    return;
+                }
+                
+                if (includeDetour && (!requestedDuration || requestedDuration <= 0)) {
+                    showError('希望所要時間を正しく入力してください');
+                    return;
+                }
+                
+                const origin = parseCoords(originStr);
+                const destination = parseCoords(destStr);
+                
+                // マーカー表示
+                showMarker({ lat: origin.lat, lng: origin.lng }, 'origin');
+                showMarker({ lat: destination.lat, lng: destination.lng }, 'destination');
+                
+                // マップの表示範囲を調整
+                const bounds = L.latLngBounds(
+                    [origin.lat, origin.lng],
+                    [destination.lat, destination.lng]
+                );
+                map.fitBounds(bounds, { padding: [50, 50] });
+                
+                setLoading(true);
+                
+                // APIリクエスト用データ
+                const requestData = {
+                    origin,
+                    destination,
+                    profile,
+                    includeSteps: true
+                };
+                
+                // 遠回りルート計算の場合は希望所要時間を追加
+                if (includeDetour && requestedDuration) {
+                    requestData.requestedDuration = parseInt(requestedDuration);
+                }
+                
+                // API呼び出し
+                const response = await fetch(`${API_BASE_URL}/routes/calculate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const result = await response.json();
+                
+                // レスポンスのデバッグログ
+                console.log('APIレスポンス:', result);
+                
+                if (!result.success) {
+                    showError(`経路計算エラー: ${result.message || 'APIからエラーが返されました'}`);
+                    return;
+                }
+                
+                const routeData = result.data;
+                
+                // 経路情報の表示（修正済み）
+                displayRouteInfo(routeData, includeDetour);
+                
+                // 経路の描画（修正済み）
+                displayRoute(routeData, includeDetour);
+                
+                showSuccess(includeDetour ? '遠回り経路を計算しました' : '最短経路を計算しました');
+            } catch (error) {
+                console.error('経路計算エラー:', error);
+                showError(`計算エラー: ${error.message}`);
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        // 経路情報を表示する関数（修正済み）
+        function displayRouteInfo(routeData, isDetour) {
+            const routeInfoEl = document.getElementById('routeInfo');
+            const routeDetailsEl = document.getElementById('routeDetails');
+            const debugInfoEl = document.getElementById('debugInfo');
+            
+            // APIレスポンス構造に合わせて修正
+            const route = routeData.route || routeData;
+            
+            // 距離と時間の単位変換
+            const distanceKm = (route.distance / 1000).toFixed(2);
+            const durationMin = Math.round(route.duration / 60);
+            const durationHours = Math.floor(durationMin / 60);
+            const durationMinRem = durationMin % 60;
+            
+            let durationStr = '';
+            if (durationHours > 0) {
+                durationStr = `${durationHours}時間${durationMinRem}分`;
+            } else {
+                durationStr = `${durationMin}分`;
+            }
+            
+            // HTML生成
+            let html = `
+                <p><span>距離:</span> ${distanceKm} km</p>
+                <p><span>所要時間:</span> ${durationStr} (${route.duration}秒)</p>
+                <p><span>移動手段:</span> ${getProfileName(route.profile)}</p>
+            `;
+            
+            if (isDetour && route.detourFactor) {
+                html += `<p><span>遠回り係数:</span> ${route.detourFactor}倍</p>`;
+            }
+            
+            routeDetailsEl.innerHTML = html;
+            routeInfoEl.style.display = 'block';
+            
+            // デバッグ情報
+            const geometry = route.geometry || routeData.coordinates;
+            if (geometry) {
+                let geometryType = '不明';
+                let dataLength = 0;
+                
+                if (typeof geometry === 'string') {
+                    geometryType = 'JSON文字列';
+                    dataLength = geometry.length;
+                } else if (Array.isArray(geometry)) {
+                    geometryType = '座標配列';
+                    dataLength = geometry.length;
+                }
+                
+                debugInfoEl.innerHTML = `
+                    <p><strong>デバッグ情報:</strong></p>
+                    <p>Geometry形式: ${geometryType}</p>
+                    <p>データ長: ${dataLength}</p>
+                    <p>座標点数: ${Array.isArray(geometry) ? geometry.length : 'JSON解析後に判明'}</p>
+                `;
+            }
+        }
+        
+        // 移動手段名の変換
+        function getProfileName(profile) {
+            const profiles = {
+                'driving': '車',
+                'walking': '徒歩',
+                'cycling': '自転車'
+            };
+            return profiles[profile] || profile;
+        }
+        
+        // 経路を地図上に描画する関数（修正済み）
+        function displayRoute(routeData, isDetour) {
+            try {
+                // APIレスポンス構造に合わせてgeometryを取得
+                let coordinates = [];
+                
+                // まず coordinates 配列を試行
+                if (routeData.coordinates && Array.isArray(routeData.coordinates)) {
+                    coordinates = routeData.coordinates.map(coord => [coord.lat, coord.lng]);
+                    console.log('coordinates配列を使用:', coordinates.length + '点');
+                }
+                // 次に route.geometry を試行
+                else if (routeData.route && routeData.route.geometry) {
+                    coordinates = parseGeometry(routeData.route.geometry);
+                    console.log('route.geometryを使用:', coordinates.length + '点');
+                }
+                // 最後に直接geometry
+                else if (routeData.geometry) {
+                    coordinates = parseGeometry(routeData.geometry);
+                    console.log('直接geometryを使用:', coordinates.length + '点');
+                }
+                
+                if (!coordinates || coordinates.length === 0) {
+                    console.error('有効な座標データが見つかりません', routeData);
+                    showError('経路データが見つかりません');
+                    return;
+                }
+                
+                // 経路レイヤーの作成
+                const routeStyle = {
+                    color: isDetour ? '#e74c3c' : '#3498db',
+                    weight: 5,
+                    opacity: 0.8
+                };
+                
+                const routeLayer = L.polyline(coordinates, routeStyle).addTo(map);
+                
+                // レイヤー変数に格納（後でクリア用）
+                if (isDetour) {
+                    detourRouteLayer = routeLayer;
+                } else {
+                    shortestRouteLayer = routeLayer;
+                }
+                
+                console.log(`経路を描画しました: ${coordinates.length}ポイント`);
+                if (coordinates.length > 0) {
+                    console.log(`開始: [${coordinates[0]}], 終了: [${coordinates[coordinates.length-1]}]`);
+                }
+                
+                // ルートに合わせて地図の表示範囲を調整
+                map.fitBounds(routeLayer.getBounds(), { padding: [20, 20] });
+                
+            } catch (error) {
+                console.error('経路の描画エラー:', error);
+                showError(`経路の描画に失敗しました: ${error.message}`);
+            }
+        }
+        
+        // geometry解析関数 - JSON形式とポリライン形式の両方に対応（修正済み）
+        function parseGeometry(geometry) {
+            // 空の場合はエラー
+            if (!geometry) {
+                return [];
+            }
+            
+            // JSONオブジェクトの文字列形式の場合
+            if (typeof geometry === 'string' && geometry.startsWith('[') && geometry.endsWith(']')) {
+                try {
+                    // JSON文字列をパース
+                    const coords = JSON.parse(geometry);
+                    
+                    // 形式をチェック：[{lat, lng}, {lat, lng}, ...]
+                    if (Array.isArray(coords) && coords.length > 0 && coords[0].lat !== undefined) {
+                        console.log('JSON座標オブジェクト配列形式を検出しました');
+                        return coords.map(coord => [coord.lat, coord.lng]);
+                    }
+                    
+                    // 形式をチェック：[[lat, lng], [lat, lng], ...]
+                    if (Array.isArray(coords) && coords.length > 0 && Array.isArray(coords[0])) {
+                        console.log('JSON座標配列形式を検出しました');
+                        return coords;
+                    }
+                } catch (e) {
+                    console.warn('JSON形式の解析に失敗:', e);
+                }
+            }
+            
+            // 配列形式の場合
+            if (Array.isArray(geometry)) {
+                if (geometry.length > 0 && geometry[0].lat !== undefined) {
+                    return geometry.map(coord => [coord.lat, coord.lng]);
+                }
+                return geometry;
+            }
+            
+            // ポリライン形式と仮定（文字列）
+            if (typeof geometry === 'string') {
+                try {
+                    return decodePolyline(geometry);
+                } catch (e) {
+                    console.error('ポリラインデコードに失敗しました:', e);
+                    return [];
+                }
+            }
+            
+            return [];
+        }
+        
+        // Google Polyline Algorithmのデコード実装
+        function decodePolyline(polyline) {
+            let points = [];
+            let index = 0;
+            let lat = 0;
+            let lng = 0;
+
+            while (index < polyline.length) {
+                let b;
+                let shift = 0;
+                let result = 0;
+
+                do {
+                    b = polyline.charCodeAt(index++) - 63;
+                    result |= (b & 0x1f) << shift;
+                    shift += 5;
+                } while (b >= 0x20);
+                
+                const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+                lat += dlat;
+
+                shift = 0;
+                result = 0;
+                
+                do {
+                    b = polyline.charCodeAt(index++) - 63;
+                    result |= (b & 0x1f) << shift;
+                    shift += 5;
+                } while (b >= 0x20);
+                
+                const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+                lng += dlng;
+
+                points.push([lat * 1e-5, lng * 1e-5]);
+            }
+            
+            console.log('ポリライン形式をデコードしました');
+            return points;
+        }
+        
+        // ボタンイベントリスナーの設定
+        document.getElementById('calculateBtn').addEventListener('click', () => {
+            calculateRoute(true); // 遠回りあり
+        });
+        
+        document.getElementById('calculateMinRouteBtn').addEventListener('click', () => {
+            calculateRoute(false); // 最短経路
+        });
+        
+        // プリセットボタンのイベントリスナー設定
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const origin = btn.getAttribute('data-origin');
+                const dest = btn.getAttribute('data-dest');
+                
+                document.getElementById('origin').value = origin;
+                document.getElementById('destination').value = dest;
+                
+                clearAll();
+                
+                // マーカー表示
+                try {
+                    const originCoords = parseCoords(origin);
+                    const destCoords = parseCoords(dest);
+                    
+                    showMarker({ lat: originCoords.lat, lng: originCoords.lng }, 'origin');
+                    showMarker({ lat: destCoords.lat, lng: destCoords.lng }, 'destination');
+                    
+                    // マップの表示範囲を調整
+                    const bounds = L.latLngBounds(
+                        [originCoords.lat, originCoords.lng],
+                        [destCoords.lat, destCoords.lng]
+                    );
+                    map.fitBounds(bounds, { padding: [50, 50] });
+                } catch (error) {
+                    showError(`プリセット位置の設定エラー: ${error.message}`);
+                }
+            });
+        });
+        
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('requestedDuration').value = '1800'; // デフォルト30分
+        });
+    </script>
+</body>
+</html>

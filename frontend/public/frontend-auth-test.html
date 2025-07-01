@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>フロントエンド認証テスト</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+        }
+        h1, h2 {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 30px;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            margin-bottom: 20px;
+            border-top: 4px solid #4285f4;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        #logoutBtn {
+            background-color: #db4437;
+        }
+        #logoutBtn:hover {
+            background-color: #c53929;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #28a745;
+            white-space: pre-wrap;
+        }
+        .error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        .hidden {
+            display: none;
+        }
+        #userInfo {
+            margin-top: 20px;
+        }
+        #token-display {
+            word-break: break-all;
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 12px;
+            border: 1px solid #ddd;
+        }
+        .info-section {
+            background-color: #e8f0fe;
+            border-left: 4px solid #4285f4;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>遠回りナビゲーションシステム フロントエンド認証テスト</h1>
+    <div class="info-section">
+        <p>このページはフロントエンドからバックエンドAPIの認証機能をテストするためのものです。</p>
+        <p><strong>現在の接続状態:</strong> <span id="cors-status">確認中...</span></p>
+    </div>
+
+    <div id="auth-status" class="card">
+        <h2>認証状態</h2>
+        <div id="status-message">ログインしていません</div>
+        <div id="token-display" class="hidden"></div>
+        <div id="userInfo" class="hidden">
+            <h3>現在のユーザー情報</h3>
+            <pre id="user-data"></pre>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>ユーザー登録</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="reg-username">ユーザー名:</label>
+                    <input type="text" id="reg-username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-email">メールアドレス:</label>
+                    <input type="email" id="reg-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">パスワード:</label>
+                    <input type="password" id="reg-password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-firstname">名:</label>
+                    <input type="text" id="reg-firstname" name="first_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-lastname">姓:</label>
+                    <input type="text" id="reg-lastname" name="last_name" required>
+                </div>
+                <button type="submit">登録</button>
+                <div id="register-result"></div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>ログイン (ユーザー名)</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">ユーザー名:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">パスワード:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit">ログイン</button>
+                <div id="login-result"></div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>ログイン (メールアドレス)</h2>
+            <form id="loginEmailForm">
+                <div class="form-group">
+                    <label for="email">メールアドレス:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="email-password">パスワード:</label>
+                    <input type="password" id="email-password" name="password" required>
+                </div>
+                <button type="submit">ログイン</button>
+                <div id="login-email-result"></div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>パスワード変更</h2>
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label for="current-password">現在のパスワード:</label>
+                    <input type="password" id="current-password" name="currentPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-password">新しいパスワード:</label>
+                    <input type="password" id="new-password" name="newPassword" required>
+                </div>
+                <button type="submit">パスワード変更</button>
+                <div id="change-password-result"></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>認証が必要な操作</h2>
+        <button id="getUserInfoBtn">ユーザー情報を取得</button>
+        <button id="getRouteHistoryBtn">経路履歴を取得</button>
+        <button id="logoutBtn">ログアウト</button>
+        <div id="operation-result"></div>
+    </div>
+
+    <script>
+        // APIのベースURL
+        const API_BASE_URL = 'http://localhost:3001/api';
+        
+        // トークンをローカルストレージに保存/取得する関数
+        const saveToken = (token) => localStorage.setItem('authToken', token);
+        const getToken = () => localStorage.getItem('authToken');
+        const removeToken = () => localStorage.removeItem('authToken');
+        
+        // 認証ヘッダーを生成する関数
+        const getAuthHeader = () => {
+            const token = getToken();
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        };
+        
+        // ユーザー情報をローカルストレージに保存/取得する関数
+        const saveUser = (user) => localStorage.setItem('user', JSON.stringify(user));
+        const getUser = () => {
+            const user = localStorage.getItem('user');
+            return user ? JSON.parse(user) : null;
+        };
+        const removeUser = () => localStorage.removeItem('user');
+        
+        // 結果表示用の関数
+        const showResult = (elementId, message, isError = false) => {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = isError ? 'error' : 'success';
+        };
+
+        // 認証状態の更新
+        const updateAuthStatus = () => {
+            const statusEl = document.getElementById('status-message');
+            const tokenEl = document.getElementById('token-display');
+            const userInfoEl = document.getElementById('userInfo');
+            const userDataEl = document.getElementById('user-data');
+            
+            const token = getToken();
+            const user = getUser();
+            
+            if (token && user) {
+                statusEl.textContent = `ログイン中: ${user.username || user.email || 'ユーザー'}`;
+                tokenEl.textContent = `トークン: ${token}`;
+                tokenEl.classList.remove('hidden');
+                userInfoEl.classList.remove('hidden');
+                userDataEl.textContent = JSON.stringify(user, null, 2);
+            } else {
+                statusEl.textContent = 'ログインしていません';
+                tokenEl.classList.add('hidden');
+                userInfoEl.classList.add('hidden');
+            }
+        };
+        
+        // API呼び出し用の共通関数
+        const callApi = async (endpoint, method = 'GET', data = null, withAuth = false) => {
+            const headers = {
+                'Content-Type': 'application/json',
+                ...(withAuth ? getAuthHeader() : {})
+            };
+            
+            const config = {
+                method,
+                headers,
+                credentials: 'include' // クロスオリジン時にクッキーを送信
+            };
+            
+            if (data) {
+                config.body = JSON.stringify(data);
+            }
+            
+            try {
+                console.log(`${method} リクエスト送信先: ${API_BASE_URL}${endpoint}`);
+                
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.message || '不明なエラーが発生しました');
+                }
+                
+                return result;
+            } catch (error) {
+                console.error('API呼び出しエラー:', error);
+                throw error;
+            }
+        };
+
+        // CORS接続テスト
+        const testCorsConnection = async () => {
+            const statusElement = document.getElementById('cors-status');
+            try {
+                const response = await fetch(`http://localhost:3001/health`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    statusElement.textContent = `✅ バックエンドAPI (${API_BASE_URL}) に接続できています`;
+                    statusElement.style.color = 'green';
+                } else {
+                    statusElement.textContent = `❌ バックエンドに接続できましたが、エラーが返されました: ${response.status}`;
+                    statusElement.style.color = 'orange';
+                }
+            } catch (error) {
+                console.error('CORS接続テストエラー:', error);
+                statusElement.textContent = `❌ バックエンドAPI (${API_BASE_URL}) に接続できません。CORS設定を確認してください。`;
+                statusElement.style.color = 'red';
+            }
+        };
+        
+        // ページロード時に認証状態を更新
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAuthStatus();
+            testCorsConnection();
+        });
+        
+        // ユーザー登録フォーム
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const first_name = document.getElementById('reg-firstname').value;
+            const last_name = document.getElementById('reg-lastname').value;
+            
+            try {
+                const result = await callApi('/auth/register', 'POST', {
+                    username, email, password, first_name, last_name
+                });
+                
+                showResult('register-result', '登録に成功しました！ログインしてください。');
+                document.getElementById('registerForm').reset();
+            } catch (error) {
+                showResult('register-result', `登録に失敗しました: ${error.message}`, true);
+            }
+        });
+        
+        // ユーザー名でのログインフォーム
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const result = await callApi('/auth/login', 'POST', { username, password });
+                
+                // トークンとユーザー情報を保存
+                saveToken(result.data.token);
+                saveUser(result.data.user);
+                
+                showResult('login-result', 'ログインに成功しました！');
+                document.getElementById('loginForm').reset();
+                updateAuthStatus();
+            } catch (error) {
+                showResult('login-result', `ログインに失敗しました: ${error.message}`, true);
+            }
+        });
+        
+        // メールアドレスでのログインフォーム
+        document.getElementById('loginEmailForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('email-password').value;
+            
+            try {
+                const result = await callApi('/auth/login', 'POST', { email, password });
+                
+                // トークンとユーザー情報を保存
+                saveToken(result.data.token);
+                saveUser(result.data.user);
+                
+                showResult('login-email-result', 'ログインに成功しました！');
+                document.getElementById('loginEmailForm').reset();
+                updateAuthStatus();
+            } catch (error) {
+                showResult('login-email-result', `ログインに失敗しました: ${error.message}`, true);
+            }
+        });
+        
+        // パスワード変更フォーム
+        document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const user = getUser();
+            
+            if (!user || !user.id) {
+                showResult('change-password-result', 'パスワードを変更するには、まずログインしてください', true);
+                return;
+            }
+            
+            try {
+                const result = await callApi(`/auth/password/${user.id}`, 'PUT', 
+                    { currentPassword, newPassword }, true);
+                
+                showResult('change-password-result', 'パスワードが正常に変更されました');
+                document.getElementById('changePasswordForm').reset();
+            } catch (error) {
+                showResult('change-password-result', `パスワード変更に失敗しました: ${error.message}`, true);
+            }
+        });
+        
+        // ユーザー情報取得ボタン
+        document.getElementById('getUserInfoBtn').addEventListener('click', async () => {
+            try {
+                const result = await callApi('/auth/me', 'GET', null, true);
+                showResult('operation-result', `ユーザー情報を取得しました: ${JSON.stringify(result.data)}`);
+            } catch (error) {
+                showResult('operation-result', `ユーザー情報の取得に失敗しました: ${error.message}`, true);
+            }
+        });
+        
+        // 経路履歴取得ボタン
+        document.getElementById('getRouteHistoryBtn').addEventListener('click', async () => {
+            try {
+                const result = await callApi('/routes/history', 'GET', null, true);
+                showResult('operation-result', `経路履歴を取得しました: ${JSON.stringify(result.data)}`);
+            } catch (error) {
+                showResult('operation-result', `経路履歴の取得に失敗しました: ${error.message}`, true);
+            }
+        });
+        
+        // ログアウトボタン
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await callApi('/auth/logout', 'POST', null, true);
+                
+                // ローカルストレージからトークンとユーザー情報を削除
+                removeToken();
+                removeUser();
+                
+                showResult('operation-result', 'ログアウトしました');
+                updateAuthStatus();
+            } catch (error) {
+                showResult('operation-result', `ログアウトに失敗しました: ${error.message}`, true);
+            }
+        });
+    </script>
+</body>
+</html>
