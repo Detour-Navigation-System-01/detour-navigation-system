@@ -1,6 +1,6 @@
 # 経路計算API呼び出しテストファイル
 @baseUrl = http://localhost:3001/api
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkyIiwiaWF0IjoxNzUxMzQwNTA3LCJleHAiOjE3NTEzNDQxMDd9.nLoeO65fK9MHUuFI02RSRMzUDmZAyDrpKK5Cr8WkMsc
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwidXNlcm5hbWUiOiJuYWthbmlzaGkzIiwiaWF0IjoxNzUxMzQ3NDc4LCJleHAiOjE3NTEzNTEwNzh9.8eEX6DdJIiJOQNJYmKUhDFNmB8hOk2CjRM1AB0QMMSI
 
 ### 接続テスト - デフォルト（東京駅→皇居）
 GET {{baseUrl}}/routes/test

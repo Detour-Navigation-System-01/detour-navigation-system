@@ -2,15 +2,15 @@
 @baseUrl = http://localhost:3001/api
 
 // ログイン後に取得したJWTトークンを保存するための変数
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkyIiwiaWF0IjoxNzUxMzM5MDY2LCJleHAiOjE3NTEzNDI2NjZ9._ZRK3xuAPNz9o6vFBaLipqn8DQlkW01MTKIJP5TpidM
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwidXNlcm5hbWUiOiJuYWthbmlzaGkzIiwiaWF0IjoxNzUxMzUwNTczLCJleHAiOjE3NTEzNTQxNzN9.1mkmV6swvckwe_AhMQXY23Udmvg5lG7Wjx5tu2qmaNQ
 
 ### ユーザー登録
 POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "username": "nakanishi2",
-  "email": "nakanishi2@example.com",
+  "username": "nakanishi3",
+  "email": "nakanishi3@example.com",
   "password": "securePassword123",
   "first_name": "younosuke",
   "last_name": "nakanishi"
@@ -21,7 +21,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "username": "nakanishi2",
+  "username": "nakanishi3",
   "password": "securePassword123"
 }
 
