@@ -55,6 +55,11 @@ export default function TripInputForm() {
       }
     }
 
+    if (!time.trim()) {
+      newErrors.time = "移動時間を入力してください";
+    }
+    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

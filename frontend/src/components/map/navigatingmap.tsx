@@ -28,11 +28,25 @@ const currentLocationIcon = new L.Icon({
   popupAnchor: [0, -12],
 });
 
+function getDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000; // Earth radius in meters
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 export default function NavigatingPage() {
   const [steps, setSteps] = useState<Step[]>([]);
   const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
   const [center, setCenter] = useState<[number, number]>([35.681236, 139.767125]); // 東京駅
   const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null);
+  const [nearbyMessage, setNearbyMessage] = useState<string | null>(null);
   const watchIdRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -52,19 +66,29 @@ export default function NavigatingPage() {
     }
   }, []);
 
-  // 現在地を10秒ごとに更新
   useEffect(() => {
     if (!navigator.geolocation) {
       console.warn("位置情報はこのブラウザでサポートされていません");
       return;
     }
 
-    // 初回取得と10秒ごと更新のための関数
     const updatePosition = () => {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          setCurrentPosition([pos.coords.latitude, pos.coords.longitude]);
+          const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+          setCurrentPosition(coords);
           console.log(`📍 現在地更新: lat=${coords[0].toFixed(6)}, lon=${coords[1].toFixed(6)} (${new Date().toLocaleTimeString()})`);
+
+          // 次のステップとの距離を確認
+          if (steps.length > 0) {
+            const nextStep = steps[0]; // とりあえず1番目だけ確認
+            const distance = getDistanceMeters(coords[0], coords[1], nextStep.start_lat, nextStep.start_lng);
+            if (distance < 10) {
+              setNearbyMessage(`「${nextStep.instruction}」が近くにあります`);
+            } else {
+              setNearbyMessage(null);
+            }
+          }
         },
         (err) => {
           console.error("位置情報の取得に失敗しました:", err.message);
@@ -77,27 +101,48 @@ export default function NavigatingPage() {
       );
     };
 
-    updatePosition(); // 初回
-
-    const intervalId = setInterval(updatePosition, 10000); // 10秒ごとに更新
+    updatePosition();
+    const intervalId = setInterval(updatePosition, 10000);
 
     return () => {
       clearInterval(intervalId);
-      // もしwatchPositionを使うならここで解除する
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
       }
     };
-  }, []);
+  }, [steps]);
 
   return (
-    <div className="p-4 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">ナビゲーション案内</h1>
+    <div className="p-4 max-w-xl mx-auto space-y-4">
+
+      {nearbyMessage && (
+        <div className="p-3 bg-yellow-100 text-yellow-800 border border-yellow-300 rounded text-center font-medium shadow">
+          {nearbyMessage}
+        </div>
+      )}
+
       {steps.length === 0 ? (
         <p>案内データが見つかりませんでした。</p>
       ) : (
         <>
-          <ol className="space-y-4 mb-6">
+          <div style={{ height: 400, width: "100%" }}>
+            <MapContainer center={center} zoom={15} style={{ height: "100%", width: "100%" }}>
+              <TileLayer
+                attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {routeCoords.length > 0 && (
+                <Polyline positions={routeCoords} color="#2563eb" weight={5} opacity={0.7} />
+              )}
+              {currentPosition && (
+                <Marker position={currentPosition} icon={currentLocationIcon}>
+                  <Popup>現在地</Popup>
+                </Marker>
+              )}
+            </MapContainer>
+          </div>
+
+          <ol className="space-y-4">
             {steps.map((step, idx) => (
               <li key={idx} className="p-4 border rounded-lg shadow-sm bg-white">
                 <p className="font-semibold text-gray-800">
@@ -112,25 +157,6 @@ export default function NavigatingPage() {
               </li>
             ))}
           </ol>
-
-          <div style={{ height: 400, width: "100%" }}>
-            <MapContainer center={center} zoom={15} style={{ height: "100%", width: "100%" }}>
-              <TileLayer
-                attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {routeCoords.length > 0 && (
-                <Polyline positions={routeCoords} color="#2563eb" weight={5} opacity={0.7} />
-              )}
-
-              {/* 現在地マーカー */}
-              {currentPosition && (
-                <Marker position={currentPosition} icon={currentLocationIcon}>
-                  <Popup>現在地</Popup>
-                </Marker>
-              )}
-            </MapContainer>
-          </div>
         </>
       )}
     </div>
