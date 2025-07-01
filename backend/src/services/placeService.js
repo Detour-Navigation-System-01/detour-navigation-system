@@ -57,8 +57,14 @@ class PlaceService {
       const validatedData = {
         ...placeData,
         lat: parseFloat(placeData.lat),
-        lng: parseFloat(placeData.lng)
+        lng: parseFloat(placeData.lng),
+        userId: placeData.userId
       };
+
+      if (!validatedData.userId) {
+        
+        throw new AppError('userIdが必要です', 400);
+      }
 
       // 座標の妥当性チェック
       if (isNaN(validatedData.lat) || isNaN(validatedData.lng)) {
@@ -91,8 +97,8 @@ class PlaceService {
    * @returns {Object} 作成または取得された場所
    */
   async findOrCreatePlaceByCoordinates(coordData) {
+    const { lat, lng, name, userId } = coordData;
     try {
-      const { lat, lng, name } = coordData;
       
       // 既存の近い場所を検索（半径100m以内）
       // TODO: 実装時はfindNearbyメソッドを使用
@@ -103,11 +109,12 @@ class PlaceService {
 
       // 見つからない場合は新規作成
       const placeData = {
-        name: name || `Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
+        name: name || `Location (${lat.toFixed(6)}, ${lng.toFixed(6)})`,
         lat: parseFloat(lat),
         lng: parseFloat(lng),
         category: 'coordinate',
-        description: 'Automatically created from coordinates'
+        description: 'Automatically created from coordinates',
+        userId: userId
       };
 
       return await this.createPlace(placeData);
@@ -232,6 +239,54 @@ class PlaceService {
     } catch (error) {
       console.error('代替近隣検索エラー:', error);
       return [];
+    }
+  }
+
+  /**
+   * 指定されたユーザーIDに紐づく場所を取得
+   * @param {number} userId - ユーザーID
+   * @param {Object} options - 取得オプション（ソート、ページネーション、フィルタリング等）
+   * @returns {Object} 取得結果と総件数
+   */
+  async getPlacesByUserId(userId, options = {}) {
+    // ユーザーIDをフィルターとしてoptionsに結合
+    const filters = { userId: userId, ...options.filters || {} };
+    const placeOptions = { ...options, filters };
+
+    try {
+      // placeRepositoryのfindAllメソッドを使って、userIdでフィルタリングして場所を取得
+      const places = await this.placeRepository.findAll(placeOptions);
+      const total = await this.placeRepository.count(filters); // フィルターされた総数を取得
+
+      return {
+        data: places,
+        total
+      };
+    } catch (error) {
+      console.error(`❌ ユーザーID: ${userId} の場所取得エラー:`, error);
+      throw new AppError(`ユーザーID: ${userId} の場所の取得に失敗しました`, 500, error);
+    }
+  }
+
+  /**
+   * 公開設定ONのユーザーのスポットを取得
+   * @param {Object} options - 取得オプション（ソート、ページネーション、フィルタリング等）
+   * @returns {Object} 取得結果と総件数
+   */
+  async getPublicPlaces(options = {}) {
+    const { filters = {}, ...otherOptions } = options;
+    
+    try {
+      const places = await this.placeRepository.findPublicPlaces(options);
+      const total = await this.placeRepository.countPublicPlaces(filters);
+      
+      return {
+        data: places,
+        total
+      };
+    } catch (error) {
+      console.error('❌ 公開スポットの取得エラー:', error);
+      throw new AppError('公開スポットの取得に失敗しました', 500, error);
     }
   }
 }

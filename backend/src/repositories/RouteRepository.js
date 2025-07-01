@@ -41,9 +41,11 @@ class RouteRepository extends BaseRepository {
       console.log('🔧 保存前データ確認:', {
         distance: routeData.distance,
         duration: routeData.duration,
-        origin_id: routeData.origin_id,
-        destination_id: routeData.destination_id,
-        user_id: routeData.user_id,
+        origin_lat: parseFloat(routeData.origin_lat),
+        origin_lng: parseFloat(routeData.origin_lng),
+        destination_lat: parseFloat(routeData.destination_lat),
+        destination_lng: parseFloat(routeData.destination_lng),
+        userId: routeData.userId,
         detour_level: routeData.detour_level
       });
 
@@ -53,13 +55,13 @@ class RouteRepository extends BaseRepository {
         description: routeData.description || '',
         origin_id: this._safeParseInt(routeData.origin_id),
         destination_id: this._safeParseInt(routeData.destination_id),
-        user_id: routeData.user_id ? this._safeParseInt(routeData.user_id) : null,
+        userId: routeData.userId ? this._safeParseInt(routeData.userId) : null,
         distance: this._safeParseInt(routeData.distance),      // 💡 これがエラーの原因だった
         duration: this._safeParseInt(routeData.duration),      // 💡 これも変換が必要
         geometry: routeData.geometry || null,
-        detour_level: this._safeParseInt(routeData.detour_level, 1),
-        route_type: routeData.route_type || 'normal',
-        overview_polyline: routeData.overview_polyline || null
+        overview_polyline: routeData.overview_polyline || null,
+        profile: routeData.profile || 'walking',
+        requested_duration: this._safeParseInt(routeData.requested_duration)
       };
 
       console.log('✅ 変換後データ:', {
@@ -75,31 +77,30 @@ class RouteRepository extends BaseRepository {
         throw new Error(`Invalid route data: distance=${safeRouteData.distance}, duration=${safeRouteData.duration}`);
       }
 
-      if (safeRouteData.origin_id <= 0 || safeRouteData.destination_id <= 0) {
-        throw new Error(`Invalid place IDs: origin=${safeRouteData.origin_id}, destination=${safeRouteData.destination_id}`);
-      }
-
       // ルート保存
       const routeQuery = `
         INSERT INTO routes (
-          name, description, origin_id, destination_id, user_id,
-          distance, duration, geometry, detour_level, route_type, overview_polyline
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
+          name, description, origin_lat, origin_lng, destination_lat, destination_lng,
+          userId, distance, duration, geometry, overview_polyline,
+          profile, requested_duration
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
         RETURNING *
       `;
       
       const routeValues = [
-        safeRouteData.name,
-        safeRouteData.description,
-        safeRouteData.origin_id,
-        safeRouteData.destination_id,
-        safeRouteData.user_id,
-        safeRouteData.distance,        // 💡 整数変換済み
-        safeRouteData.duration,        // 💡 整数変換済み
-        safeRouteData.geometry,
-        safeRouteData.detour_level,    // 💡 整数変換済み
-        safeRouteData.route_type,
-        safeRouteData.overview_polyline
+        routeData.name,
+        routeData.description,
+        parseFloat(routeData.origin_lat),
+        parseFloat(routeData.origin_lng),
+        parseFloat(routeData.destination_lat),
+        parseFloat(routeData.destination_lng),
+        routeData.userId,
+        this._safeParseInt(routeData.distance),
+        this._safeParseInt(routeData.duration),
+        routeData.geometry,
+        routeData.overview_polyline,
+        routeData.profile || 'walking', // デフォルトはwalking
+        this._safeParseInt(routeData.requested_duration)
       ];
       
       console.log('📝 実行クエリパラメータ（型確認）:', 
@@ -188,7 +189,6 @@ class RouteRepository extends BaseRepository {
       const stepsResult = await this.pool.query(stepsQuery, [id]);
       
       route.steps = stepsResult.rows;
-      
       return route;
     } catch (error) {
       console.error(`経路(ID: ${id})の詳細取得エラー:`, error);
@@ -201,13 +201,9 @@ class RouteRepository extends BaseRepository {
     
     try {
       const query = `
-        SELECT r.*, 
-               p1.name as origin_name, p1.lat as origin_lat, p1.lng as origin_lng,
-               p2.name as destination_name, p2.lat as destination_lat, p2.lng as destination_lng
+        SELECT r.*
         FROM routes r
-        LEFT JOIN places p1 ON r.origin_id = p1.id
-        LEFT JOIN places p2 ON r.destination_id = p2.id
-        WHERE r.user_id = $1
+        WHERE r.userId = $1
         ORDER BY r.created_at DESC
         LIMIT $2 OFFSET $3
       `;

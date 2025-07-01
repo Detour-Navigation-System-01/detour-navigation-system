@@ -1,8 +1,11 @@
-### 場所APIのテスト
+### 場所APIのテスト（JWT認証対応版）
 @baseUrl = http://localhost:3001/api
 
+// ログイン後に取得したJWTトークンを保存するための変数
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwidXNlcm5hbWUiOiJuYWthbmlzaGkyIiwiaWF0IjoxNzUxMjA0MzgyLCJleHAiOjE3NTEyMDc5ODJ9.drrRK59fSjolyeIShAfPNNys8OpUFh5K-LrEjFY4Arg
+
 ### 場所一覧を取得
-GET {{baseUrl}}/places/4
+GET {{baseUrl}}/places
 Content-Type: application/json
 
 ### ページネーションとソートで場所一覧を取得
@@ -13,9 +16,10 @@ Content-Type: application/json
 GET {{baseUrl}}/places?name=観光
 Content-Type: application/json
 
-### 場所を作成
+### 場所を作成（JWT認証が必要）
 POST {{baseUrl}}/places
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 {
   "name": "東京スカイツリー",
@@ -29,21 +33,27 @@ Content-Type: application/json
 }
 
 ### 特定の場所を取得
-GET {{baseUrl}}/places/1
+GET {{baseUrl}}/places/{{myPlaceId}}
 Content-Type: application/json
 
-### 場所情報を更新
-PUT {{baseUrl}}/places/1
+### 場所情報を更新（JWT認証が必要）
+# ↓↓↓ 必ずUser ID 3が作成したスポットIDに変更してください ↓↓↓
+# 修正済み: データベースのカラム名はuser_idではなくuserIdでした
+@myPlaceId = 4
+
+PUT {{baseUrl}}/places/{{myPlaceId}}
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 {
   "description": "更新された説明文",
   "image_url": "https://example.com/updated-skytree.jpg"
 }
 
-### 場所を削除
-DELETE {{baseUrl}}/places/1
+### 場所を削除（JWT認証が必要）
+DELETE {{baseUrl}}/places/{{myPlaceId}}
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 ### カテゴリー別の場所を取得
 GET {{baseUrl}}/places/category/観光
@@ -51,4 +61,93 @@ Content-Type: application/json
 
 ### 近隣の場所を検索
 GET {{baseUrl}}/places/nearby?lat=35.7100&lng=139.8107&radius=5
+Content-Type: application/json
+
+### user idを指定して、そのユーザが作成したスポットのみを取得
+### 最初にuser1が2個スポットを作成、user2が1個スポット作成してDBに保存する
+### その後、user1が作成したもののみを取得
+
+### ユーザー3がスポットを作成 (1/2) - JWT認証が必要
+# JWTトークンのユーザーIDが使用されます
+POST {{baseUrl}}/places
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "name": "ユーザー3 - 最初のテストスポット",
+  "description": "これはユーザー3が作成した最初のテストスポットです。",
+  "category": "テスト",
+  "address": "東京都新宿区西新宿2-8-1",
+  "prefecture": "東京都",
+  "lat": 35.6896,
+  "lng": 139.6923,
+  "image_url": "https://placehold.co/600x400/FF5733/ffffff?text=User3_Spot1"
+}
+
+### ユーザー3がスポットを作成 (2/2) - JWT認証が必要
+# JWTトークンのユーザーIDが使用されます
+POST {{baseUrl}}/places
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "name": "ユーザー3 - 二番目のテストスポット",
+  "description": "これはユーザー3が作成した2番目のテストスポットです。",
+  "category": "テスト",
+  "address": "東京都渋谷区神宮前1-8-8",
+  "prefecture": "東京都",
+  "lat": 35.6702,
+  "lng": 139.7032,
+  "image_url": "https://placehold.co/600x400/33FF57/ffffff?text=User3_Spot2"
+}
+
+### 別のユーザーでログイン後、スポットを作成してみる
+# 別のユーザーでログインしてから @authToken を更新し、このリクエストを実行してください
+POST {{baseUrl}}/places
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "name": "別のユーザー - テストスポット2",
+  "description": "これは別のユーザーが作成したテストスポットです。",
+  "category": "テスト",
+  "address": "神奈川県横浜市中区山下町2",
+  "prefecture": "神奈川県",
+  "lat": 35.4475,
+  "lng": 139.6421,
+  "image_url": "https://placehold.co/600x400/3357FF/ffffff?text=OtherUser_Spot1"
+}
+
+### 現在認証中のユーザー（トークンの所有者）自身が作成した場所を取得
+# フロントエンド向けの使いやすいエンドポイント
+GET {{baseUrl}}/places/me/places
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### User ID 3 が作成したスポットのみを取得
+# URLの `/user/3` は、現在のトークンで認証されているユーザーID 3 を指定しています。
+# ここで返されるスポット一覧から、自分が作成したスポットIDを確認し、
+# 以下の更新・削除テストに使用してください。
+GET {{baseUrl}}/places/user/3
+Content-Type: application/json
+
+### 公開設定ONのユーザーが作成したスポットのみを取得
+# 認証なしで公開可能な情報のみ取得するエンドポイント
+GET {{baseUrl}}/places/public
+Content-Type: application/json
+
+### 公開設定ONのユーザーが作成したスポットを、カテゴリを指定して取得
+GET {{baseUrl}}/places/public?category=テスト
+Content-Type: application/json
+
+### 公開設定ONのユーザーが作成したスポットを、名前で検索（部分一致）
+GET {{baseUrl}}/places/public?name=テスト
+Content-Type: application/json
+
+### 公開設定ONのユーザーが作成したスポットを、ページネーションとソートで取得
+GET {{baseUrl}}/places/public?page=1&limit=3&sort=created_at&order=desc
+Content-Type: application/json
+
+### 公開設定ONのユーザーが作成したスポットを、都道府県で絞り込み
+GET {{baseUrl}}/places/public?prefecture=東京都
 Content-Type: application/json

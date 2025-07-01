@@ -9,12 +9,6 @@ class RouteService {
   constructor() {
     this.mapService = new MapService();
     this.routeRepository = new RouteRepository();
-    
-    this.routeTypes = {
-      NORMAL: 'normal',
-      DETOUR: 'detour',
-      ALTERNATIVE: 'alternative'
-    };
   }
 
   /**
@@ -60,12 +54,12 @@ class RouteService {
       console.log('🚀 経路計算開始:', { routeData, options });
 
       // 1. 出発地と目的地の処理
-      const originData = await this._resolveLocation(routeData.origin);
-      const destinationData = await this._resolveLocation(routeData.destination);
+      const originData = await this._resolveLocation(routeData.origin, options.userId);
+      const destinationData = await this._resolveLocation(routeData.destination, options.userId);
       
       console.log('📍 場所解決結果:', {
-        origin: { id: originData.place.id, name: originData.place.name },
-        destination: { id: destinationData.place.id, name: destinationData.place.name }
+        origin: originData.coords,
+        destination: destinationData.coords
       });
       
       // 2. 経由地の処理
@@ -74,7 +68,7 @@ class RouteService {
       
       if (routeData.waypoints && routeData.waypoints.length > 0) {
         for (const point of routeData.waypoints) {
-          const pointData = await this._resolveLocation(point);
+          const pointData = await this._resolveLocation(point, options.userId);
           if (pointData.place) waypointPlaces.push(pointData.place);
           if (pointData.coords) waypoints.push(pointData.coords);
         }
@@ -88,7 +82,11 @@ class RouteService {
       };
       
       // 4. MapServiceを使って経路計算
-      console.log('🗺️ MapService呼び出し中...');
+      console.log('🗺️ MapService呼び出し中...', {
+        profile: routeData.profile || 'driving',
+        options: calculateOptions
+      });
+      
       const routeResult = await this.mapService.calculateRoute(
         originData.coords,
         destinationData.coords,
@@ -99,6 +97,7 @@ class RouteService {
       
       console.log('📊 MapService結果:', {
         success: routeResult.success,
+        profile: routeData.profile || 'driving',
         distance: routeResult.data?.distance,
         duration: routeResult.data?.duration
       });
@@ -108,16 +107,75 @@ class RouteService {
         throw new Error(`経路計算に失敗しました: ${routeResult.message}`);
       }
 
+      // 徒歩プロファイルの場合、所要時間を補正する（OSRMのデモサーバーが徒歩の所要時間を正しく計算していないため）
+      if (routeResult.success && routeData.profile === 'walking' && routeResult.data?.distance) {
+        // 徒歩の平均速度: 約4.5 km/h = 1.25 m/s
+        const walkingSpeedMps = 1.25;
+        // 補正した所要時間を計算（秒単位）
+        const correctedDuration = Math.round(routeResult.data.distance / walkingSpeedMps);
+        
+        console.log('🚶‍♂️ 徒歩所要時間を補正:', {
+          originalDuration: routeResult.data.duration,
+          correctedDuration: correctedDuration,
+          distance: routeResult.data.distance,
+          speed: `${walkingSpeedMps} m/s（約4.5 km/h）`
+        });
+        
+        // 補正した所要時間に置き換え
+        routeResult.data.duration = correctedDuration;
+        
+        // 各ステップの所要時間も補正する
+        if (routeResult.data.steps && routeResult.data.steps.length > 0) {
+          console.log(`🚶‍♂️ ${routeResult.data.steps.length}個のステップの所要時間も補正します`);
+          
+          routeResult.data.steps = routeResult.data.steps.map(step => {
+            if (step.distance && step.duration) {
+              // 各ステップの距離に基づいて所要時間を再計算
+              const originalStepDuration = step.duration;
+              const correctedStepDuration = Math.round(step.distance / walkingSpeedMps);
+              
+              return {
+                ...step,
+                duration: correctedStepDuration
+              };
+            }
+            return step;
+          });
+        }
+      }
+
       // 6. 数値データの検証と変換
       const validatedRouteData = this._validateAndConvertData(routeResult.data);
       
+      // 所要時間のチェック: 指定された所要時間が最短経路より短い場合はエラー
+      if (routeData.requestedDuration && 
+          parseInt(routeData.requestedDuration) < parseInt(validatedRouteData.duration)) {
+        console.log('⚠️ 指定された所要時間が短すぎます:', {
+          requestedDuration: routeData.requestedDuration,
+          shortestDuration: validatedRouteData.duration
+        });
+        
+        return {
+          success: false,
+          message: '指定された所要時間が最短経路の所要時間より短いため、経路を計算できません',
+          data: {
+            requestedDuration: parseInt(routeData.requestedDuration),
+            shortestDuration: parseInt(validatedRouteData.duration)
+          }
+        };
+      }
+      
       // 7. 経路データの準備
       const routeToSave = {
-        name: routeData.name || `${originData.place.name || '出発地'} から ${destinationData.place.name || '目的地'} への経路`,
+        name: routeData.name || '新しい経路',
         description: routeData.description || '',
-        origin_id: originData.place.id,        // ✅ 実際のDBのID
-        destination_id: destinationData.place.id, // ✅ 実際のDBのID
-        user_id: options.userId || null,
+        userId: options.userId || null,
+
+        // ✅ 緯度経度を直接保存
+        origin_lat: parseFloat(originData.coords.lat),
+        origin_lng: parseFloat(originData.coords.lng),
+        destination_lat: parseFloat(destinationData.coords.lat),
+        destination_lng: parseFloat(destinationData.coords.lng),
         
         // 検証済みの計算結果データ
         distance: validatedRouteData.distance,
@@ -125,9 +183,12 @@ class RouteService {
         geometry: JSON.stringify(validatedRouteData.coordinates),
         overview_polyline: validatedRouteData.overview_polyline,
         
-        route_type: routeData.routeType || this.routeTypes.NORMAL,
-        detour_level: routeData.detourLevel || 1,
+        // プロファイル（移動手段）を明示的に保存
+        profile: routeData.profile || 'walking', // デフォルトは歩きに変更
+        // requestedDurationがあれば保存
+        requested_duration: routeData.requestedDuration || null,
         
+        //必要に応じて修正
         waypoints: waypointPlaces.map((place, index) => ({
           place_id: place.id,
           sequence: index + 1
@@ -146,7 +207,7 @@ class RouteService {
         maneuver: step.maneuver || null
       })) : [];
 
-      console.log('💾 データベース保存開始:', {
+      /*console.log('💾 データベース保存開始:', {
         routeData: {
           origin_id: routeToSave.origin_id,
           destination_id: routeToSave.destination_id,
@@ -154,7 +215,7 @@ class RouteService {
           duration: routeToSave.duration
         },
         stepsCount: processedSteps.length
-      });
+      });*/
       
       // 9. RouteRepositoryを使って経路とステップを保存
       const savedRoute = await this.routeRepository.createWithSteps(
@@ -190,7 +251,7 @@ class RouteService {
    * @param {Object|String|Number} location - 場所データ
    * @returns {Promise<Object>} {place, coords}
    */
-  async _resolveLocation(location) {
+  async _resolveLocation(location, userId) {
     if (!location) {
       throw new Error('場所情報が不正です');
     }
@@ -199,42 +260,19 @@ class RouteService {
     
     // 座標オブジェクトの場合
     if (location.lat !== undefined && location.lng !== undefined) {
-      try {
-        // ✅ 修正：実際のデータベースに場所を作成
-        const place = await placeService.findOrCreatePlaceByCoordinates({
-          lat: parseFloat(location.lat),
-          lng: parseFloat(location.lng),
-          name: location.name
-        });
-        
-        console.log('✅ 座標から場所作成/取得成功:', place);
-        
-        return {
-          place: place,
-          coords: { lat: location.lat, lng: location.lng }
-        };
-      } catch (error) {
-        console.error('❌ 座標からの場所作成エラー:', error);
-        throw new Error('場所の作成に失敗しました: ' + error.message);
-      }
+      return {
+        place: null,
+        coords: { lat: location.lat, lng: location.lng }
+      };
     }
     
     // 場所IDの場合
     if (typeof location === 'number' || (typeof location === 'string' && !isNaN(location))) {
-      try {
-        // ✅ 修正：実際のデータベースから場所を取得
         const place = await placeService.getPlaceById(parseInt(location));
-        
-        console.log('✅ IDから場所取得成功:', place);
-        
         return {
           place: place,
           coords: { lat: place.lat, lng: place.lng }
         };
-      } catch (error) {
-        console.error('❌ 場所取得エラー:', error);
-        throw new Error('指定された場所が見つかりません: ' + error.message);
-      }
     }
     
     throw new Error('不正な場所フォーマットです');
@@ -243,8 +281,8 @@ class RouteService {
   // 他のメソッドは既存のまま...
   async calculateAlternativeRoutes(routeData, options = {}) {
     try {
-      const originData = await this._resolveLocation(routeData.origin);
-      const destinationData = await this._resolveLocation(routeData.destination);
+      const originData = await this._resolveLocation(routeData.origin, options.userId);
+      const destinationData = await this._resolveLocation(routeData.destination, options.userId);
       
       const result = await this.mapService.calculateRouteAlternatives(
         originData.coords,
@@ -255,8 +293,9 @@ class RouteService {
         }
       );
       
-      if (!result.success) {
-        throw new Error(`代替経路計算に失敗しました: ${result.message}`);
+      if (!result.success || !result.data || !Array.isArray(result.data.routes)) {
+        console.error('❌ OSRM応答異常: ', result);
+        throw new Error(`代替経路が取得できませんでした`);
       }
       
       return {

@@ -3,34 +3,29 @@ const express = require('express');
 const router = express.Router();
 const placeController = require('../controllers/placeController');
 const { validateIdParam, validatePlaceData } = require('../middleware/validation'); 
-const { uploadImage } = require('../middleware/uploadMiddleware'); // 新しいミドルウェアをインポート
+const { uploadImage } = require('../middleware/uploadMiddleware'); 
+const authenticate = require('../middleware/auth'); // JWT認証をインポート
 
 /**
  * 場所管理API
  * @route /api/places
  */
 
-// 場所一覧を取得
-router.get('/', placeController.getAllPlaces);
-
-// カテゴリー別の場所を取得 (特定IDの前に配置する必要があります)
+// 認証が不要な公開エンドポイント
+router.get('/public', placeController.getPublicPlaces); // 新規: 公開設定ONのユーザーのスポットを取得
+router.get('/user/:id', validateIdParam, placeController.getPlacesByUserId);
 router.get('/category/:category', placeController.getPlacesByCategory);
-
-// 近隣の場所を検索 (特定IDの前に配置する必要があります)
 router.get('/nearby', placeController.getNearbyPlaces);
-
-// 特定の場所を取得
+router.get('/', placeController.getAllPlaces);
 router.get('/:id', validateIdParam, placeController.getPlaceById);
 
-// 新しい場所を作成
-router.post('/', validatePlaceData, placeController.createPlace);
+// 認証が必要だが、別途パスパラメータは不要なエンドポイント
+router.get('/me/places', authenticate, placeController.getPlacesByCurrentUser);
 
-// 場所情報を更新
-router.put('/:id', validateIdParam, validatePlaceData, placeController.updatePlace);
+// 認証が必要なエンドポイント
+router.post('/upload-image', authenticate, uploadImage, placeController.uploadPlaceImage);
+router.put('/:id', authenticate, validateIdParam, validatePlaceData, placeController.updatePlace);
+router.delete('/:id', authenticate, validateIdParam, placeController.deletePlace);
+router.post('/', authenticate, validatePlaceData, placeController.createPlace);
 
-// 場所を削除
-router.delete('/:id', validateIdParam, placeController.deletePlace);
-
-// '/upload-image' パスで、uploadImageミドルウェアを使ってファイルを受け取り、controllerで処理
-router.post('/upload-image', uploadImage, placeController.uploadPlaceImage);
 module.exports = router;

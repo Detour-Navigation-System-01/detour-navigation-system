@@ -4,14 +4,14 @@
 -- geometry カラムを追加（経路の幾何学情報を保存）
 ALTER TABLE routes ADD COLUMN geometry TEXT;
 
--- detour_level カラムを追加（遠回りレベル：1-5）
-ALTER TABLE routes ADD COLUMN detour_level INTEGER DEFAULT 1 CHECK (detour_level BETWEEN 1 AND 5);
-
--- route_type カラムを追加（通常ルート、遠回りルートなど）
-ALTER TABLE routes ADD COLUMN route_type VARCHAR(50) DEFAULT 'normal';
-
 -- overview_polyline カラムを追加（Google Maps APIのエンコードされたポリライン形式）
 ALTER TABLE routes ADD COLUMN overview_polyline TEXT;
+
+-- profile カラム（移動手段）を追加
+ALTER TABLE routes ADD COLUMN profile VARCHAR(50) DEFAULT 'walking';
+
+-- requested_duration カラム（希望所要時間）を追加
+ALTER TABLE routes ADD COLUMN requested_duration INTEGER;
 
 -- steps テーブルを作成（ターンバイターンナビゲーションの指示）
 CREATE TABLE route_steps (
@@ -32,5 +32,4 @@ CREATE TABLE route_steps (
 
 -- 新しいインデックスを作成
 CREATE INDEX idx_route_steps_route ON route_steps(route_id);
-CREATE INDEX idx_routes_detour_level ON routes(detour_level);
-CREATE INDEX idx_routes_route_type ON routes(route_type);
+CREATE INDEX idx_routes_profile ON routes(profile);

@@ -182,10 +182,16 @@ class UserService {
    * @returns {Promise<boolean>} 削除が成功したかどうか
    */
   async deleteUser(userId) {
+    const authService = require('./authService');
     try {
       // ユーザーの存在確認
       await this.getUserById(userId);
       
+      // ユーザーのすべてのトークンを無効化
+      console.log(`ユーザーID: ${userId} のすべてのトークンを無効化します`);
+      await authService.invalidateAllUserTokens(userId);
+      
+      // ユーザーを削除
       return await User.delete(userId);
     } catch (error) {
       if (error instanceof AppError) throw error;
