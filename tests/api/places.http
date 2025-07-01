@@ -2,7 +2,7 @@
 @baseUrl = http://localhost:3001/api
 
 // ログイン後に取得したJWTトークンを保存するための変数
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwidXNlcm5hbWUiOiJuYWthbmlzaGkyIiwiaWF0IjoxNzUxMjA0MzgyLCJleHAiOjE3NTEyMDc5ODJ9.drrRK59fSjolyeIShAfPNNys8OpUFh5K-LrEjFY4Arg
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwidXNlcm5hbWUiOiJuYWthbmlzaGkzIiwiaWF0IjoxNzUxMzQ3NDc4LCJleHAiOjE3NTEzNTEwNzh9.8eEX6DdJIiJOQNJYmKUhDFNmB8hOk2CjRM1AB0QMMSI
 
 ### 場所一覧を取得
 GET {{baseUrl}}/places
