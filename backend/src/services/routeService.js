@@ -1,13 +1,15 @@
 // backend/src/services/routeService.js
-// 💡 場所解決メソッドの修正版
+// 💡 遠回り経路機能追加版
 
 const MapService = require('./mapService');
+const DetourService = require('./detourService'); // 遠回りルート生成サービスを追加
 const RouteRepository = require('../repositories/RouteRepository');
 const placeService = require('./placeService'); // ✅ 修正：シングルトンを使用
 
 class RouteService {
   constructor() {
     this.mapService = new MapService();
+    this.detourService = new DetourService(); // 遠回りサービスを初期化
     this.routeRepository = new RouteRepository();
   }
 
@@ -147,22 +149,60 @@ class RouteService {
       // 6. 数値データの検証と変換
       const validatedRouteData = this._validateAndConvertData(routeResult.data);
       
-      // 所要時間のチェック: 指定された所要時間が最短経路より短い場合はエラー
-      if (routeData.requestedDuration && 
-          parseInt(routeData.requestedDuration) < parseInt(validatedRouteData.duration)) {
-        console.log('⚠️ 指定された所要時間が短すぎます:', {
-          requestedDuration: routeData.requestedDuration,
-          shortestDuration: validatedRouteData.duration
-        });
+      // 希望所要時間の処理
+      if (routeData.requestedDuration) {
+        const requestedDuration = parseInt(routeData.requestedDuration);
+        const shortestDuration = parseInt(validatedRouteData.duration);
         
-        return {
-          success: false,
-          message: '指定された所要時間が最短経路の所要時間より短いため、経路を計算できません',
-          data: {
-            requestedDuration: parseInt(routeData.requestedDuration),
-            shortestDuration: parseInt(validatedRouteData.duration)
+        // 所要時間のチェック: 指定された所要時間が最短経路より短い場合はエラー
+        if (requestedDuration < shortestDuration) {
+          console.log('⚠️ 指定された所要時間が短すぎます:', {
+            requestedDuration,
+            shortestDuration
+          });
+          
+          return {
+            success: false,
+            message: '指定された所要時間が最短経路の所要時間より短いため、経路を計算できません',
+            data: {
+              requestedDuration,
+              shortestDuration
+            }
+          };
+        }
+        
+        // 希望所要時間が最短経路より長い場合は遠回り経路を生成
+        if (requestedDuration > shortestDuration) {
+          console.log('🔄 希望所要時間に基づいた遠回り経路を生成します:', {
+            requestedDuration,
+            shortestDuration,
+            detourFactor: (requestedDuration / shortestDuration).toFixed(2)
+          });
+          
+          try {
+            // DetourServiceを使用して遠回りルートを生成
+            const detourRoute = this.detourService.generateDetour(
+              validatedRouteData,
+              requestedDuration,
+              { profile: routeData.profile }
+            );
+            
+            // 元のルートデータを遠回りルートデータで更新
+            validatedRouteData.coordinates = detourRoute.coordinates;
+            validatedRouteData.geometry = detourRoute.geometry;
+            validatedRouteData.distance = detourRoute.distance;
+            validatedRouteData.duration = detourRoute.duration;
+            
+            console.log('✅ 遠回り経路の生成に成功しました:', {
+              newDistance: validatedRouteData.distance,
+              newDuration: validatedRouteData.duration,
+              detourFactor: detourRoute.detourFactor
+            });
+          } catch (detourError) {
+            console.error('❌ 遠回り経路の生成に失敗しました:', detourError);
+            // 失敗した場合でも元の経路を使用して処理を続行
           }
-        };
+        }
       }
       
       // 7. 経路データの準備
