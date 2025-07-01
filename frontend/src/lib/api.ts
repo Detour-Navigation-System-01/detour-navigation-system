@@ -6,20 +6,29 @@ export const fetcher = async <T = unknown>(
   input: RequestInfo,
   init?: RequestInit
 ): Promise<T> => {
-  const res = await fetch(API_BASE + input, {
-    ...init,
-    credentials: 'include', // ✅ Cookie送信を明示
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers || {}),
-    },
-  });
+  const token = typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
 
-  const data = await res.json().catch(() => ({}));
+  try {
+    const res = await fetch(API_BASE + input, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...(init?.headers || {}),
+      },
+    });
 
-  if (!res.ok) {
-    throw new Error(data.message || 'APIエラー');
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      console.error('❌ fetch失敗:', res.status, res.statusText, data);
+      throw new Error(data.message || 'APIエラー');
+    }
+
+    return data;
+  } catch (err) {
+    console.error('❌ fetcherレベルでの失敗:', err);
+    throw err;
   }
-
-  return data;
 };
+

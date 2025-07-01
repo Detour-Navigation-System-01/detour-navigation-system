@@ -1,56 +1,49 @@
 'use client';
-import Link from 'next/link';
+
 import Image from 'next/image';
 import './BottomNav.css';
-import { useEffect,useState } from 'react';
-import { usePathname } from 'next/navigation';
-import { fetchCurrentUser } from '@/lib/auth';
-
-
-interface User{
-  id: number;
-  username: string;
-}
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function BottomNav() {
-
   const pathname = usePathname();
-  const [user,setUser] = useState<User |null>(null);
+  const router = useRouter();
+  const { user } = useAuth();
 
-  useEffect(()=>{
-    const getUser = async()=>{
-      try{
-        const res = await fetchCurrentUser();
-        if(res?.data?.user){
-          setUser(res.data.user);
-        }
-      }catch(e){
-        console.warn('ユーザ情報取得失敗',e);
-      }
-    };
-    getUser();
-  },[]);
+  const handleProfileClick = () => {
+    console.log('🧭 現在のuser:', user);
+    if (user) {
+      router.push(`/profile/${user.id}`);
+    } else {
+      router.push('/login');
+    }
+  };
 
-  const tabs = [
-    { href: '/', label: 'Map', icon: '/icons/map.svg' },
-    { href: '/preservation', label: 'Preserve', icon: '/icons/preserve.svg' },
-    {
-      href: user ? `/profile/${user.id}` : '/login',
-      label: 'Profile',
-      icon: '/icons/profile.svg',
-    },    
-  ];
-  
   return (
     <nav className="bottom-nav">
-      {tabs.map(({ href, label, icon }) => (
-        <Link href={href} key={href}>
-          <div className={`nav-item ${pathname === href ? 'active' : ''}`}>
-            <Image src={icon} alt={`${label} Icon`} width={24} height={24} />
-            <span>{label}</span>
-          </div>
-        </Link>
-      ))}
+      <div
+        className={`nav-item ${pathname === '/' ? 'active' : ''}`}
+        onClick={() => router.push('/')}
+      >
+        <Image src="/icons/map.svg" alt="Map Icon" width={24} height={24} />
+        <span>Map</span>
+      </div>
+
+      <div
+        className={`nav-item ${pathname === '/preservation' ? 'active' : ''}`}
+        onClick={() => router.push('/preservation')}
+      >
+        <Image src="/icons/preserve.svg" alt="Preserve Icon" width={24} height={24} />
+        <span>Preserve</span>
+      </div>
+
+      <div
+        className={`nav-item ${pathname.startsWith('/profile') || pathname === '/login' ? 'active' : ''}`}
+        onClick={handleProfileClick}
+      >
+        <Image src="/icons/profile.svg" alt="Profile Icon" width={24} height={24} />
+        <span>Profile</span>
+      </div>
     </nav>
   );
 }
