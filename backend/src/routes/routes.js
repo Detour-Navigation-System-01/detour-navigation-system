@@ -51,6 +51,7 @@ router.get('/test', async (req, res) => {
 /**
  * @route   POST /api/routes/calculate
  * @desc    出発地から目的地までの経路を計算（保存なし）
+ * @desc    requestedDurationパラメータを指定すると遠回り経路を生成
  * @access  Public
  */
 router.post('/calculate', async (req, res) => {
