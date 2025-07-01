@@ -15,11 +15,14 @@ export const fetchCurrentUser = async () => {
  * ログアウト処理（トークン削除 + サーバ通知）
  */
 export const logout = async () => {
-  // ✅ トークン削除（フロント側）
-  localStorage.removeItem('jwt_token');
+  try {
+    await fetcher('/api/auth/logout', {
+      method: 'POST',
+    });
+  } catch (err) {
+    console.warn('⚠️ ログアウトAPI失敗（たとえ失敗しても続行）', err);
+  }
 
-  // ✅ サーバにも通知（ログアウト用の処理があるなら）
-  return await fetcher<{ message: string }>('/api/auth/logout', {
-    method: 'POST',
-  });
+  // ✅ 最後に削除
+  localStorage.removeItem('jwt_token');
 };

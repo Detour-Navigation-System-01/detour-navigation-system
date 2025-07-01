@@ -45,16 +45,14 @@ const fetchUser = async () => {
 
   try {
     const res = await fetcher<{ data?: { user: User } }>('/api/auth/me');
-    console.log('🎯 /me の返り値:', res);
     setUser(res.data?.user || null);
-    console.log('✅ setUser 呼び出し後 user:', res.data?.user || null);
-    console.log('🧭 BottomNav user:', user);
-
-  } catch {
-    setUser(null);
+  } catch (err) {
+    console.warn('⚠️ /me 取得失敗:', err);
+    setUser(null); // ← 未認証として扱う
   } finally {
     setLoading(false);
   }
+
 };
 
   useEffect(() => {
