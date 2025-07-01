@@ -1,18 +1,16 @@
+// frontend/src/lib/api.ts
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
 export const fetcher = async <T = unknown>(
   input: RequestInfo,
   init?: RequestInit
 ): Promise<T> => {
-  // ✅ localStorage からトークンを取得（SSR環境対策あり）
-  const token = typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
-
   const res = await fetch(API_BASE + input, {
     ...init,
-    credentials: 'include',
+    credentials: 'include', // ✅ Cookie送信を明示
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
       ...(init?.headers || {}),
     },
   });
@@ -25,4 +23,3 @@ export const fetcher = async <T = unknown>(
 
   return data;
 };
-

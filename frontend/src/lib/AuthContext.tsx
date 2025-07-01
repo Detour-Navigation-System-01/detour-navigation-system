@@ -3,7 +3,15 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { fetcher } from '@/lib/api'
 
-type User = { userId: string; name: string } | null
+// ✅ サーバーの返り値に一致するUser型（最低限idとusernameを含む）
+type User = {
+  id: number
+  username: string
+  email?: string
+  first_name?: string
+  last_name?: string
+  [key: string]: any // 他にもプロパティが追加されることを許容
+} | null
 
 const AuthContext = createContext<{
   user: User
@@ -16,13 +24,13 @@ const AuthContext = createContext<{
 })
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User>(null) // ← 型は "User"（大文字）
+  const [user, setUser] = useState<User>(null)
   const [loading, setLoading] = useState(true)
 
   const fetchUser = async () => {
     try {
-      const data = await fetcher<User>('/api/auth/me')
-      setUser(data)
+      const res = await fetcher<{ data?: { user: User } }>('/api/auth/me')
+      setUser(res.data?.user || null)
     } catch {
       setUser(null)
     } finally {

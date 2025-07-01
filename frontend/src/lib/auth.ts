@@ -7,3 +7,9 @@ export const fetchCurrentUser = async () => {
     '/api/auth/me'
   );
 };
+
+export const logout = async () => {
+  return await fetcher<{ message: string }>('/api/auth/logout', {
+    method: 'POST',
+  });
+};
