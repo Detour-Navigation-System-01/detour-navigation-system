@@ -31,9 +31,10 @@ export default function ProfilePage() {
         />
         <h2 style={nameStyle}>{user?.username || 'ユーザー名未取得'}</h2>
         <p style={idStyle}>ID: {user?.id ?? '-'}</p>
-        <Link href="/profile/edit">
+        <Link href={`/profile/${user?.id}/edit`}>
           <button style={editButtonStyle}>編集</button>
         </Link>
+
       </div>
 
       {/* 設定トグルとログアウト */}
