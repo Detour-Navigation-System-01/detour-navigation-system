@@ -59,9 +59,9 @@ class RouteRepository extends BaseRepository {
         distance: this._safeParseInt(routeData.distance),      // 💡 これがエラーの原因だった
         duration: this._safeParseInt(routeData.duration),      // 💡 これも変換が必要
         geometry: routeData.geometry || null,
-        detour_level: this._safeParseInt(routeData.detour_level, 1),
-        route_type: routeData.route_type || 'normal',
-        overview_polyline: routeData.overview_polyline || null
+        overview_polyline: routeData.overview_polyline || null,
+        profile: routeData.profile || 'walking',
+        requested_duration: this._safeParseInt(routeData.requested_duration)
       };
 
       console.log('✅ 変換後データ:', {
@@ -81,7 +81,8 @@ class RouteRepository extends BaseRepository {
       const routeQuery = `
         INSERT INTO routes (
           name, description, origin_lat, origin_lng, destination_lat, destination_lng,
-          userId, distance, duration, geometry, detour_level, route_type, overview_polyline
+          userId, distance, duration, geometry, overview_polyline,
+          profile, requested_duration
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
         RETURNING *
       `;
@@ -97,9 +98,9 @@ class RouteRepository extends BaseRepository {
         this._safeParseInt(routeData.distance),
         this._safeParseInt(routeData.duration),
         routeData.geometry,
-        this._safeParseInt(routeData.detour_level),
-        routeData.route_type,
-        routeData.overview_polyline
+        routeData.overview_polyline,
+        routeData.profile || 'walking', // デフォルトはwalking
+        this._safeParseInt(routeData.requested_duration)
       ];
       
       console.log('📝 実行クエリパラメータ（型確認）:', 

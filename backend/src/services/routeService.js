@@ -9,12 +9,6 @@ class RouteService {
   constructor() {
     this.mapService = new MapService();
     this.routeRepository = new RouteRepository();
-    
-    this.routeTypes = {
-      NORMAL: 'normal',
-      DETOUR: 'detour',
-      ALTERNATIVE: 'alternative'
-    };
   }
 
   /**
@@ -88,7 +82,11 @@ class RouteService {
       };
       
       // 4. MapServiceを使って経路計算
-      console.log('🗺️ MapService呼び出し中...');
+      console.log('🗺️ MapService呼び出し中...', {
+        profile: routeData.profile || 'driving',
+        options: calculateOptions
+      });
+      
       const routeResult = await this.mapService.calculateRoute(
         originData.coords,
         destinationData.coords,
@@ -99,6 +97,7 @@ class RouteService {
       
       console.log('📊 MapService結果:', {
         success: routeResult.success,
+        profile: routeData.profile || 'driving',
         distance: routeResult.data?.distance,
         duration: routeResult.data?.duration
       });
@@ -108,8 +107,63 @@ class RouteService {
         throw new Error(`経路計算に失敗しました: ${routeResult.message}`);
       }
 
+      // 徒歩プロファイルの場合、所要時間を補正する（OSRMのデモサーバーが徒歩の所要時間を正しく計算していないため）
+      if (routeResult.success && routeData.profile === 'walking' && routeResult.data?.distance) {
+        // 徒歩の平均速度: 約4.5 km/h = 1.25 m/s
+        const walkingSpeedMps = 1.25;
+        // 補正した所要時間を計算（秒単位）
+        const correctedDuration = Math.round(routeResult.data.distance / walkingSpeedMps);
+        
+        console.log('🚶‍♂️ 徒歩所要時間を補正:', {
+          originalDuration: routeResult.data.duration,
+          correctedDuration: correctedDuration,
+          distance: routeResult.data.distance,
+          speed: `${walkingSpeedMps} m/s（約4.5 km/h）`
+        });
+        
+        // 補正した所要時間に置き換え
+        routeResult.data.duration = correctedDuration;
+        
+        // 各ステップの所要時間も補正する
+        if (routeResult.data.steps && routeResult.data.steps.length > 0) {
+          console.log(`🚶‍♂️ ${routeResult.data.steps.length}個のステップの所要時間も補正します`);
+          
+          routeResult.data.steps = routeResult.data.steps.map(step => {
+            if (step.distance && step.duration) {
+              // 各ステップの距離に基づいて所要時間を再計算
+              const originalStepDuration = step.duration;
+              const correctedStepDuration = Math.round(step.distance / walkingSpeedMps);
+              
+              return {
+                ...step,
+                duration: correctedStepDuration
+              };
+            }
+            return step;
+          });
+        }
+      }
+
       // 6. 数値データの検証と変換
       const validatedRouteData = this._validateAndConvertData(routeResult.data);
+      
+      // 所要時間のチェック: 指定された所要時間が最短経路より短い場合はエラー
+      if (routeData.requestedDuration && 
+          parseInt(routeData.requestedDuration) < parseInt(validatedRouteData.duration)) {
+        console.log('⚠️ 指定された所要時間が短すぎます:', {
+          requestedDuration: routeData.requestedDuration,
+          shortestDuration: validatedRouteData.duration
+        });
+        
+        return {
+          success: false,
+          message: '指定された所要時間が最短経路の所要時間より短いため、経路を計算できません',
+          data: {
+            requestedDuration: parseInt(routeData.requestedDuration),
+            shortestDuration: parseInt(validatedRouteData.duration)
+          }
+        };
+      }
       
       // 7. 経路データの準備
       const routeToSave = {
@@ -129,8 +183,10 @@ class RouteService {
         geometry: JSON.stringify(validatedRouteData.coordinates),
         overview_polyline: validatedRouteData.overview_polyline,
         
-        route_type: routeData.routeType || this.routeTypes.NORMAL,
-        detour_level: routeData.detourLevel || 1,
+        // プロファイル（移動手段）を明示的に保存
+        profile: routeData.profile || 'walking', // デフォルトは歩きに変更
+        // requestedDurationがあれば保存
+        requested_duration: routeData.requestedDuration || null,
         
         //必要に応じて修正
         waypoints: waypointPlaces.map((place, index) => ({

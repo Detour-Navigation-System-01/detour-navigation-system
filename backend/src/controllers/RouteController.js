@@ -24,8 +24,7 @@ class RouteController {
         profile, 
         name,
         description,
-        routeType,
-        detourLevel
+        requestedDuration // 希望所要時間を受け取る
       } = req.body;
       
       // 必須パラメータの検証
@@ -69,8 +68,7 @@ class RouteController {
           profile,
           name,
           description,
-          routeType,
-          detourLevel,
+          requestedDuration, // 希望所要時間を使用
           originLat, // 出発地の緯度
           originLng, // 出発地の経度
           destinationLat, // 目的地の緯度
