@@ -40,6 +40,60 @@ Content-Type: application/json
   "includeSteps": true
 }
 
+### 高度な経路計算（保存なし）- 徒歩で東京駅から皇居へ（希望所要時間30分）
+POST {{baseUrl}}/routes/calculate
+Content-Type: application/json
+
+{
+  "origin": {
+    "lat": 35.6812,
+    "lng": 139.7671
+  },
+  "destination": {
+    "lat": 35.6853,
+    "lng": 139.7528
+  },
+  "profile": "walking",
+  "includeSteps": true,
+  "requestedDuration": 1800
+}
+
+### 高度な経路計算（保存なし）- 徒歩で東京駅から皇居へ（希望所要時間1時間）
+POST {{baseUrl}}/routes/calculate
+Content-Type: application/json
+
+{
+  "origin": {
+    "lat": 35.6812,
+    "lng": 139.7671
+  },
+  "destination": {
+    "lat": 35.6853,
+    "lng": 139.7528
+  },
+  "profile": "walking",
+  "includeSteps": true,
+  "requestedDuration": 3600
+}
+
+### 高度な経路計算（保存なし）- 所要時間が短すぎる場合のエラーテスト
+POST {{baseUrl}}/routes/calculate
+Content-Type: application/json
+
+{
+  "origin": {
+    "lat": 35.6812,
+    "lng": 139.7671
+  },
+  "destination": {
+    "lat": 35.6853,
+    "lng": 139.7528
+  },
+  "profile": "walking",
+  "includeSteps": true,
+  "requestedDuration": 1000
+}
+
 ### 経路計算 - 経由地点あり（渋谷→新宿→上野）
 POST {{baseUrl}}/routes/calculate
 Content-Type: application/json

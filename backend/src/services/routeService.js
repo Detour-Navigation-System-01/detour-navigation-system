@@ -206,16 +206,31 @@ class RouteService {
         end_lng: step.end_lng || null,
         maneuver: step.maneuver || null
       })) : [];
-
-      /*console.log('💾 データベース保存開始:', {
+      
+      // skipSaveオプションが指定されている場合、保存はせずに計算結果だけを返す
+      if (options.skipSave) {
+        console.log('⏭️ 保存をスキップして計算結果のみを返します');
+        return {
+          success: true,
+          message: '経路が正常に計算されました',
+          data: {
+            route: routeToSave,
+            steps: processedSteps,
+            coordinates: validatedRouteData.coordinates
+          }
+        };
+      }
+      
+      // ここから下は保存処理（skipSaveでなければ実行される）
+      console.log('💾 データベース保存開始:', {
         routeData: {
-          origin_id: routeToSave.origin_id,
-          destination_id: routeToSave.destination_id,
+          origin_lat: routeToSave.origin_lat,
+          destination_lat: routeToSave.destination_lat,
           distance: routeToSave.distance,
           duration: routeToSave.duration
         },
         stepsCount: processedSteps.length
-      });*/
+      });
       
       // 9. RouteRepositoryを使って経路とステップを保存
       const savedRoute = await this.routeRepository.createWithSteps(

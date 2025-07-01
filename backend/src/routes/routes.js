@@ -5,6 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const MapService = require('../services/mapService');
+const RouteService = require('../services/routeService'); // RouteServiceのインポートを追加
 const RouteController = require('../controllers/RouteController');
 const authenticate = require('../middleware/auth'); // 認証ミドルウェアのインポート
 
@@ -49,7 +50,7 @@ router.get('/test', async (req, res) => {
 
 /**
  * @route   POST /api/routes/calculate
- * @desc    出発地から目的地までの経路を計算
+ * @desc    出発地から目的地までの経路を計算（保存なし）
  * @access  Public
  */
 router.post('/calculate', async (req, res) => {
@@ -60,7 +61,8 @@ router.post('/calculate', async (req, res) => {
       waypoints = [], 
       profile = 'driving',
       includeSteps = false,
-      includeAnnotations = false
+      includeAnnotations = false,
+      requestedDuration // 希望所要時間を追加
     } = req.body;
     
     // 入力パラメータの検証
@@ -80,26 +82,36 @@ router.post('/calculate', async (req, res) => {
     
     console.log(`経路計算リクエスト: ${origin.lat},${origin.lng} → ${destination.lat},${destination.lng}`);
     
-    // MapServiceを使用して経路計算（従来の方法）
-    const result = await mapService.calculateRoute(
-      origin,
-      destination,
-      waypoints,
-      profile,
-      { includeSteps, includeAnnotations }
+    // RouteServiceを使用して経路計算（保存はしない）
+    // 認証なしでも使えるようにuserIdはnullに
+    const routeService = new RouteService();
+    const routeResult = await routeService.calculateAndSaveRoute(
+      {
+        origin,
+        destination,
+        waypoints,
+        profile,
+        requestedDuration
+      },
+      { 
+        userId: null, // 未認証ユーザー
+        skipSave: true, // 保存をスキップするフラグ
+        includeSteps,
+        includeAnnotations
+      }
     );
     
-    if (result.success) {
+    if (routeResult.success) {
       return res.status(200).json({
         success: true,
-        message: result.message,
-        data: result.data
+        message: routeResult.message || '経路が正常に計算されました',
+        data: routeResult.data
       });
     } else {
-      return res.status(500).json({
+      return res.status(400).json({
         success: false,
-        message: result.message,
-        error: result.error
+        message: routeResult.message,
+        error: routeResult.error
       });
     }
   } catch (error) {
