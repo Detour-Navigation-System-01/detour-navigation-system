@@ -1,127 +1,138 @@
 "use client";
-
-import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
+import { useEffect, useState, useRef } from "react";
+import { MapContainer, TileLayer, Polyline, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-// 型定義
-interface Coordinate {
-  lat: number;
-  lon: number;
+interface Step {
+  sequence: number;
+  instruction: string;
+  distance: number;
+  duration: number;
+  start_lat: number;
+  start_lng: number;
+  maneuver: string;
 }
 
-// カスタムアイコン作成
-const createIcon = (iconUrl: string) =>
-  L.icon({
-    iconUrl,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-  });
+// 現在地マーカー用のアイコン（青い丸）
+const currentLocationIcon = new L.Icon({
+  iconUrl:
+    "data:image/svg+xml;base64," +
+    btoa(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#2563eb" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8" stroke="white" stroke-width="2" fill="#2563eb" />
+      </svg>
+    `),
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+  popupAnchor: [0, -12],
+});
 
-const startIcon = createIcon("/start-icon.png");
-const endIcon = createIcon("/end-icon.png");
-const currentIcon = createIcon("/current-location-icon.png"); // 現在地用
+export default function NavigatingPage() {
+  const [steps, setSteps] = useState<Step[]>([]);
+  const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
+  const [center, setCenter] = useState<[number, number]>([35.681236, 139.767125]); // 東京駅
+  const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null);
+  const watchIdRef = useRef<number | null>(null);
 
-const NavigatingMap = () => {
-  const searchParams = useSearchParams();
-  const fromLat = parseFloat(searchParams.get("fromLat") || "35.681");
-  const fromLon = parseFloat(searchParams.get("fromLon") || "139.767");
-  const toLat = parseFloat(searchParams.get("toLat") || "35.689");
-  const toLon = parseFloat(searchParams.get("toLon") || "139.691");
-
-  const fromCoord: Coordinate = { lat: fromLat, lon: fromLon };
-  const toCoord: Coordinate = { lat: toLat, lon: toLon };
-
-  const [routeCoords, setRouteCoords] = useState<Coordinate[]>([]);
-  const [currentPosition, setCurrentPosition] = useState<Coordinate | null>(null);
-  const mapRef = useRef<L.Map>(null);
-
-  // ルート取得
   useEffect(() => {
-    const fetchRoute = async () => {
-      try {
-        const res = await fetch("/api/route", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            start: fromCoord,
-            goal: toCoord,
-          }),
-        });
+    const stored = sessionStorage.getItem("routeSteps");
+    if (stored) {
+      const parsed: Step[] = JSON.parse(stored);
+      setSteps(parsed);
 
-        const data = await res.json();
-        if (data.route) {
-          setRouteCoords(data.route);
-        }
-      } catch (err) {
-        console.error("ルート取得失敗:", err);
+      const coords = parsed.map((s) => [s.start_lat, s.start_lng] as [number, number]);
+      setRouteCoords(coords);
+
+      if (coords.length > 0) {
+        const avgLat = coords.reduce((sum, c) => sum + c[0], 0) / coords.length;
+        const avgLng = coords.reduce((sum, c) => sum + c[1], 0) / coords.length;
+        setCenter([avgLat, avgLng]);
       }
-    };
+    }
+  }, []);
 
-    fetchRoute();
-  }, [fromLat, fromLon, toLat, toLon]);
-
-  // 現在地取得 + 10秒ごと更新
+  // 現在地を10秒ごとに更新
   useEffect(() => {
-    const updateCurrentPosition = () => {
+    if (!navigator.geolocation) {
+      console.warn("位置情報はこのブラウザでサポートされていません");
+      return;
+    }
+
+    // 初回取得と10秒ごと更新のための関数
+    const updatePosition = () => {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          const coord = { lat, lon };
-          setCurrentPosition(coord);
-          if (mapRef.current) {
-            mapRef.current.setView([lat, lon]);
-          }
+        (pos) => {
+          setCurrentPosition([pos.coords.latitude, pos.coords.longitude]);
+          console.log(`📍 現在地更新: lat=${coords[0].toFixed(6)}, lon=${coords[1].toFixed(6)} (${new Date().toLocaleTimeString()})`);
         },
         (err) => {
-          console.error("現在地取得エラー:", err);
+          console.error("位置情報の取得に失敗しました:", err.message);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 5000,
         }
       );
     };
 
-    updateCurrentPosition(); // 初回取得
-    const intervalId = setInterval(updateCurrentPosition, 10000); // 10秒ごとに取得
+    updatePosition(); // 初回
 
-    return () => clearInterval(intervalId); // クリーンアップ
+    const intervalId = setInterval(updatePosition, 10000); // 10秒ごとに更新
+
+    return () => {
+      clearInterval(intervalId);
+      // もしwatchPositionを使うならここで解除する
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
   }, []);
 
   return (
-    <div style={{ height: "100vh" }}>
-      <MapContainer
-        center={[fromLat, fromLon]}
-        zoom={15}
-        style={{ height: "100%", width: "100%" }}
-        ref={mapRef}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {/* 出発・到着マーカー */}
-        <Marker position={[fromLat, fromLon]} icon={startIcon} />
-        <Marker position={[toLat, toLon]} icon={endIcon} />
+    <div className="p-4 max-w-xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">ナビゲーション案内</h1>
+      {steps.length === 0 ? (
+        <p>案内データが見つかりませんでした。</p>
+      ) : (
+        <>
+          <ol className="space-y-4 mb-6">
+            {steps.map((step, idx) => (
+              <li key={idx} className="p-4 border rounded-lg shadow-sm bg-white">
+                <p className="font-semibold text-gray-800">
+                  {step.sequence}. {step.instruction}
+                </p>
+                <p className="text-sm text-gray-600">
+                  {step.distance.toFixed(1)}m / {Math.round(step.duration)}秒
+                </p>
+                <p className="text-xs text-gray-400">
+                  緯度: {step.start_lat}, 経度: {step.start_lng}
+                </p>
+              </li>
+            ))}
+          </ol>
 
-        {/* 経路 */}
-        {routeCoords.length > 0 && (
-          <Polyline
-            positions={routeCoords.map((coord) => [coord.lat, coord.lon])}
-            color="blue"
-          />
-        )}
+          <div style={{ height: 400, width: "100%" }}>
+            <MapContainer center={center} zoom={15} style={{ height: "100%", width: "100%" }}>
+              <TileLayer
+                attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {routeCoords.length > 0 && (
+                <Polyline positions={routeCoords} color="#2563eb" weight={5} opacity={0.7} />
+              )}
 
-        {/* 現在地マーカー */}
-        {currentPosition && (
-          <Marker
-            position={[currentPosition.lat, currentPosition.lon]}
-            icon={currentIcon}
-          />
-        )}
-      </MapContainer>
+              {/* 現在地マーカー */}
+              {currentPosition && (
+                <Marker position={currentPosition} icon={currentLocationIcon}>
+                  <Popup>現在地</Popup>
+                </Marker>
+              )}
+            </MapContainer>
+          </div>
+        </>
+      )}
     </div>
   );
-};
-
-export default NavigatingMap;
+}

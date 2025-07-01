@@ -624,7 +624,9 @@ export default function RouteResultMap() {
           <button 
             onClick={() => {
               console.log("🧭 ナビゲーション開始");
-              alert("ナビゲーション開始！");
+              if (routeSteps.length > 0) {
+                sessionStorage.setItem("routeSteps", JSON.stringify(routeSteps));
+              }
               router.push("/navigating");
             }}
             className="px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 text-base font-medium transition-colors flex-1 flex items-center justify-center gap-2"
@@ -632,6 +634,17 @@ export default function RouteResultMap() {
             <span>▶</span>
             開始
           </button>
+          {/* <button 
+            onClick={() => {
+              console.log("🧭 ナビゲーション開始");
+              alert("ナビゲーション開始！");
+              router.push("/navigating");
+            }}
+            className="px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 text-base font-medium transition-colors flex-1 flex items-center justify-center gap-2"
+          >
+            <span>▶</span>
+            開始
+          </button> */}
         </div>
       </div>
     </div>
