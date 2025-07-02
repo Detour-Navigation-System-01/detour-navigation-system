@@ -9,7 +9,9 @@ const placeService = require('./placeService');
 class RouteService {
   constructor() {
     this.mapService = new MapService();
+
     this.detourService = new TimeConstrainedDetourService(this.mapService); // 🔥 新しいサービスを初期化
+
     this.routeRepository = new RouteRepository();
     
     console.log('✅ RouteService initialized with TimeConstrainedDetourService');
@@ -151,6 +153,7 @@ class RouteService {
       // 6. 数値データの検証と変換
       const validatedRouteData = this._validateAndConvertData(routeResult.data);
       
+
       // 🔥 7. 希望所要時間の処理（新しいアルゴリズム統合）
       if (routeData.requestedDuration) {
         const requestedDuration = parseInt(routeData.requestedDuration);
@@ -161,6 +164,7 @@ class RouteService {
           shortestDuration: `${shortestDuration}秒 (${Math.round(shortestDuration/60)}分)`,
           difference: `${requestedDuration - shortestDuration}秒`
         });
+
         
         // 所要時間のチェック: 指定された所要時間が最短経路より短い場合はエラー
         if (requestedDuration < shortestDuration) {
@@ -174,6 +178,7 @@ class RouteService {
             message: '指定された所要時間が最短経路の所要時間より短いため、経路を計算できません',
             data: {
               requestedDuration,
+
               shortestDuration,
               minimumRequired: shortestDuration + 60 // 最低でも1分は余裕が必要
             }
@@ -200,11 +205,13 @@ class RouteService {
             );
             
             // 元のルートデータを新しい遠回りルートデータで更新
+
             validatedRouteData.coordinates = detourRoute.coordinates;
             validatedRouteData.geometry = detourRoute.geometry;
             validatedRouteData.distance = detourRoute.distance;
             validatedRouteData.duration = detourRoute.duration;
             
+
             // 成功ログの詳細表示
             const utilizationRate = (detourRoute.duration / requestedDuration) * 100;
             const improvementFactor = detourRoute.duration / shortestDuration;

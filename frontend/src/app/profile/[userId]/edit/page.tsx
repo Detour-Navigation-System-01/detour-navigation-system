@@ -1,25 +1,54 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { fetcher } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function ProfileEditPage() {
   const router = useRouter();
+  const { user, refresh } = useAuth();
 
-  const [username, setUsername] = useState('test');
-  const [email, setEmail] = useState('test@gmail.com');
+  // 初期値は空。userが取得されてから useEffect でセット
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // ✅ userが読み込まれたタイミングでフォームに反映
+  useEffect(() => {
+    if (user) {
+      setUsername(user.username || '');
+      setEmail(user.email || '');
+    }
+  }, [user]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (password !== confirmPassword) {
       alert('パスワードが一致しません');
       return;
     }
-    // TODO: APIに送信してプロフィールを更新
-    alert('プロフィールを更新しました');
+
+    try {
+      await fetcher(`/api/users/${user?.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          username,
+          email,
+          ...(password && { password }), // パスワードがあれば送信
+        }),
+      });
+
+      alert('プロフィールを更新しました');
+      await refresh(); // 再取得
+      router.push(`/profile/${user?.id}`);
+    } catch (err: any) {
+      console.error('❌ 更新エラー', err);
+      alert(err.message || 'プロフィール更新に失敗しました');
+    }
   };
 
   return (
@@ -39,7 +68,7 @@ export default function ProfileEditPage() {
           style={{ borderRadius: '50%', marginBottom: '8px' }}
         />
         <h2 style={{ fontSize: '20px', fontWeight: 'bold' }}>{username}</h2>
-        <p style={{ color: '#333' }}>@alex_marshall</p>
+        <p style={{ color: '#333' }}>@{user?.username}</p>
       </div>
 
       <form
@@ -72,7 +101,7 @@ export default function ProfileEditPage() {
         </div>
 
         <div>
-          <label>パスワード</label>
+          <label>パスワード（任意）</label>
           <input
             type="password"
             value={password}
@@ -82,7 +111,7 @@ export default function ProfileEditPage() {
         </div>
 
         <div>
-          <label>パスワード（確認用）</label>
+          <label>パスワード（確認）</label>
           <input
             type="password"
             value={confirmPassword}
@@ -121,6 +150,8 @@ export default function ProfileEditPage() {
     </div>
   );
 }
+
+// --- スタイル定義 ---
 
 const inputStyle: React.CSSProperties = {
   width: '100%',

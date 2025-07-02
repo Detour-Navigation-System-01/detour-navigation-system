@@ -1,44 +1,69 @@
-'use client'
+'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { fetcher } from '@/lib/api'
+import { createContext, useContext, useEffect, useState } from 'react';
+import { fetcher } from '@/lib/api';
 
-type User = { userId: string; name: string } | null
+type User = {
+  id: number;
+  username: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  [key: string]: any;
+} | null;
 
 const AuthContext = createContext<{
-  user: User
-  loading: boolean
-  refresh: () => Promise<void>
+  user: User;
+  loading: boolean;
+  refresh: () => Promise<void>;
 }>({
   user: null,
   loading: true,
-  refresh: async () => {}
-})
+  refresh: async () => {},
+});
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User>(null) // ← 型は "User"（大文字）
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<User>(null);
+  const [loading, setLoading] = useState(true);
 
-  const fetchUser = async () => {
-    try {
-      const data = await fetcher<User>('/api/auth/me')
-      setUser(data)
-    } catch {
-      setUser(null)
-    } finally {
-      setLoading(false)
-    }
+const fetchUser = async () => {
+  console.log('🔍 fetchUser start');
+
+  if (typeof window === 'undefined') {
+    console.log('🧨 サーバーサイドでfetchUserが実行されました');
+    return; // サーバーでは何もしない
   }
 
+  const token = localStorage.getItem('jwt_token');
+  console.log('🔑 トークン:', token);
+
+  if (!token) {
+    setUser(null);
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const res = await fetcher<{ data?: { user: User } }>('/api/auth/me');
+    setUser(res.data?.user || null);
+  } catch (err) {
+    console.warn('⚠️ /me 取得失敗:', err);
+    setUser(null); // ← 未認証として扱う
+  } finally {
+    setLoading(false);
+  }
+
+};
+
   useEffect(() => {
-    fetchUser()
-  }, [])
+    fetchUser();
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, loading, refresh: fetchUser }}>
       {children}
     </AuthContext.Provider>
-  )
-}
+  );
+};
 
-export const useAuth = () => useContext(AuthContext)
+export const useAuth = () => useContext(AuthContext);

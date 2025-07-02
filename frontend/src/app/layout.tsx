@@ -42,8 +42,8 @@ export default function RootLayout({
       >
         <AuthProvider>
           {children}
+          <BottomNav />
         </AuthProvider>
-        <BottomNav />
       </body>
     </html>
   );
