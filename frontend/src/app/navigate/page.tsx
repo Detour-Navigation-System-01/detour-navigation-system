@@ -6,6 +6,7 @@
 
 import { Suspense } from 'react';
 import NavigatePage from '../../components/map/routeresultmap';
+import ToNavigating from '../../components/navigationButtons/ToNavigating'; 
 
 // Loading コンポーネント
 function NavigateLoading() {
@@ -23,6 +24,7 @@ export default function Navigate() {
   return (
     <Suspense fallback={<NavigateLoading />}>
       <NavigatePage />
+      <ToNavigating />
     </Suspense>
   );
 }

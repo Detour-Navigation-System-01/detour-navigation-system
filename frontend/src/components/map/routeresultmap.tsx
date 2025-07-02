@@ -208,7 +208,8 @@ export default function RouteResultMap() {
           lng: to.lon
         },
         profile: "walking",
-        includeSteps: true
+        includeSteps: true,
+        requestedDuration: timeParam ? parseInt(timeParam) * 60 : null 
       };
 
       console.log("📤 API送信データ:", requestBody);
@@ -576,8 +577,8 @@ export default function RouteResultMap() {
         )}
       </MapContainer>
 
-      {/* 下部情報パネル */}
-      <div className="absolute bottom-0 left-0 right-0 bg-white shadow-lg z-[1000]">
+      {/* 上部情報パネル */}
+      <div className="absolute top-0 left-0 right-0 bg-white shadow-lg z-[1000]">
         {/* 時間と距離の表示 */}
         <div className="text-center py-4">
           <div className="text-2xl font-bold text-gray-800 mb-1">
@@ -597,14 +598,13 @@ export default function RouteResultMap() {
             </div>
           )}
 
-          {/* ルートステップ数表示 */}
           {routeSteps.length > 0 && (
             <div className="text-xs text-gray-500 mt-1">
               {routeSteps.length}つのステップ
             </div>
           )}
         </div>
-        
+
         {/* ボタン */}
         <div className="flex gap-3 px-4 pb-6">
           <button 
@@ -634,19 +634,44 @@ export default function RouteResultMap() {
             <span>▶</span>
             開始
           </button>
-          {/* <button 
-            onClick={() => {
-              console.log("🧭 ナビゲーション開始");
-              alert("ナビゲーション開始！");
-              router.push("/navigating");
-            }}
-            className="px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 text-base font-medium transition-colors flex-1 flex items-center justify-center gap-2"
-          >
-            <span>▶</span>
-            開始
-          </button> */}
         </div>
       </div>
+
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-md z-[1000] w-[90%] max-w-md px-4 py-3">
+        {/* 上のバー */}
+        <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-2" />
+
+        {/* 時間と距離 */}
+        <div className="text-center mb-3 text-gray-900 font-medium text-base">
+          {duration ? formatDuration(duration) : '計算中...'} ({distance}km)
+        </div>
+
+        {/* ボタンエリア */}
+        <div className="flex justify-between gap-3">
+          <button 
+            onClick={() => window.history.back()}
+            className="flex-1 py-2 rounded-full bg-green-100 text-green-800 text-sm font-semibold"
+          >
+            入力に戻る
+          </button>
+
+          <button 
+            onClick={() => {
+              if (routeSteps.length > 0) {
+                sessionStorage.setItem("routeSteps", JSON.stringify(routeSteps));
+              }
+              router.push("/navigating");
+            }}
+            className="flex-1 py-2 rounded-full bg-green-800 text-white text-sm font-semibold flex items-center justify-center gap-1"
+          >
+            <span>🧭</span>
+            ナビゲーションを開始する
+          </button>
+        </div>
+      </div>
+
+ 
+
     </div>
   );
 }

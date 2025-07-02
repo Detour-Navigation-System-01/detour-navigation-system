@@ -27,15 +27,24 @@ export default function TripInputForm() {
   };
 
   // 履歴をlocalStorageに保存
-  const saveSearchHistory = (fromValue: string, toValue: string) => {
-    try {
-      const current = JSON.parse(localStorage.getItem("searchHistory") || "[]");
-      const updated = Array.from(new Set([fromValue, toValue, ...current]));
-      localStorage.setItem("searchHistory", JSON.stringify(updated.slice(0, 10)));
-    } catch (error) {
-      console.error("履歴の保存に失敗しました:", error);
+const saveSearchHistory = (fromValue: string, toValue: string) => {
+  try {
+    const current = JSON.parse(localStorage.getItem("searchHistory") || "[]");
+
+    const candidates: string[] = [];
+    if (fromValue !== "現在地") {
+      candidates.push(fromValue);
     }
-  };
+    if (toValue) {
+      candidates.push(toValue);
+    }
+
+    const updated = Array.from(new Set([...candidates, ...current]));
+    localStorage.setItem("searchHistory", JSON.stringify(updated.slice(0, 10)));
+  } catch (error) {
+    console.error("履歴の保存に失敗しました:", error);
+  }
+};
 
   useEffect(() => {
     loadSearchHistory();

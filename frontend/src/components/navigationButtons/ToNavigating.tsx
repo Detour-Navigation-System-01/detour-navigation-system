@@ -2,10 +2,10 @@
 
 import { useRouter } from "next/navigation";
 
-export default function NavigationButtons() {
+export default function ToNavigating() {
   const router = useRouter();
 
-  const sharedButtonStyle = {
+  const backStyle = {
     position: "absolute" as const,
     right: "20px",
     zIndex: 1000,
@@ -17,12 +17,12 @@ export default function NavigationButtons() {
     cursor: "pointer",
   };
 
-  const inputButtonStyle = {
+  const toNavigatingStyle = {
     position: "absolute" as const,
-    top: "5vh",
-    left: "50%",
+    top: "80vh",
+    left: "80%",
     transform: "translateX(-50%)",
-    width: "60vw",
+    width: "50vw",
     height: "10vh",
     minHeight: "48px",
     fontSize: "1.3rem", // ← bigger text
@@ -45,8 +45,8 @@ export default function NavigationButtons() {
   return (
     <>
       <button
-        style={inputButtonStyle}
-        onClick={() => router.push("/input")}
+        style={toNavigatingStyle}
+        onClick={() => router.push("/navigating")}
         onTouchStart={(e) =>
           (e.currentTarget.style.transform = "translateX(-50%) scale(0.95)")
         }
@@ -69,16 +69,14 @@ export default function NavigationButtons() {
                    6 9.5S8.01 5 10.5 5 15 7.01 15 
                    9.5 12.99 14 10.5 14z" />
         </svg>
-        入力する
+        ナビゲーション開始
       </button>
 
-      <button style={{ ...sharedButtonStyle, top: "200px" }} onClick={() => router.push("/login")}>
-        profileボタン
+      <button style={{ ...backStyle, top: "200px" }} onClick={() => router.push("/login")}>
+        入力に戻る
       </button>
       
-      <button style={{ ...sharedButtonStyle, top: "400px" }} onClick={() => router.push("/camera")}>
-        cameraボタン
-      </button>
+      
     </>
   );
 }
