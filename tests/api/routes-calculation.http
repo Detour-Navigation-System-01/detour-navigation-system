@@ -1,11 +1,12 @@
 # 経路計算API呼び出しテストファイル
 @baseUrl = http://localhost:3001/api
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkzIiwiaWF0IjoxNzUxMzUzNTQyLCJleHAiOjE3NTEzNTcxNDJ9.5_mGQi-aecyWSqD7LOUqXmK87PATcgfglCPA0v0-2ho
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkzIiwiaWF0IjoxNzUxMzYxNzY0LCJleHAiOjE3NTEzNjUzNjR9.ZzfreSvpQE7hwHUmGPYb1--8cYu9a8AVUr9hm4D9DXg
+
 ### 接続テスト - デフォルト（東京駅→皇居）
 GET {{baseUrl}}/routes/test
 Content-Type: application/json
 
-### 経路計算 - 東京駅から皇居
+### 経路計算 - 東京駅から皇居（最短経路）
 POST {{baseUrl}}/routes/calculate
 Content-Type: application/json
 
@@ -39,7 +40,7 @@ Content-Type: application/json
   "includeSteps": true
 }
 
-### 高度な経路計算（保存なし）- 徒歩で東京駅から皇居へ（希望所要時間30分）
+### 遠回り経路計算 - 徒歩で東京駅から皇居へ（希望所要時間30分）
 POST {{baseUrl}}/routes/calculate
 Content-Type: application/json
 
@@ -57,7 +58,7 @@ Content-Type: application/json
   "requestedDuration": 1800
 }
 
-### 高度な経路計算（保存なし）- 徒歩で東京駅から皇居へ（希望所要時間1時間）
+### 遠回り経路計算 - 徒歩で東京駅から皇居へ（希望所要時間1時間）
 POST {{baseUrl}}/routes/calculate
 Content-Type: application/json
 
@@ -75,7 +76,25 @@ Content-Type: application/json
   "requestedDuration": 3600
 }
 
-### 高度な経路計算（保存なし）- 所要時間が短すぎる場合のエラーテスト
+### 遠回り経路計算 - 徒歩で東京駅から皇居へ（大きく遠回り - 希望所要時間2時間）
+POST {{baseUrl}}/routes/calculate
+Content-Type: application/json
+
+{
+  "origin": {
+    "lat": 35.6812,
+    "lng": 139.7671
+  },
+  "destination": {
+    "lat": 35.6853,
+    "lng": 139.7528
+  },
+  "profile": "walking",
+  "includeSteps": true,
+  "requestedDuration": 7200
+}
+
+### 遠回り経路計算 - 所要時間が短すぎる場合のエラーテスト
 POST {{baseUrl}}/routes/calculate
 Content-Type: application/json
 
