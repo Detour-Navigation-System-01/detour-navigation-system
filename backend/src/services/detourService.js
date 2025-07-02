@@ -7,6 +7,7 @@
  * @version 2.5.0
  */
 
+
 const polyline = require('@mapbox/polyline');
 
 

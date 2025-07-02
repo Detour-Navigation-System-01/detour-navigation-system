@@ -1,5 +1,13 @@
 /* SignupForm.module.css */
 
+/**
+ * @fileoverview 認証コンポーネント
+ * @description ログイン画面用css
+ * @author　平野
+ * @created 2025-06-17
+ * @version 1.0.0
+ */
+
 .container {
   display: flex;
   justify-content: center;

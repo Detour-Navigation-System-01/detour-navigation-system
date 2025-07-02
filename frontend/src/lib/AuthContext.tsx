@@ -1,3 +1,12 @@
+/**
+ * @fileoverview 認証コンポーネント
+ * @description ログイン画面用css
+ * @author 平野
+ * @created 2025-06-24
+ * @updated 2025-07-02
+ * @version 2.2.3
+ */
+
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';

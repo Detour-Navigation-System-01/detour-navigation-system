@@ -1,5 +1,14 @@
 // frontend/src/lib/api.ts
 
+/**
+ * @fileoverview 認証コンポーネント
+ * @description ログイン画面用css
+ * @author 平野
+ * @created 2025-06-10
+ * @updated 2025-07-02
+ * @version 2.1.4
+ */
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
 export const fetcher = async <T = unknown>(
