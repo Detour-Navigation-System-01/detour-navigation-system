@@ -1,4 +1,12 @@
 // backend/src/routes/places.js
+/**
+ * @fileoverview Placeルーティング
+ * @description 場所に関するエンドポイントを定義（公開スポット、作成、編集、削除など）
+ * @author 瀬下美華
+ * @created 2025-06-15
+ * @updated 2025-07-02
+ * @version 1.0.1
+ */
 const express = require('express');
 const router = express.Router();
 const placeController = require('../controllers/placeController');

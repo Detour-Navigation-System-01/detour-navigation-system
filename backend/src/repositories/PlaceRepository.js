@@ -1,4 +1,12 @@
 // backend/src/repositories/PlaceRepository.js
+/**
+ * @fileoverview PlaceRepository
+ * @description 場所エンティティに関するDBアクセスを提供するリポジトリクラス。BaseRepositoryを継承し、場所固有の検索機能も実装する。
+ * @author 瀬下美華
+ * @created 2025-06-25
+ * @updated 2025-07-02
+ * @version 1.1.1
+ */
 
 const BaseRepository = require('./BaseRepository');
 const pool = require('../utils/db');
@@ -13,9 +21,9 @@ class PlaceRepository extends BaseRepository {
   }
 
   /**
-   * 条件に基づいて場所を検索
-   * @param {Object} options - 検索オプション
-   * @returns {Promise<Array>} 検索結果
+   * 条件に基づいて場所一覧を取得します
+   * @param {Object} options - { orderBy, direction, limit, offset, filters }
+   * @returns {Promise<Object[]>} 場所リスト
    */
   async findAll(options = {}) {
     const { 
@@ -74,9 +82,9 @@ class PlaceRepository extends BaseRepository {
   }
 
   /**
-   * 条件に基づく場所の総数を取得
-   * @param {Object} filters - フィルター条件
-   * @returns {Promise<number>} 総数
+   * 条件に一致する場所の総数を取得します
+   * @param {Object} filters - 検索条件
+   * @returns {Promise<number>} 件数
    */
   async count(filters = {}) {
     // フィルター条件の構築
@@ -115,11 +123,11 @@ class PlaceRepository extends BaseRepository {
   }
 
   /**
-   * 近隣の場所を検索
+   * 指定した座標と半径に基づいて近隣の場所を取得します
    * @param {number} lat - 緯度
    * @param {number} lng - 経度
-   * @param {number} radiusKm - 検索範囲（km）
-   * @returns {Promise<Array>} 近隣の場所一覧
+   * @param {number} radiusKm - 半径（km）
+   * @returns {Promise<Object[]>} 該当する場所のリスト
    */
   async findNearby(lat, lng, radiusKm = 5) {    try {
       // PostgreSQLのEarthDistanceを使用して近隣検索を実装
@@ -147,10 +155,10 @@ class PlaceRepository extends BaseRepository {
   }
   
   /**
-   * カテゴリによる場所検索
-   * @param {string} category - カテゴリー
-   * @param {Object} options - 検索オプション
-   * @returns {Promise<Array>} 検索結果
+   * カテゴリで場所を検索します
+   * @param {string} category - カテゴリ名
+   * @param {Object} options - limit, offset 等の検索オプション
+   * @returns {Promise<Object[]>} 検索結果
    */
   async findByCategory(category, options = {}) {
     const { limit = 10, offset = 0 } = options;
@@ -171,9 +179,9 @@ class PlaceRepository extends BaseRepository {
     }  }
 
   /**
-   * 公開設定ONのユーザーのスポットを取得する
-   * @param {Object} options - 検索オプション
-   * @returns {Promise<Array>} 検索結果
+   * 公開設定ONのユーザーによる場所一覧を取得します
+   * @param {Object} options - 検索条件
+   * @returns {Promise<Object[]>} 場所リスト
    */
   async findPublicPlaces(options = {}) {
     const { 
@@ -242,9 +250,9 @@ class PlaceRepository extends BaseRepository {
   }
 
   /**
-   * 公開設定ONのユーザーのスポットの総数を取得
-   * @param {Object} filters - フィルター条件
-   * @returns {Promise<number>} 総数
+   * 公開設定ONのユーザーによる場所の総数を取得します
+   * @param {Object} filters - 検索条件
+   * @returns {Promise<number>} 件数
    */
   async countPublicPlaces(filters = {}) {
     // クエリの構築
