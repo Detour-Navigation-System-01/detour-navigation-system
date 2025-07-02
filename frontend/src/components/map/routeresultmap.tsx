@@ -462,7 +462,14 @@ export default function RouteResultMap() {
       isMounted = false;
     };
   }, [fromParam, toParam, timeParam]);
-
+  
+  useEffect(() => {
+    if (routeSteps.length > 0) {
+      sessionStorage.setItem("routeSteps", JSON.stringify(routeSteps));
+      console.log("✅ routeSteps を sessionStorage に保存しました");
+    }
+  }, [routeSteps]);
+  
   if (loading || !isClient || !leafletIcons) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -512,12 +519,13 @@ export default function RouteResultMap() {
 
   const { center, zoom } = getMapSettings();
 
+
   return (
     <div className="h-screen w-screen relative" style={{ height: "100vh", width: "100vw" }}>
       <MapContainer 
         center={center} 
         zoom={zoom} 
-        style={{ height: "80%", width: "100%" }}
+        style={{ height: "75%", width: "100%" }}
         className="z-0"
        >
         <TileLayer
@@ -535,6 +543,7 @@ export default function RouteResultMap() {
             dashArray="0"
           />
         )}
+        
         
         {/* 出発地マーカー */}
         {fromCoord && leafletIcons && (
