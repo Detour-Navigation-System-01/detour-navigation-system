@@ -1,3 +1,12 @@
+/**
+ * @fileoverview 認証コンポーネント
+ * @description ログイン画面ロジック
+ * @author 平野
+ * @created 2025-06-24
+ * @updated 2025-07-03
+ * @version 2.2.0
+ */
+
 'use client';
 
 import { useState } from 'react';

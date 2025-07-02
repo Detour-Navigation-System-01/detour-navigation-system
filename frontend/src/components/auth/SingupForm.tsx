@@ -3,7 +3,8 @@
  * @description 新規ユーザー登録用フォームコンポーネント
  * @author 平野
  * @created 2025-06-17
- * @version 1.0.0
+ * @updated 2025-06-20
+ * @version 1.2.0
  */
 
 'use client';

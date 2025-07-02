@@ -1,5 +1,14 @@
 // frontend/src/lib/auth.ts
 
+/**
+ * @fileoverview 認証コンポーネント
+ * @description ログイン画面用css
+ * @author 平野
+ * @created 2025-06-24
+ * @updated 2025-07-02
+ * @version 1.2.0
+ */
+
 import { fetcher } from './api';
 
 /**

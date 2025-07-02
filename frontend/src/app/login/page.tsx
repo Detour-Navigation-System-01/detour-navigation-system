@@ -1,10 +1,10 @@
 /**
  * @fileoverview ログインページコンポーネント
  * @description ユーザー認証のためのログインフォームを表示するページコンポーネント
- * @author 作成者名
- * @created YYYY-MM-DD
- * @updated YYYY-MM-DD
- * @version 1.0.0
+ * @author 平野
+ * @created 2025-06-17
+ * @updated 2025-06-24
+ * @version 2.0.0
  */
 
 import LoginForm from '@/components/auth/LoginForm';

@@ -1,10 +1,10 @@
 /**
  * @fileoverview ルートレイアウトコンポーネント
  * @description アプリケーション全体のレイアウトとフォント設定を管理
- * @author あなたの名前
+ * @author 平野
  * @created 2025-06-21
- * @updated 2025-06-21
- * @version 1.0.0
+ * @updated 2025-07-02
+ * @version 1.1.1
  */
 
 import 'leaflet/dist/leaflet.css';
