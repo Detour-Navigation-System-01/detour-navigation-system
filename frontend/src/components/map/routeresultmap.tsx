@@ -287,53 +287,56 @@ export default function RouteResultMap() {
       }
     } catch (err) {
       console.error("❌ バックエンドAPI ルート取得エラー:", err);
-      // フォールバック: 直接OSRM APIを使用
-      console.log("🔄 フォールバック: 直接OSRM APIを使用");
-      return await fetchRouteOSRM(from, to);
+      //エラーページに飛ぶ
+      router.push("/error");
+      return false;
+      // // フォールバック: 直接OSRM APIを使用
+      // console.log("🔄 フォールバック: 直接OSRM APIを使用");
+      // return await fetchRouteOSRM(from, to);
     }
   };
 
-  // フォールバック用のOSRM API直接呼び出し
-  const fetchRouteOSRM = async (from: Coordinate, to: Coordinate) => {
-    console.log("🚗 フォールバック ルート取得開始:", { from, to });
+  // // フォールバック用のOSRM API直接呼び出し
+  // const fetchRouteOSRM = async (from: Coordinate, to: Coordinate) => {
+  //   console.log("🚗 フォールバック ルート取得開始:", { from, to });
     
-    try {
-      await new Promise(resolve => setTimeout(resolve, 300));
+  //   try {
+  //     await new Promise(resolve => setTimeout(resolve, 300));
       
-      const response = await fetch(
-        `https://router.project-osrm.org/route/v1/walking/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson&steps=true`
-      );
+  //     const response = await fetch(
+  //       `https://router.project-osrm.org/route/v1/walking/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson&steps=true`
+  //     );
       
-      if (!response.ok) {
-        throw new Error(`OSRM API エラー: ${response.status} ${response.statusText}`);
-      }
+  //     if (!response.ok) {
+  //       throw new Error(`OSRM API エラー: ${response.status} ${response.statusText}`);
+  //     }
       
-      const data = await response.json();
-      console.log("📊 OSRM ルート取得結果:", data);
+  //     const data = await response.json();
+  //     console.log("📊 OSRM ルート取得結果:", data);
       
-      if (data.routes && data.routes.length > 0) {
-        const route = data.routes[0];
+  //     if (data.routes && data.routes.length > 0) {
+  //       const route = data.routes[0];
         
-        if (!route.geometry || !route.geometry.coordinates) {
-          throw new Error("ルートの詳細情報が取得できませんでした");
-        }
+  //       if (!route.geometry || !route.geometry.coordinates) {
+  //         throw new Error("ルートの詳細情報が取得できませんでした");
+  //       }
         
-        const coords = route.geometry.coordinates.map(([lon, lat]: [number, number]) => [lat, lon] as [number, number]);
+  //       const coords = route.geometry.coordinates.map(([lon, lat]: [number, number]) => [lat, lon] as [number, number]);
         
-        setRouteCoords(coords);
-        setDistance((route.distance / 1000).toFixed(1));
-        setDuration(Math.round(route.duration / 60)); // 秒から分に変換
+  //       setRouteCoords(coords);
+  //       setDistance((route.distance / 1000).toFixed(1));
+  //       setDuration(Math.round(route.duration / 60)); // 秒から分に変換
         
-        console.log("✅ フォールバック ルート設定完了");
-        return true;
-      } else {
-        throw new Error("指定された地点間のルートが見つかりませんでした");
-      }
-    } catch (err) {
-      console.error("❌ フォールバック ルート取得エラー:", err);
-      throw err;
-    }
-  };
+  //       console.log("✅ フォールバック ルート設定完了");
+  //       return true;
+  //     } else {
+  //       throw new Error("指定された地点間のルートが見つかりませんでした");
+  //     }
+  //   } catch (err) {
+  //     console.error("❌ フォールバック ルート取得エラー:", err);
+  //     throw err;
+  //   }
+  // };
 
   // 時間フォーマット関数
   const formatDuration = (minutes: number): string => {

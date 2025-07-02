@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react';
 import NavigatingMap from '@/components/map/navigatingmap';
+import ToCamera from '../../components/navigationButtons/ToCamera'; 
 
 // Loading コンポーネント
 function NavigatingLoading() {
@@ -19,6 +20,7 @@ export default function NavigatingPage() {
   return (
     <Suspense fallback={<NavigatingLoading />}>
       <NavigatingMap />
+      <ToCamera />
     </Suspense>
   );
 }
