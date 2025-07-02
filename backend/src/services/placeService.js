@@ -1,5 +1,12 @@
 // backend/src/services/placeService.js
-// 💡 コンストラクタエラーの修正
+/**
+ * @fileoverview PlaceService
+ * @description Placeエンティティに関するビジネスロジックを管理。場所の取得・作成・検索・削除などを担当します。
+ * @author 瀬下美華
+ * @created 2025-06-25
+ * @updated 2025-07-02
+ * @version 1.1.1
+ */
 
 const { AppError } = require('../middleware/errorHandler');
 const PlaceRepository = require('../repositories/PlaceRepository');
@@ -11,9 +18,9 @@ class PlaceService {
   }
 
   /**
-   * 場所一覧を取得
-   * @param {Object} options - 取得オプション（ソート、ページネーション、フィルタリング等）
-   * @returns {Object} 取得結果と総件数
+   * 全ての場所を取得
+   * @param {Object} options - ソート・ページネーション・フィルタなど
+   * @returns {Promise<Object>} dataとtotal件数
    */
   async getAllPlaces(options = {}) {
     const { filters = {}, ...otherOptions } = options;
@@ -32,9 +39,9 @@ class PlaceService {
   }
 
   /**
-   * 特定の場所を取得
+   * IDにより場所を取得
    * @param {number} id - 場所ID
-   * @returns {Object} 取得した場所
+   * @returns {Promise<Object>} 該当場所
    */
   async getPlaceById(id) {
     const place = await this.placeRepository.findById(id);
@@ -48,8 +55,8 @@ class PlaceService {
 
   /**
    * 新しい場所を作成
-   * @param {Object} placeData - 場所データ
-   * @returns {Object} 作成された場所
+   * @param {Object} placeData - 作成対象の場所データ
+   * @returns {Promise<Object>} 作成された場所
    */
   async createPlace(placeData) {
     try {
@@ -92,9 +99,9 @@ class PlaceService {
   }
 
   /**
-   * 💡 座標から場所を検索または作成（RouteServiceから使用）
-   * @param {Object} coordData - 座標データ {lat, lng, name?}
-   * @returns {Object} 作成または取得された場所
+   * 座標から場所を検索または作成（ルート生成用途）
+   * @param {Object} coordData - { lat, lng, name?, userId }
+   * @returns {Promise<Object>} 新規または既存の場所
    */
   async findOrCreatePlaceByCoordinates(coordData) {
     const { lat, lng, name, userId } = coordData;
@@ -125,7 +132,10 @@ class PlaceService {
   }
 
   /**
-   * 場所情報を更新
+   * 場所の更新
+   * @param {number} id - 場所ID
+   * @param {Object} updateData - 更新データ
+   * @returns {Promise<Object>} 更新後の場所
    */
   async updatePlace(id, updateData) {
     const place = await this.placeRepository.findById(id);
@@ -154,7 +164,9 @@ class PlaceService {
   }
 
   /**
-   * 場所を削除
+   * 場所の削除
+   * @param {number} id - 対象ID
+   * @returns {Promise<boolean>} 成否
    */
   async deletePlace(id) {
     const place = await this.placeRepository.findById(id);
@@ -173,7 +185,10 @@ class PlaceService {
   }
 
   /**
-   * カテゴリー別の場所を取得
+   * カテゴリに紐づく場所を取得
+   * @param {string} category - カテゴリ名
+   * @param {Object} options - 検索オプション
+   * @returns {Promise<Object>} dataとtotal
    */
   async getPlacesByCategory(category, options = {}) {
     const filters = { category, ...options.filters || {} };
@@ -193,7 +208,11 @@ class PlaceService {
   }
 
   /**
-   * 近隣の場所を検索
+   * 指定座標の近隣場所を取得
+   * @param {number} lat - 緯度
+   * @param {number} lng - 経度
+   * @param {number} radius - 半径（km）
+   * @returns {Promise<Object[]>} 該当する場所
    */
   async getNearbyPlaces(lat, lng, radius = 5) {
     try {
@@ -208,7 +227,8 @@ class PlaceService {
   }
 
   /**
-   * 💡 近隣検索の代替実装（PostgreSQL拡張が使えない場合）
+   * 近隣検索の代替手段（拡張なしでも動作）
+   * @private
    */
   async _findNearbyFallback(lat, lng, radiusKm) {
     try {
@@ -243,10 +263,10 @@ class PlaceService {
   }
 
   /**
-   * 指定されたユーザーIDに紐づく場所を取得
-   * @param {number} userId - ユーザーID
-   * @param {Object} options - 取得オプション（ソート、ページネーション、フィルタリング等）
-   * @returns {Object} 取得結果と総件数
+   * 指定ユーザーIDに紐づく場所を取得
+   * @param {number} userId - 対象ユーザーID
+   * @param {Object} options - フィルター等
+   * @returns {Promise<Object>} dataとtotal
    */
   async getPlacesByUserId(userId, options = {}) {
     // ユーザーIDをフィルターとしてoptionsに結合
@@ -269,9 +289,9 @@ class PlaceService {
   }
 
   /**
-   * 公開設定ONのユーザーのスポットを取得
-   * @param {Object} options - 取得オプション（ソート、ページネーション、フィルタリング等）
-   * @returns {Object} 取得結果と総件数
+   * 公開設定ONの場所を取得
+   * @param {Object} options - フィルター等
+   * @returns {Promise<Object>} dataとtotal
    */
   async getPublicPlaces(options = {}) {
     const { filters = {}, ...otherOptions } = options;
