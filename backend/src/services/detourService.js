@@ -1,10 +1,10 @@
-
+/**
  * TimeConstrainedDetourService.js - 時間制約を最大限活用する遠回りルート生成サービス
  * Phase 2.0: 完全改良版
  * - 設定の外出し（マジックナンバー解決）
  * - 真の動的半径計算（逆算ベース）
  * - 現実的な改善判定ロジック
-
+*/
 
 const polyline = require('@mapbox/polyline');
 
