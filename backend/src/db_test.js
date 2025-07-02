@@ -1,4 +1,11 @@
-// backend/src/routes/db_test.js
+/**
+ * @fileoverview データベース接続テスト
+ * @description データベース接続を検証するためのユーティリティ
+ * @author 中西陽之介
+ * @created 2025-06-12
+ * @updated 2025-07-03
+ * @version 1.0.0
+ */
 
 // .env ファイルを読み込む
 require('dotenv').config({ path: '../../.env' });

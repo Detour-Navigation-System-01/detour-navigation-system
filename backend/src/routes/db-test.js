@@ -1,8 +1,10 @@
 /**
- * データベースルーターのテスト用スクリプト
- * 
- * このスクリプトはExpressルーターとして実装され、
- * /api/db-testエンドポイントを提供します。
+ * @fileoverview データベース接続テストAPI
+ * @description データベース接続を確認するためのエンドポイント
+ * @author 中西陽之介
+ * @created 2025-06-15
+ * @updated 2025-07-03
+ * @version 1.0.1
  */
 const express = require('express');
 const router = express.Router();

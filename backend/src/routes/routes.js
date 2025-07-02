@@ -1,5 +1,10 @@
 /**
- * 経路計算関連のルーター
+ * @fileoverview 経路計算APIルーティング
+ * @description 経路計算に関するAPIエンドポイントの定義と処理のルーティング
+ * @author 中西陽之介
+ * @created 2025-06-18
+ * @updated 2025-07-03
+ * @version 1.2.0
  */
 
 const express = require('express');

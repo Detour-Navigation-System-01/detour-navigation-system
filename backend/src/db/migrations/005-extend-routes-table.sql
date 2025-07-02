@@ -1,4 +1,14 @@
 -- ファイル名: backend/src/db/migrations/005-extend-routes-table.sql
+
+/**
+ * @fileoverview routesテーブル拡張マイグレーション
+ * @description 経路計算結果の詳細情報（geometry, overview_polyline, 移動手段, ステップ情報）を保存するための機能拡張
+ * @author 中西陽之介
+ * @created 2025-06-14
+ * @updated 2025-07-03
+ * @version 1.0.0
+ */
+
 -- 経路計算結果の詳細情報を保存するためにroutesテーブルを拡張
 
 -- geometry カラムを追加（経路の幾何学情報を保存）

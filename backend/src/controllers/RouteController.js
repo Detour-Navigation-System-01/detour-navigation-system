@@ -1,5 +1,10 @@
 /**
- * RouteController.js - 経路関連のHTTPリクエストを処理するコントローラー
+ * @fileoverview 経路計算コントローラー
+ * @description 経路計算に関するHTTPリクエストを処理するコントローラークラス
+ * @author 中西陽之介
+ * @created 2025-06-15
+ * @updated 2025-07-03
+ * @version 1.3.0
  */
 
 const RouteService = require('../services/routeService');

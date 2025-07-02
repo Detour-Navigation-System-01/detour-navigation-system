@@ -1,4 +1,14 @@
 -- ファイル名: backend/src/db/migrations/007-create-token-blacklist.sql
+
+/**
+ * @fileoverview トークンブラックリストテーブル作成マイグレーション
+ * @description 無効化されたJWTトークンを管理するテーブルを定義。ログアウト時やセキュリティ対策に利用。
+ * @author 中西陽之介
+ * @created 2025-06-18
+ * @updated 2025-07-03
+ * @version 1.0.0
+ */
+
 CREATE TABLE token_blacklist (
   id SERIAL PRIMARY KEY,
   token TEXT NOT NULL,         -- 無効化するトークン（またはトークンのハッシュ）

@@ -1,4 +1,12 @@
-// backend/src/database/init.js
+/**
+ * @fileoverview データベース初期化モジュール
+ * @description アプリケーション起動時にデータベースの初期化を行う
+ * @author 中西陽之介
+ * @created 2025-06-12
+ * @updated 2025-07-03
+ * @version 1.0.0
+ */
+
 const { runMigration } = require('../utils/run-migration');
 const { runSeeds } = require('../utils/run-seeds');
 const fs = require('fs');

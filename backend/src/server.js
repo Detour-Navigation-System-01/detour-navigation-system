@@ -1,3 +1,12 @@
+/**
+ * @fileoverview サーバー起動スクリプト
+ * @description アプリケーションサーバーの初期化と起動処理
+ * @author 中西陽之介
+ * @created 2025-06-12
+ * @updated 2025-07-03
+ * @version 1.1.0
+ */
+
 const app = require('./app');
 const PORT = process.env.PORT || 3001;
 // データベース初期化モジュールをインポート
