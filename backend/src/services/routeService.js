@@ -1,16 +1,18 @@
 // backend/src/services/routeService.js
-// 💡 遠回り経路機能追加版
+// 💡 Phase 1: 時間制約最適化遠回り経路機能統合版
 
 const MapService = require('./mapService');
-const DetourService = require('./detourService'); // 遠回りルート生成サービスを追加
+const TimeConstrainedDetourService = require('./detourService'); // 🔥 新しいサービスに変更
 const RouteRepository = require('../repositories/RouteRepository');
-const placeService = require('./placeService'); // ✅ 修正：シングルトンを使用
+const placeService = require('./placeService');
 
 class RouteService {
   constructor() {
     this.mapService = new MapService();
-    this.detourService = new DetourService(); // 遠回りサービスを初期化
+    this.detourService = new TimeConstrainedDetourService(this.mapService); // 🔥 新しいサービスを初期化
     this.routeRepository = new RouteRepository();
+    
+    console.log('✅ RouteService initialized with TimeConstrainedDetourService');
   }
 
   /**
@@ -149,10 +151,16 @@ class RouteService {
       // 6. 数値データの検証と変換
       const validatedRouteData = this._validateAndConvertData(routeResult.data);
       
-      // 希望所要時間の処理
+      // 🔥 7. 希望所要時間の処理（新しいアルゴリズム統合）
       if (routeData.requestedDuration) {
         const requestedDuration = parseInt(routeData.requestedDuration);
         const shortestDuration = parseInt(validatedRouteData.duration);
+        
+        console.log('⏱️ 遠回り処理開始:', {
+          requestedDuration: `${requestedDuration}秒 (${Math.round(requestedDuration/60)}分)`,
+          shortestDuration: `${shortestDuration}秒 (${Math.round(shortestDuration/60)}分)`,
+          difference: `${requestedDuration - shortestDuration}秒`
+        });
         
         // 所要時間のチェック: 指定された所要時間が最短経路より短い場合はエラー
         if (requestedDuration < shortestDuration) {
@@ -166,46 +174,74 @@ class RouteService {
             message: '指定された所要時間が最短経路の所要時間より短いため、経路を計算できません',
             data: {
               requestedDuration,
-              shortestDuration
+              shortestDuration,
+              minimumRequired: shortestDuration + 60 // 最低でも1分は余裕が必要
             }
           };
         }
         
-        // 希望所要時間が最短経路より長い場合は遠回り経路を生成
+        // 希望所要時間が最短経路より長い場合は新しい時間制約最適化遠回り経路を生成
         if (requestedDuration > shortestDuration) {
-          console.log('🔄 希望所要時間に基づいた遠回り経路を生成します:', {
-            requestedDuration,
-            shortestDuration,
-            detourFactor: (requestedDuration / shortestDuration).toFixed(2)
+          console.log('🎯 TimeConstrainedDetourService使用開始:', {
+            algorithm: '時間制約最大活用型',
+            targetUtilization: '95-100%',
+            method: '円形候補点生成 + 反復改善'
           });
           
           try {
-            // DetourServiceを使用して遠回りルートを生成
-            const detourRoute = this.detourService.generateDetour(
+            // 🔥 新しいTimeConstrainedDetourServiceを使用
+            const detourRoute = await this.detourService.generateTimeOptimizedDetour(
               validatedRouteData,
               requestedDuration,
-              { profile: routeData.profile }
+              { 
+                profile: routeData.profile,
+                userId: options.userId
+              }
             );
             
-            // 元のルートデータを遠回りルートデータで更新
+            // 元のルートデータを新しい遠回りルートデータで更新
             validatedRouteData.coordinates = detourRoute.coordinates;
             validatedRouteData.geometry = detourRoute.geometry;
             validatedRouteData.distance = detourRoute.distance;
             validatedRouteData.duration = detourRoute.duration;
             
-            console.log('✅ 遠回り経路の生成に成功しました:', {
-              newDistance: validatedRouteData.distance,
-              newDuration: validatedRouteData.duration,
-              detourFactor: detourRoute.detourFactor
+            // 成功ログの詳細表示
+            const utilizationRate = (detourRoute.duration / requestedDuration) * 100;
+            const improvementFactor = detourRoute.duration / shortestDuration;
+            
+            console.log('✅ 時間制約最適化遠回り経路の生成に成功:', {
+              originalDuration: `${shortestDuration}秒`,
+              targetDuration: `${requestedDuration}秒`,
+              actualDuration: `${detourRoute.duration}秒`,
+              utilizationRate: `${utilizationRate.toFixed(1)}%`,
+              improvementFactor: `${improvementFactor.toFixed(2)}倍`,
+              algorithm: detourRoute.algorithm,
+              iterations: detourRoute.iterations,
+              timeSaved: `${requestedDuration - detourRoute.duration}秒の余裕`
             });
+            
           } catch (detourError) {
-            console.error('❌ 遠回り経路の生成に失敗しました:', detourError);
-            // 失敗した場合でも元の経路を使用して処理を続行
+            console.error('❌ 時間制約最適化遠回り経路の生成に失敗:', detourError);
+            
+            // 🔥 詳細なエラー情報をユーザーに返す
+            const errorResponse = {
+              success: false,
+              message: `遠回り経路の生成に失敗しました: ${detourError.message}`,
+              data: {
+                requestedDuration,
+                shortestDuration,
+                error: detourError.message,
+                algorithm: 'TimeConstrainedDetourService',
+                suggestions: this._getDetourErrorSuggestions(detourError.message, requestedDuration, shortestDuration)
+              }
+            };
+            
+            return errorResponse;
           }
         }
       }
       
-      // 7. 経路データの準備
+      // 8. 経路データの準備
       const routeToSave = {
         name: routeData.name || '新しい経路',
         description: routeData.description || '',
@@ -235,7 +271,7 @@ class RouteService {
         }))
       };
 
-      // 8. ステップデータの処理
+      // 9. ステップデータの処理
       const processedSteps = validatedRouteData.steps ? validatedRouteData.steps.map((step, index) => ({
         instruction: step.instruction || `Step ${index + 1}`,
         distance: Math.floor(parseFloat(step.distance || 0)),
@@ -272,7 +308,7 @@ class RouteService {
         stepsCount: processedSteps.length
       });
       
-      // 9. RouteRepositoryを使って経路とステップを保存
+      // 10. RouteRepositoryを使って経路とステップを保存
       const savedRoute = await this.routeRepository.createWithSteps(
         routeToSave, 
         processedSteps
@@ -298,6 +334,38 @@ class RouteService {
         error: error.message
       };
     }
+  }
+
+  /**
+   * 🔥 遠回り処理エラーに対する提案を生成
+   * @private
+   */
+  _getDetourErrorSuggestions(errorMessage, requestedDuration, shortestDuration) {
+    const suggestions = [];
+    const timeDifference = requestedDuration - shortestDuration;
+    
+    if (errorMessage.includes('時間が短すぎます') || timeDifference < 60) {
+      suggestions.push(`最短経路時間（${Math.round(shortestDuration/60)}分）の1.5倍以上の時間を指定してください`);
+      suggestions.push(`推奨時間: ${Math.round((shortestDuration * 1.5)/60)}分以上`);
+    }
+    
+    if (errorMessage.includes('候補経路評価')) {
+      suggestions.push('目標時間を少し短くしてみてください');
+      suggestions.push('出発地と目的地の間に十分な道路があることを確認してください');
+    }
+    
+    if (errorMessage.includes('経路計算失敗')) {
+      suggestions.push('ネットワーク接続を確認してください');
+      suggestions.push('しばらく時間をおいて再試行してください');
+    }
+    
+    // 一般的な提案
+    if (suggestions.length === 0) {
+      suggestions.push('目標時間を調整してみてください');
+      suggestions.push('異なる出発地・目的地で試してみてください');
+    }
+    
+    return suggestions;
   }
 
   /**
@@ -333,7 +401,11 @@ class RouteService {
     throw new Error('不正な場所フォーマットです');
   }
 
-  // 他のメソッドは既存のまま...
+  // 🔥 以下のメソッドは既存のまま保持
+
+  /**
+   * 代替経路計算
+   */
   async calculateAlternativeRoutes(routeData, options = {}) {
     try {
       const originData = await this._resolveLocation(routeData.origin, options.userId);
@@ -369,6 +441,9 @@ class RouteService {
     }
   }
 
+  /**
+   * 経路履歴取得
+   */
   async getRouteHistory(userId, options = {}) {
     try {
       if (!userId) {
@@ -392,6 +467,9 @@ class RouteService {
     }
   }
 
+  /**
+   * 経路詳細取得
+   */
   async getRouteDetails(routeId) {
     try {
       if (!routeId) {
