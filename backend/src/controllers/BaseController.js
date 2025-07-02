@@ -1,8 +1,10 @@
-// backend/src/controllers/BaseController.js
-
 /**
- * 基本コントローラークラス
- * すべてのコントローラーの基盤となる共通機能を提供
+ * @fileoverview 基本コントローラークラス
+ * @description すべてのコントローラーの基盤となる共通機能を提供
+ * @author 中西陽之介
+ * @created 2025-06-13
+ * @updated 2025-07-03
+ * @version 1.0.0
  */
 class BaseController {
   /**

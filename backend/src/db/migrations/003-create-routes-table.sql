@@ -1,4 +1,14 @@
 -- ファイル名: backend/src/db/migrations/003-create-routes-table.sql
+
+/**
+ * @fileoverview routesテーブル作成マイグレーション
+ * @description ユーザーが計算・保存する経路情報を格納するテーブルを定義。出発地・目的地・経由地点などを含む。
+ * @author 中西陽之介
+ * @created 2025-06-14
+ * @updated 2025-07-03
+ * @version 1.0.0
+ */
+
 CREATE TABLE routes (
   id SERIAL PRIMARY KEY,
   userId INTEGER NOT NULL,

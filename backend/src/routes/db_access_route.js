@@ -1,4 +1,11 @@
-// backend/src/routes/db_access_route.js
+/**
+ * @fileoverview データベースアクセスルート
+ * @description データベース接続テストのためのAPIエンドポイント
+ * @author 中西陽之介
+ * @created 2025-06-16
+ * @updated 2025-07-03
+ * @version 1.0.0
+ */
 
 // .env ファイルはプロジェクトルート (detour-navigation-system) にあるので、
 // routes/ からは '../../.env' と指定します

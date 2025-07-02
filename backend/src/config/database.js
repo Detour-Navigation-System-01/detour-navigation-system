@@ -1,3 +1,12 @@
+/**
+ * @fileoverview データベース設定モジュール
+ * @description 環境変数からデータベース接続設定を読み込み、設定オブジェクトとしてエクスポートする
+ * @author 中西陽之介
+ * @created 2023-10-01
+ * @updated 2025-07-03
+ * @version 1.0.0
+ */
+
 // データベース接続設定を環境変数から読み込む
 require('dotenv').config();
 

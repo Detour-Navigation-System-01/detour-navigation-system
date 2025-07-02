@@ -1,9 +1,10 @@
-// backend/src/middleware/validation.js
-
 /**
- * リクエスト入力のバリデーションミドルウェア
- * このモジュールは、APIエンドポイントへの入力を検証するためのミドルウェア関数を提供する
- * 各種データの検証や型変換を行い、無効な入力を早期に検出して適切なエラーメッセージを返す
+ * @fileoverview バリデーションミドルウェア
+ * @description APIエンドポイントへの入力データ検証を行うミドルウェア関数群
+ * @author 中西陽之介
+ * @created 2025-06-15
+ * @updated 2025-07-03
+ * @version 1.0.0
  */
 const { AppError } = require('./errorHandler');
 

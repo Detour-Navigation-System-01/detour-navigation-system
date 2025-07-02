@@ -1,4 +1,12 @@
-// backend/src/middleware/uploadMiddleware.js
+/**
+ * @fileoverview 画像アップロードミドルウェア
+ * @description 画像ファイルのアップロード処理を担当するミドルウェア
+ * @author 瀬下美華
+ * @created 2025-06-25
+ * @updated 2025-07-03
+ * @version 1.0.0
+ */
+
 const multer = require('multer');
 const path = require('path'); // pathモジュールをインポート
 const fs = require('fs'); // fsモジュールをインポート
