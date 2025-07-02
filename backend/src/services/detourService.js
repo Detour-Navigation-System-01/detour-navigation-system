@@ -1,10 +1,12 @@
 /**
- * TimeConstrainedDetourService.js - 時間制約を最大限活用する遠回りルート生成サービス
- * Phase 2.0: 完全改良版
- * - 設定の外出し（マジックナンバー解決）
- * - 真の動的半径計算（逆算ベース）
- * - 現実的な改善判定ロジック
-*/
+ * @fileoverview 遠回り経路計算サービス
+ * @description 時間制約を考慮した遠回り経路生成アルゴリズムを実装したサービス
+ * @author 中西陽之介
+ * @created 2025-06-20
+ * @updated 2025-07-03
+ * @version 2.5.0
+ */
+
 
 const polyline = require('@mapbox/polyline');
 

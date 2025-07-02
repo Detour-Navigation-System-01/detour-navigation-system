@@ -1,3 +1,12 @@
+/**
+ * @fileoverview バックエンドアプリケーションメイン
+ * @description Expressアプリケーションの構成、ミドルウェア、ルーティング設定
+ * @author 中西陽之介
+ * @created 2025-06-12
+ * @updated 2025-07-03
+ * @version 1.2.0
+ */
+
 const express = require('express');
 const cors = require('./middleware/cors');
 const app = express();

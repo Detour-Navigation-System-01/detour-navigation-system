@@ -1,3 +1,12 @@
+/**
+ * @fileoverview データベース接続モジュール
+ * @description PostgreSQLデータベース接続のプール管理を行う
+ * @author 中西陽之介
+ * @created 2025-06-12
+ * @updated 2025-07-03
+ * @version 1.0.0
+ */
+
 const { Pool } = require('pg');
 const dbConfig = require('../config/database');
 

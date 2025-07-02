@@ -1,5 +1,10 @@
 /**
- * ナビゲーション関連のルーター
+ * @fileoverview ナビゲーションAPIルーティング
+ * @description ナビゲーション機能に関するAPIエンドポイントの定義
+ * @author 中西陽之介
+ * @created 2025-06-18
+ * @updated 2025-07-03
+ * @version 1.0.1
  */
 
 const express = require('express');

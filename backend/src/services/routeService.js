@@ -1,5 +1,11 @@
-// backend/src/services/routeService.js
-// 💡 Phase 1: 時間制約最適化遠回り経路機能統合版
+/**
+ * @fileoverview 経路計算サービス
+ * @description 時間制約最適化遠回り経路機能を含む経路計算サービス
+ * @author 中西陽之介
+ * @created 2025-06-14
+ * @updated 2025-07-03
+ * @version 2.1.0
+ */
 
 const MapService = require('./mapService');
 const TimeConstrainedDetourService = require('./detourService'); // 🔥 新しいサービスに変更

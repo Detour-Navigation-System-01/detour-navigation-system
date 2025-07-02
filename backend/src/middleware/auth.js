@@ -1,3 +1,12 @@
+/**
+ * @fileoverview 認証ミドルウェア
+ * @description JWTを使用したユーザー認証を処理するミドルウェア
+ * @author 中西陽之介
+ * @created 2025-06-15
+ * @updated 2025-07-03
+ * @version 1.0.0
+ */
+
 const jwt = require('jsonwebtoken');
 const { AppError } = require('./errorHandler');
 const tokenBlacklistRepo = require('../repositories/TokenBlacklistRepository');
