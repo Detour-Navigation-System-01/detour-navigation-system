@@ -1,3 +1,12 @@
+/**
+ * @fileoverview ユーザーコントローラー
+ * @description ユーザー情報の取得・更新・削除など、ユーザーに関するAPIリクエストを処理するコントローラークラス
+ * @author 笠置啓太
+ * @created 2025-06-17
+ * @updated 2025-07-01
+ * @version 1.2.0
+ */
+
 // backend/src/controllers/userController.js
 const BaseController = require('./BaseController');
 const { catchAsync } = require('../middleware/errorHandler');

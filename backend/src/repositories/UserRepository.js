@@ -1,3 +1,12 @@
+/**
+ * @fileoverview ユーザーデータリポジトリ
+ * @description ユーザーデータベーステーブルへのアクセス処理を担当。パスワードのハッシュ化やユーザー認証も含む。
+ * @author 笠置啓太
+ * @created 2025-06-17
+ * @updated 2025-07-01
+ * @version 1.2.0
+ */
+
 // backend/src/repositories/UserRepository.js
 
 const BaseRepository = require('./BaseRepository');
