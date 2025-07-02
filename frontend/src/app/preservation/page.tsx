@@ -1,3 +1,13 @@
+/**
+ * @fileoverview 保存スポットコンポーネント
+ * @description ログインによるページ遷移判定
+ * @author 平野
+ * @created 2025-07-03
+ * @updated 2025-07-03
+ * @version 1.0.0
+ */
+
+
 'use client';
 
 import { useEffect } from 'react';
