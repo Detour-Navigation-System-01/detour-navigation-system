@@ -1,8 +1,8 @@
 /**
  * @fileoverview カメラページコンポーネント
  * @description カメラビューを表示するページコンポーネント
- * @author 作成者名
- * @created YYYY-MM-DD
+ * @author 尾﨑諒
+ * @created 2025/07/03
  * @updated YYYY-MM-DD
  * @version 1.0.0
  */

@@ -1,3 +1,17 @@
+/**
+ * @fileoverview ナビゲーション画面の下部に表示するアクションボタンコンポーネント
+ * @description
+ * - カメラ画面への遷移ボタン（カメラアイコン付き）
+ * - ピンを立てる（予定）ボタン（ピンアイコン付き）
+ * - ナビゲーション終了ボタン
+ * - タッチ時の拡大縮小アニメーション対応
+ * 
+ * @author 尾﨑諒
+ * @created 2025/07/03
+ * @updated 2025/07/03
+ * @version 1.0.0
+ */
+
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -8,7 +22,7 @@ export default function ToCamera() {
   const endStyle = {
     position: "absolute" as const,
     top: "80vh",
-    left: "18%",
+    left: "15%",
     transform: "translateX(-50%)",
     width: "25vw",
     height: "6vh",
@@ -32,9 +46,9 @@ export default function ToCamera() {
   const toCameraStyle = {
     position: "absolute" as const,
     top: "80vh",
-    left: "50%",
+    left: "48%",
     transform: "translateX(-50%)",
-    width: "30vw",
+    width: "34vw",
     height: "6vh",
     minHeight: "48px",
     fontSize: "1.1rem",
@@ -61,7 +75,7 @@ export default function ToCamera() {
     top: "80vh",
     left: "80%",
     transform: "translateX(-50%)",
-    width: "30vw",
+    width: "34vw",
     height: "6vh",
     minHeight: "48px",
     fontSize: "1.1rem",

@@ -1,3 +1,13 @@
+/**
+ * @fileoverview 旅行情報入力フォームコンポーネント
+ * @description 出発地・目的地・移動時間の入力と検索履歴表示を行い、経路計算ページへ遷移するフォーム
+ * @author 尾﨑諒
+ * @created 2025/07/03
+ * @updated 2025/07/03
+ * @version 1.0.0
+ */
+
+
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";

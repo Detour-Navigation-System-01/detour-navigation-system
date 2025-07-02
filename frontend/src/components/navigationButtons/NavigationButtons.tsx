@@ -1,3 +1,17 @@
+/**
+ * @fileoverview ナビゲーション画面のためのボタンコンポーネント
+ * @description
+ * - 入力画面への遷移ボタン（虫眼鏡アイコン付き）
+ * - プロフィール画面への遷移ボタン
+ * - カメラ画面への遷移ボタン
+ * - タッチ時の簡易アニメーション効果付き
+ * 
+ * @author 尾﨑諒
+ * @created 2025/07/03
+ * @updated 2025/07/03
+ * @version 1.0.0
+ */
+
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -72,13 +86,7 @@ export default function NavigationButtons() {
         
       </button>
 
-      <button style={{ ...sharedButtonStyle, top: "200px" }} onClick={() => router.push("/login")}>
-        profileボタン
-      </button>
       
-      <button style={{ ...sharedButtonStyle, top: "400px" }} onClick={() => router.push("/camera")}>
-        cameraボタン
-      </button>
     </>
   );
 }

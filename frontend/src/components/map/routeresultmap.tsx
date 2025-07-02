@@ -1,3 +1,19 @@
+/**
+ * @fileoverview ルート検索結果を地図上に表示し、出発地・目的地のマーカーやルートのポリラインを描画します。
+ * また、ルート情報の保存やナビゲーション開始の操作も提供します。
+ * 
+ * @description
+ * - URLパラメータから出発地・目的地・制限時間を取得し、現在地取得やジオコーディングを行います。
+ * - バックエンドAPIを呼び出してルート情報を取得し、地図に描画します。
+ * - ルート情報の保存やナビゲーション画面への遷移を実装しています。
+ * 
+ * @author 尾﨑諒
+ * @created 2025/07/03
+ * @updated 2025/07/03
+ * @version 1.0.0
+ */
+
+
 "use client";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -650,7 +666,7 @@ export default function RouteResultMap() {
             </div>
           )}
 
-          {routeSteps.length > 0 && (
+          {/* {routeSteps.length > 0 && (
             <div className="text-xs text-gray-500 mt-1">
               {routeSteps.length}つのステップ
             </div>
@@ -660,11 +676,11 @@ export default function RouteResultMap() {
             <div className="text-xs text-blue-600 mt-1">
               ルートID: {routeId}
             </div>
-          )}
+          )} */}
         </div>
 
         {/* ボタンエリア */}
-        <div className="flex justify-between gap-3">
+        {/* <div className="flex justify-between gap-3">
           <button 
             onClick={() => window.history.back()}
             className="flex-1 py-2 rounded-full bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors"
@@ -696,7 +712,7 @@ export default function RouteResultMap() {
             <span>🧭</span>
             開始
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

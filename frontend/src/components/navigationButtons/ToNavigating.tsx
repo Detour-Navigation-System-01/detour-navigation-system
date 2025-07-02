@@ -1,3 +1,16 @@
+/**
+ * @fileoverview ナビゲーション開始画面のボタンコンポーネント
+ * @description
+ * - 「ナビゲーション開始」ボタン（/navigating ページへ遷移）
+ * - 「入力に戻る」ボタン（ブラウザ履歴で前の画面に戻る）
+ * - タッチ時の拡大縮小アニメーション対応
+ * 
+ * @author 尾﨑諒
+ * @created 2025/07/03
+ * @updated 2025/07/03
+ * @version 1.0.0
+ */
+
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -7,8 +20,8 @@ export default function ToNavigating() {
 
   const backStyle = {
     position: "absolute" as const,
-    top: "60vh",
-    left: "25%",
+    top: "82vh",
+    left: "22%",
     transform: "translateX(-50%)",
     width: "30vw",
     height: "8vh",
@@ -31,7 +44,7 @@ export default function ToNavigating() {
 
   const toNavigatingStyle = {
     position: "absolute" as const,
-    top: "80vh",
+    top: "82vh",
     left: "70%",
     transform: "translateX(-50%)",
     width: "50vw",

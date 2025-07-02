@@ -1,3 +1,12 @@
+/**
+ * @fileoverview 地図表示コンポーネント
+ * @description Leafletを使用して現在地を中心にマップを表示し、カスタムアイコンのマーカーを設置するコンポーネント
+ * @author 尾﨑諒
+ * @created 2025/07/03
+ * @updated 2025/07/03
+ * @version 1.0.0
+ */
+
 "use client";
 
 import { useEffect, useState } from "react";
