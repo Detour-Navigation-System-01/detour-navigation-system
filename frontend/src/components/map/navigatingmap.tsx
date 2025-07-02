@@ -49,6 +49,37 @@ export default function NavigatingPage() {
   const [nearbyMessage, setNearbyMessage] = useState<string | null>(null);
   const watchIdRef = useRef<number | null>(null);
 
+  const getMapSettings = () => {
+    if (!fromCoord || !toCoord) {
+      return { center: [35.681236, 139.767125] as [number, number], zoom: 13 };
+    }
+    
+    // 中点を計算
+    const centerLat = (fromCoord.lat + toCoord.lat) / 2;
+    const centerLon = (fromCoord.lon + toCoord.lon) / 2;
+    
+    // 2点間の距離を計算してズームレベルを決定
+    const latDiff = Math.abs(fromCoord.lat - toCoord.lat);
+    const lonDiff = Math.abs(fromCoord.lon - toCoord.lon);
+    
+    const maxDiff = Math.max(latDiff, lonDiff);
+    let zoom = 15;
+    
+    if (maxDiff > 2) zoom = 7;
+    else if (maxDiff > 1) zoom = 8;
+    else if (maxDiff > 0.5) zoom = 9;
+    else if (maxDiff > 0.2) zoom = 10;
+    else if (maxDiff > 0.1) zoom = 11;
+    else if (maxDiff > 0.05) zoom = 12;
+    else if (maxDiff > 0.02) zoom = 13;
+    else if (maxDiff > 0.01) zoom = 14;
+    
+    console.log(`🗺️ マップ設定: 中心点(${centerLat.toFixed(4)}, ${centerLon.toFixed(4)}), ズーム: ${zoom}`);
+    
+    return { center: [centerLat, centerLon] as [number, number], zoom };
+  };
+  
+
   useEffect(() => {
     const stored = sessionStorage.getItem("routeSteps");
     if (stored) {
@@ -65,6 +96,28 @@ export default function NavigatingPage() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    const storedSteps = sessionStorage.getItem("routeSteps");
+    const storedCoords = sessionStorage.getItem("routeCoordinates");
+
+    if (storedSteps) {
+      const parsedSteps: Step[] = JSON.parse(storedSteps);
+      setSteps(parsedSteps);
+    }
+
+    if (storedCoords) {
+      const parsedCoords: [number, number][] = JSON.parse(storedCoords);
+      setRouteCoords(parsedCoords);
+
+      if (parsedCoords.length > 0) {
+        const avgLat = parsedCoords.reduce((sum, c) => sum + c[0], 0) / parsedCoords.length;
+        const avgLng = parsedCoords.reduce((sum, c) => sum + c[1], 0) / parsedCoords.length;
+        setCenter([avgLat, avgLng]);
+      }
+    }
+  }, []);
+
 
   useEffect(() => {
     if (!navigator.geolocation) {

@@ -6,24 +6,38 @@ import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet"
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-
 interface Coordinate {
   lat: number;
   lon: number;
 }
 
+// 新しいデータベース形式のレスポンス
 interface RouteResponse {
   success: boolean;
   message: string;
   data: {
-    distance: number;
-    duration: number;
-    geometry: string;
-    coordinates: Array<{
+    route: {
+      id?: number;
+      name: string;
+      description: string;
+      userId: number | null;
+      origin_lat: number;
+      origin_lng: number;
+      destination_lat: number;
+      destination_lng: number;
+      distance: number;
+      duration: number;
+      profile: string;
+      detourLevel: number;
+      routeType: string;
+      createdAt?: string;
+      updatedAt?: string;
+    };
+    coordinates?: Array<{
       lat: number;
       lng: number;
     }>;
-    steps: Array<{
+    steps?: Array<{
       sequence: number;
       instruction: string;
       distance: number;
@@ -34,7 +48,8 @@ interface RouteResponse {
       end_lng: number | null;
       maneuver: string;
     }>;
-    overview_polyline: string;
+    geometry?: string;
+    overview_polyline?: string;
   };
 }
 
@@ -80,6 +95,7 @@ export default function RouteResultMap() {
     endIcon: L.Icon;
   } | null>(null);
   const [routeSteps, setRouteSteps] = useState<Array<any>>([]);
+  const [routeId, setRouteId] = useState<number | null>(null);
 
   // URLパラメータを取得
   const fromParam = searchParams.get('from');
@@ -92,7 +108,6 @@ export default function RouteResultMap() {
   const initializeIcons = () => {
     if (typeof window !== "undefined") {
       try {
-        // カスタムアイコンの作成
         const startIcon = createStartIcon();
         const endIcon = createEndIcon();
         
@@ -137,7 +152,7 @@ export default function RouteResultMap() {
         {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 300000 // 5分間キャッシュ
+          maximumAge: 300000
         }
       );
     });
@@ -148,10 +163,8 @@ export default function RouteResultMap() {
     console.log(`🔍 ジオコーディング開始: "${address}"`);
     
     try {
-      // 少し待機を入れてAPIレート制限を回避
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Nominatim API（OpenStreetMapのジオコーディングサービス）を使用
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=jp&addressdetails=1`,
         {
@@ -193,7 +206,7 @@ export default function RouteResultMap() {
     }
   };
 
-  // バックエンドAPIを使用したルート取得関数
+  // バックエンドAPIを使用したルート取得関数（新しいDB形式対応）
   const fetchRoute = async (from: Coordinate, to: Coordinate) => {
     console.log("🚗 ルート取得開始（バックエンドAPI使用）:", { from, to });
     
@@ -232,28 +245,40 @@ export default function RouteResultMap() {
       const data: RouteResponse = await response.json();
       console.log("📊 バックエンドAPI ルート取得結果:", data);
       
-      if (data.success && data.data) {
-        const route = data.data;
+      if (data.success && data.data && data.data.route) {
+        const route = data.data.route;
         
-        // coordinatesが存在することを確認
-        if (!route.coordinates || route.coordinates.length === 0) {
-          throw new Error("ルートの座標情報が取得できませんでした");
+        // ルートIDを保存（後で保存機能で使用）
+        if (route.id) {
+          setRouteId(route.id);
         }
         
-        // APIレスポンスの座標フォーマットを[lat, lng]に変換
-        const coords = route.coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
+        // 座標データの処理
+        let coords: [number, number][] = [];
+        
+        if (data.data.coordinates && data.data.coordinates.length > 0) {
+          // coordinatesが存在する場合
+          coords = data.data.coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
+        } else {
+          // coordinatesがない場合は始点と終点のみ表示
+          coords = [
+            [route.origin_lat, route.origin_lng],
+            [route.destination_lat, route.destination_lng]
+          ];
+          console.log("⚠️ 詳細な座標情報がないため、始点と終点のみ表示します");
+        }
         
         setRouteCoords(coords);
         setDistance((route.distance / 1000).toFixed(1));
-        // 修正: バックエンドAPIのdurationが秒の場合は分に変換
-        setDuration(Math.round(route.duration / 60));
-        setRouteSteps(route.steps || []);
+        setDuration(Math.round(route.duration / 60)); // 秒から分に変換
+        setRouteSteps(data.data.steps || []);
         
         console.log("✅ ルート設定完了:", {
           distance: (route.distance / 1000).toFixed(1) + "km",
           duration: Math.round(route.duration / 60) + "分",
           points: coords.length,
-          steps: route.steps?.length || 0
+          steps: data.data.steps?.length || 0,
+          routeId: route.id
         });
         
         return true;
@@ -297,8 +322,7 @@ export default function RouteResultMap() {
         
         setRouteCoords(coords);
         setDistance((route.distance / 1000).toFixed(1));
-        // OSRM APIは秒で返すので分に変換
-        setDuration(Math.round(route.duration / 60));
+        setDuration(Math.round(route.duration / 60)); // 秒から分に変換
         
         console.log("✅ フォールバック ルート設定完了");
         return true;
@@ -311,7 +335,7 @@ export default function RouteResultMap() {
     }
   };
 
-  // 時間フォーマット関数（分を受け取って適切にフォーマット）
+  // 時間フォーマット関数
   const formatDuration = (minutes: number): string => {
     if (minutes < 60) {
       return `${minutes}分`;
@@ -327,11 +351,9 @@ export default function RouteResultMap() {
       return { center: [35.681236, 139.767125] as [number, number], zoom: 13 };
     }
     
-    // 中点を計算
     const centerLat = (fromCoord.lat + toCoord.lat) / 2;
     const centerLon = (fromCoord.lon + toCoord.lon) / 2;
     
-    // 2点間の距離を計算してズームレベルを決定
     const latDiff = Math.abs(fromCoord.lat - toCoord.lat);
     const lonDiff = Math.abs(fromCoord.lon - toCoord.lon);
     
@@ -352,7 +374,7 @@ export default function RouteResultMap() {
     return { center: [centerLat, centerLon] as [number, number], zoom };
   };
 
-  // ルートを保存する関数
+  // ルートを保存する関数（新しいDB形式対応）
   const saveRoute = async () => {
     if (!fromCoord || !toCoord || !fromParam || !toParam) {
       alert("ルート情報が不完全です");
@@ -360,6 +382,12 @@ export default function RouteResultMap() {
     }
 
     try {
+      // 既にルートが保存されている場合は保存済みメッセージを表示
+      if (routeId) {
+        alert(`ルートは既に保存済みです (ID: ${routeId})`);
+        return;
+      }
+
       const saveData = {
         name: `${fromParam}から${toParam}へのルート`,
         description: `時間制限: ${timeParam ? timeParam + '分' : 'なし'}`,
@@ -376,6 +404,8 @@ export default function RouteResultMap() {
         routeType: "normal"
       };
 
+      console.log("💾 ルート保存データ:", saveData);
+
       const response = await fetch(`${API_BASE_URL}/routes/save`, {
         method: 'POST',
         headers: {
@@ -385,15 +415,23 @@ export default function RouteResultMap() {
       });
 
       if (response.ok) {
-        const result = await response.json();
+        const result: RouteResponse = await response.json();
         console.log("✅ ルート保存成功:", result);
-        alert("ルートが保存されました");
+        
+        if (result.success && result.data && result.data.route && result.data.route.id) {
+          setRouteId(result.data.route.id);
+          alert(`ルートが保存されました (ID: ${result.data.route.id})`);
+        } else {
+          alert("ルートが保存されました");
+        }
       } else {
-        throw new Error("ルート保存に失敗しました");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "ルート保存に失敗しました");
       }
     } catch (err) {
       console.error("❌ ルート保存エラー:", err);
-      alert("ルート保存に失敗しました");
+      const errorMessage = err instanceof Error ? err.message : "ルート保存に失敗しました";
+      alert(errorMessage);
     }
   };
 
@@ -435,7 +473,7 @@ export default function RouteResultMap() {
         if (!isMounted) return;
         setToCoord(toCoords);
         
-        // ルート計算（バックエンドAPI使用）
+        // ルート計算
         if (!isMounted) return;
         setStep("ルートを計算中...");
         await fetchRoute(fromCoords, toCoords);
@@ -464,11 +502,12 @@ export default function RouteResultMap() {
   }, [fromParam, toParam, timeParam]);
   
   useEffect(() => {
-    if (routeSteps.length > 0) {
+    if (routeSteps.length > 0 && routeCoords.length > 0) {
       sessionStorage.setItem("routeSteps", JSON.stringify(routeSteps));
-      console.log("✅ routeSteps を sessionStorage に保存しました");
+      sessionStorage.setItem("routeCoordinates", JSON.stringify(routeCoords));
+      console.log("✅ routeSteps と routeCoordinates を sessionStorage に保存しました");
     }
-  }, [routeSteps]);
+  }, [routeSteps, routeCoords]);
   
   if (loading || !isClient || !leafletIcons) {
     return (
@@ -519,7 +558,6 @@ export default function RouteResultMap() {
 
   const { center, zoom } = getMapSettings();
 
-
   return (
     <div className="h-screen w-screen relative" style={{ height: "100vh", width: "100vw" }}>
       <MapContainer 
@@ -543,7 +581,6 @@ export default function RouteResultMap() {
             dashArray="0"
           />
         )}
-        
         
         {/* 出発地マーカー */}
         {fromCoord && leafletIcons && (
@@ -587,10 +624,13 @@ export default function RouteResultMap() {
       </MapContainer>
 
       {/* 上部情報パネル */}
-      <div className="absolute top-0 left-0 right-0 bg-white shadow-lg z-[1000]">
-        {/* 時間と距離の表示 */}
-        <div className="text-center py-4">
-          <div className="text-2xl font-bold text-gray-800 mb-1">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-md z-[1000] w-[90%] max-w-md px-4 py-3">
+        {/* 上のバー */}
+        <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-2" />
+
+        {/* 時間と距離 */}
+        <div className="text-center mb-3">
+          <div className="text-lg font-bold text-gray-800 mb-1">
             {duration ? formatDuration(duration) : '計算中...'} ({distance}km)
           </div>
           
@@ -612,56 +652,33 @@ export default function RouteResultMap() {
               {routeSteps.length}つのステップ
             </div>
           )}
-        </div>
 
-        {/* ボタン */}
-        <div className="flex gap-3 px-4 pb-6">
-          <button 
-            onClick={() => window.history.back()}
-            className="px-6 py-3 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 text-base font-medium transition-colors flex-1"
-          >
-            戻る
-          </button>
-          
-          <button 
-            onClick={saveRoute}
-            className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 text-base font-medium transition-colors flex-1"
-          >
-            保存
-          </button>
-          
-          <button 
-            onClick={() => {
-              console.log("🧭 ナビゲーション開始");
-              if (routeSteps.length > 0) {
-                sessionStorage.setItem("routeSteps", JSON.stringify(routeSteps));
-              }
-              router.push("/navigating");
-            }}
-            className="px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 text-base font-medium transition-colors flex-1 flex items-center justify-center gap-2"
-          >
-            <span>▶</span>
-            開始
-          </button>
-        </div>
-      </div>
-
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-md z-[1000] w-[90%] max-w-md px-4 py-3">
-        {/* 上のバー */}
-        <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-2" />
-
-        {/* 時間と距離 */}
-        <div className="text-center mb-3 text-gray-900 font-medium text-base">
-          {duration ? formatDuration(duration) : '計算中...'} ({distance}km)
+          {routeId && (
+            <div className="text-xs text-blue-600 mt-1">
+              ルートID: {routeId}
+            </div>
+          )}
         </div>
 
         {/* ボタンエリア */}
         <div className="flex justify-between gap-3">
           <button 
             onClick={() => window.history.back()}
-            className="flex-1 py-2 rounded-full bg-green-100 text-green-800 text-sm font-semibold"
+            className="flex-1 py-2 rounded-full bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors"
           >
             入力に戻る
+          </button>
+
+          <button 
+            onClick={saveRoute}
+            className={`flex-1 py-2 rounded-full text-sm font-semibold transition-colors ${
+              routeId 
+                ? 'bg-green-100 text-green-700 cursor-default'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+            disabled={!!routeId}
+          >
+            {routeId ? '保存済み' : '保存'}
           </button>
 
           <button 
@@ -671,16 +688,13 @@ export default function RouteResultMap() {
               }
               router.push("/navigating");
             }}
-            className="flex-1 py-2 rounded-full bg-green-800 text-white text-sm font-semibold flex items-center justify-center gap-1"
+            className="flex-1 py-2 rounded-full bg-green-800 text-white text-sm font-semibold flex items-center justify-center gap-1 hover:bg-green-700 transition-colors"
           >
             <span>🧭</span>
-            ナビゲーションを開始する
+            開始
           </button>
         </div>
       </div>
-
- 
-
     </div>
   );
 }

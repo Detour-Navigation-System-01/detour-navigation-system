@@ -71,7 +71,7 @@ const saveSearchHistory = (fromValue: string, toValue: string) => {
   const handleSubmit = () => {
     if (!validateInputs()) return;
     saveSearchHistory(from, to);
-    alert(`出発: ${from}, 目的地: ${to}, 時間: ${time}`);
+    // alert(`出発: ${from}, 目的地: ${to}, 時間: ${time}`);
     router.push(
       `/navigate?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&time=${encodeURIComponent(time)}`
     );
