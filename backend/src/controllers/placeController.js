@@ -1,4 +1,13 @@
 // backend/src/controllers/placeController.js
+/**
+ * @fileoverview 保存スポットに関連するリクエストを処理するコントローラー
+ * @description このコントローラーは、ルーティング層から呼び出され、ユーザーの入力を受け取ります。
+ * ビジネスロジックを持つサービス層を介して処理を行い、最終的にレスポンスを返します。
+ * @author 瀬下美華
+ * @created 2025-06-25
+ * @updated 2025-07-02
+ * @version 2.1.1
+ */
 
 const BaseController = require('./BaseController');
 const { catchAsync } = require('../middleware/errorHandler');
@@ -17,7 +26,11 @@ class PlaceController extends BaseController {
   }
 
   /**
-   * 場所一覧を取得
+   * 場所の一覧を取得します（フィルタ・並び替え・ページネーション対応）
+   * @param {Request} req - クエリパラメータを含むリクエストオブジェクト
+   * @param {Response} res - レスポンスオブジェクト
+   * @returns {Promise<Response>} 場所のリストとメタ情報を返すレスポンス
+   * @throws {Error} サービス層からの取得に失敗した場合
    */
   getAllPlaces = catchAsync(async (req, res) => {
     console.log('場所一覧取得処理を開始します');
@@ -50,7 +63,11 @@ class PlaceController extends BaseController {
   });
 
   /**
-   * 特定の場所を取得
+   * 特定の場所情報を取得します
+   * @param {Request} req - IDが埋め込まれたリクエストパラメータを持つリクエストオブジェクト
+   * @param {Response} res - レスポンスオブジェクト
+   * @returns {Promise<Response>} 対象の場所情報を返すレスポンス
+   * @throws {Error} 該当IDが存在しない場合
    */
   getPlaceById = catchAsync(async (req, res) => {
     // validateIdParamミドルウェアで検証済みのIDを使用
@@ -67,7 +84,11 @@ class PlaceController extends BaseController {
   });
 
   /**
-   * 新しい場所を作成
+   * 新しい場所を作成します（認証ユーザーのみ可能）
+   * @param {Request} req - リクエストボディに場所情報を含む
+   * @param {Response} res - レスポンスオブジェクト
+   * @returns {Promise<Response>} 作成された場所データを含むレスポンス
+   * @throws {Error} 認証されていない場合や入力不備の場合
    */
   createPlace = catchAsync(async (req, res) => {
     const { name, description, category, address, prefecture, lat, lng, image_url } = req.body;
@@ -104,7 +125,11 @@ class PlaceController extends BaseController {
   });
 
   /**
-   * 場所情報を更新（作成者のみ可能）
+   * 既存の場所情報を更新します（場所の作成者のみ更新可能）
+   * @param {Request} req - リクエストボディに更新情報を含む
+   * @param {Response} res - レスポンスオブジェクト
+   * @returns {Promise<Response>} 更新後の場所データを含むレスポンス
+   * @throws {Error} 認可エラーまたは存在しない場所IDの場合
    */
   updatePlace = catchAsync(async (req, res) => {
     const placeId = req.parsedId;
@@ -150,7 +175,11 @@ class PlaceController extends BaseController {
   });
 
   /**
-   * 場所を削除（作成者のみ可能）
+   * 指定された場所を削除します（作成者のみ削除可能）
+   * @param {Request} req - パラメータに場所IDを含むリクエスト
+   * @param {Response} res - レスポンスオブジェクト
+   * @returns {Promise<Response>} 削除成功メッセージを含むレスポンス
+   * @throws {Error} 認可エラーや削除失敗時
    */
   deletePlace = catchAsync(async (req, res) => {
     const placeId = req.parsedId;
@@ -182,7 +211,10 @@ class PlaceController extends BaseController {
   });
   
   /**
-   * カテゴリー別の場所を取得
+   * 指定されたカテゴリーに属する場所一覧を取得します
+   * @param {Request} req - パスパラメータにカテゴリー名を含む
+   * @param {Response} res - レスポンスオブジェクト
+   * @returns {Promise<Response>} 該当カテゴリーの場所リスト
    */
   getPlacesByCategory = catchAsync(async (req, res) => {
     const category = req.params.category;
@@ -200,7 +232,11 @@ class PlaceController extends BaseController {
   });
   
   /**
-   * 近隣の場所を検索
+   * 緯度・経度をもとに指定範囲内の場所を取得します
+   * @param {Request} req - クエリにlat, lng, radiusを含むリクエスト
+   * @param {Response} res - レスポンスオブジェクト
+   * @returns {Promise<Response>} 指定位置から半径内の場所データ
+   * @throws {Error} 座標が不足している場合
    */
   getNearbyPlaces = catchAsync(async (req, res) => {
     const { lat, lng, radius = 5 } = req.query;
@@ -220,10 +256,14 @@ class PlaceController extends BaseController {
       message: '近隣の場所を取得しました',
       data: places
     });
-  });    /**
-   * @desc 画像をローカルにアップロードし、そのURLを返す
-   * @route POST /api/places/upload-image
-   * @access Private (認証済みユーザーのみ)
+  }); 
+  
+  /**
+   * 画像ファイルをサーバーにアップロードし、そのURLを返します
+   * @param {Request} req - multipart/form-data形式のリクエスト（req.fileを含む）
+   * @param {Response} res - アップロードされた画像のURLとパスを返すレスポンス
+   * @returns {Promise<Response>} アップロード成功時のファイル情報
+   * @throws {Error} ファイルが未添付、または認証されていない場合
    */
   uploadPlaceImage = catchAsync(async (req, res) => {
     // 認証ユーザーIDの確認
@@ -265,7 +305,10 @@ class PlaceController extends BaseController {
   });
 
   /**
-   * ユーザーIDを指定してそのアカウントの保存スポット情報だけを取得
+   * 指定ユーザーが登録した場所一覧を取得します
+   * @param {Request} req - パラメータにユーザーIDを含むリクエスト
+   * @param {Response} res - レスポンスオブジェクト
+   * @returns {Promise<Response>} ユーザーに紐づく場所一覧
    */
   getPlacesByUserId = catchAsync(async (req, res) => {
     // validateIdParamミドルウェアで検証済みのユーザーIDを使用
@@ -297,7 +340,11 @@ class PlaceController extends BaseController {
   });
 
   /**
-   * 現在認証されているユーザー自身の登録場所を取得
+   * 現在ログイン中のユーザーが登録した場所一覧を取得します
+   * @param {Request} req - JWTに基づくユーザー情報を含むリクエスト
+   * @param {Response} res - レスポンスオブジェクト
+   * @returns {Promise<Response>} 自身の登録スポット一覧
+   * @throws {Error} 未認証状態の場合
    */
   getPlacesByCurrentUser = catchAsync(async (req, res) => {
     // JWTから認証済みユーザーのIDを取得
@@ -335,7 +382,11 @@ class PlaceController extends BaseController {
   });
 
   /**
-   * 公開設定ONのユーザーのスポットを取得
+   * 現在ログイン中のユーザーが登録した場所一覧を取得します
+   * @param {Request} req - JWTに基づくユーザー情報を含むリクエスト
+   * @param {Response} res - レスポンスオブジェクト
+   * @returns {Promise<Response>} 自身の登録スポット一覧
+   * @throws {Error} 未認証状態の場合
    */
   getPublicPlaces = catchAsync(async (req, res) => {
     console.log('公開設定ONのユーザーのスポット一覧取得処理を開始します');

@@ -1,4 +1,14 @@
 -- ファイル名: backend/src/db/migrations/002-create-places-table.sql
+
+/**
+ * @fileoverview placesテーブル作成マイグレーション
+ * @description ユーザーが登録する「場所」の情報を保存するテーブルを定義。ユーザーとのリレーション、位置情報、カテゴリなどを含む。
+ * @author 瀬下美華
+ * @created 2025-06-25
+ * @updated 2025-07-02
+ * @version 1.2.1
+ */
+
 CREATE TABLE places (
   id SERIAL PRIMARY KEY,
   userId INTEGER NOT NULL,  -- ユーザーIDカラムを追加 (ユーザーテーブルのIDと紐づく)

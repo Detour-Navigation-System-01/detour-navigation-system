@@ -1,5 +1,11 @@
-// backend/src/repositories/RouteRepository.js
-// 💡 エラー解決のための修正版
+/**
+ * @fileoverview 経路リポジトリ
+ * @description 経路データのデータベース操作を担当するリポジトリクラス
+ * @author 中西陽之介
+ * @created 2025-06-14
+ * @updated 2025-07-03
+ * @version 1.1.1
+ */
 
 const BaseRepository = require('./BaseRepository');
 const pool = require('../utils/db');

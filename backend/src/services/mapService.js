@@ -1,5 +1,10 @@
 /**
- * マップサービスクラス - 外部地図API(OSRM)とのインテグレーションを処理
+ * @fileoverview マップサービス
+ * @description 外部地図API(OSRM)とのインテグレーションを処理するサービス
+ * @author 中西陽之介
+ * @created 2025-06-14
+ * @updated 2025-07-03
+ * @version 1.0.0
  */
 
 const axios = require('axios');

@@ -3,7 +3,8 @@
  * @description 新規ユーザー登録用フォームコンポーネント
  * @author 平野
  * @created 2025-06-17
- * @version 1.0.0
+ * @updated 2025-07-03
+ * @version 1.3.0
  */
 
 'use client';
@@ -44,8 +45,9 @@ export default function SignupForm() {
         setMessage(data.message || '登録に失敗しました');
       }
     } catch (err) {
+      const error = err as Error;
       console.error(err);
-      setMessage('通信エラーが発生しました');
+      setMessage(error.message ||'通信エラーが発生しました');
     }
   };
   

@@ -1,10 +1,10 @@
-// backend/src/repositories/BaseRepository.js
-
 /**
- * ベースリポジトリクラス
- * すべてのリポジトリの基本となる抽象クラスです
- * 
- * このクラスを継承して特定のエンティティ用のリポジトリを実装します
+ * @fileoverview ベースリポジトリ
+ * @description すべてのリポジトリクラスの基底となる抽象クラス
+ * @author 中西陽之介
+ * @created 2025-06-14
+ * @updated 2025-07-03
+ * @version 1.0.0
  */
 
 class BaseRepository {

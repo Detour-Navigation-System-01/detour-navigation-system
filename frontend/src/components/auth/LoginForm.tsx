@@ -1,58 +1,75 @@
+/**
+ * @fileoverview 認証コンポーネント
+ * @description ログイン画面ロジック
+ * @author 平野
+ * @created 2025-06-24
+ * @updated 2025-07-03
+ * @version 2.2.1
+ */
+
 'use client';
 
 import { useState } from 'react';
 import { fetcher } from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import styles from './LoginForm.module.css'; 
+import styles from './LoginForm.module.css';
 import Link from 'next/link';
+import { useAuth } from '@/lib/AuthContext'; // ✅ 追加
 
 export default function LoginForm() {
-  const routerInstance = useRouter();
-  const [userEmail, setUserEmail] = useState('');
-  const [userPassword, setUserPassword] = useState('');
+  const router = useRouter();
+  const { refresh } = useAuth(); // ✅ 追加
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
 
-  const handleUserLogin = async (formEvent: React.FormEvent) => {
-    formEvent.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
     try {
-      const responseData = await fetcher<{
+      const res = await fetcher<{
         message: string;
-        data?: { 
-          user: { id: number; username: string } 
-          token: string;  
+        data?: {
+          user: {
+            id: number;
+            username: string;
+          };
+          token: string;
         };
       }>('/api/auth/login', {
         method: 'POST',
-        body: JSON.stringify({
-          email: userEmail,
-          password: userPassword,
-        }),
+        body: JSON.stringify({ email, password }),
       });
 
-      if (responseData.data?.user) {
-        setStatusMessage(`ようこそ、${responseData.data.user.username}さん！`);
-        localStorage.setItem('jwt_token',responseData.data.token);
-        routerInstance.push('/profile/${userId}');
+      const user = res.data?.user;
+      const token = res.data?.token;
+
+      if (user && token) {
+        localStorage.setItem('jwt_token', token);
+        await refresh(); // ✅ グローバル状態にuserを反映！
+
+        setStatusMessage(`ようこそ、${user.username}さん！`);
+        router.push(`/profile/${user.id}`);
       } else {
-        setStatusMessage(responseData.message || 'ログイン失敗');
+        setStatusMessage(res.message || 'ログイン失敗');
       }
-    } catch (loginError) {
-      console.error(loginError);
-      setStatusMessage('通信エラーが発生しました');
+    } catch (err) {
+      const error = err as Error;
+      console.error('ログインエラー', err);
+      setStatusMessage(error.message || '通信エラーが発生しました');
     }
   };
 
   return (
     <div className={styles.container}>
-      <form onSubmit={handleUserLogin} className={styles.form}>
+      <form onSubmit={handleSubmit} className={styles.form}>
         <h2 className={styles.heading}>ログイン</h2>
 
         <input
           type="email"
           placeholder="メールアドレス"
-          value={userEmail}
-          onChange={(e) => setUserEmail(e.target.value)}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
           className={styles.input}
         />
@@ -60,8 +77,8 @@ export default function LoginForm() {
         <input
           type="password"
           placeholder="パスワード"
-          value={userPassword}
-          onChange={(e) => setUserPassword(e.target.value)}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
           className={styles.input}
         />
@@ -73,7 +90,7 @@ export default function LoginForm() {
         <p className={styles.message}>{statusMessage}</p>
 
         <p className={styles.link}>
-          アカウントをお持ちでない方は <Link href="/signup">こちら</Link> から登録してください。
+          アカウントがない方は <Link href="/signup">こちら</Link>
         </p>
       </form>
     </div>

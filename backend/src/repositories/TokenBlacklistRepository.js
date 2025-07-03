@@ -1,12 +1,15 @@
-// backend/src/repositories/TokenBlacklistRepository.js
+/**
+ * @fileoverview トークンブラックリストリポジトリ
+ * @description 無効化されたJWTトークンの管理を担当するリポジトリ
+ * @author 中西陽之介
+ * @created 2025-06-18
+ * @updated 2025-07-03
+ * @version 1.0.0
+ */
 // 対応するマイグレーションファイル: backend/src/db/migrations/007-create-token-blacklist.sql
 
 const BaseRepository = require('./BaseRepository');
 const pool = require('../utils/db');
-
-/**
- * トークンブラックリスト（無効化リスト）のデータアクセスを担当するリポジトリ
- */
 class TokenBlacklistRepository extends BaseRepository {
   constructor() {
     super(pool, 'token_blacklist');

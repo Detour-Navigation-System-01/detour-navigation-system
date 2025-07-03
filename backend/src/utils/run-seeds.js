@@ -1,5 +1,12 @@
-// backend/src/utils/run-seeds.js
-// 実行方法：node src/utils/run-seeds.js
+/**
+ * @fileoverview データベースシード実行ユーティリティ
+ * @description SQLファイルからシードデータを投入するスクリプト
+ * @author 中西陽之介
+ * @created 2025-06-12
+ * @updated 2025-07-03
+ * @version 1.0.0
+ */
+
 const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');

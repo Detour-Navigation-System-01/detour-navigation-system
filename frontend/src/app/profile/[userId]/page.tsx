@@ -3,30 +3,47 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { logout } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const { refresh, user } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();     // ← ここでトークン削除 & API通知（順番重要）
+    await refresh();    // ← トークン削除後にユーザー状態を更新
+    router.push('/login');
+  };
+
+
   return (
     <div style={containerStyle}>
       {/* ヘッダー部分 */}
       <div style={headerStyle}>
         <Image
-          src="/default-user-icon.png" // 仮の画像
+          src="/default-user-icon.png"
           alt="プロフィール画像"
           width={120}
           height={120}
           style={{ borderRadius: '50%', marginBottom: '12px' }}
         />
-        <h2 style={nameStyle}>test</h2>
-        <p style={idStyle}>test</p>
-        <Link href="/profile/edit">
+        <h2 style={nameStyle}>{user?.username || 'ユーザー名未取得'}</h2>
+        <p style={idStyle}>ID: {user?.id ?? '-'}</p>
+        <Link href={`/profile/${user?.id}/edit`}>
           <button style={editButtonStyle}>編集</button>
         </Link>
+
       </div>
 
-      {/* 設定トグル */}
+      {/* 設定トグルとログアウト */}
       <div style={settingsContainer}>
         <SettingToggle label="自分の保存したスポットを外部に公開する" />
         <SettingToggle label="何かしらの設定" />
+        <button onClick={handleLogout} style={logoutButtonStyle}>
+          ログアウト
+        </button>
       </div>
     </div>
   );
@@ -40,6 +57,8 @@ function SettingToggle({ label }: { label: string }) {
     </div>
   );
 }
+
+// --- スタイル定義 ---
 
 const containerStyle: React.CSSProperties = {
   fontFamily: 'sans-serif',
@@ -103,4 +122,16 @@ const toggleItemStyle: React.CSSProperties = {
 const toggleStyle: React.CSSProperties = {
   width: '20px',
   height: '20px',
+};
+
+const logoutButtonStyle: React.CSSProperties = {
+  marginTop: '24px',
+  alignSelf: 'center',
+  backgroundColor: '#DD6666',
+  color: 'white',
+  padding: '10px 24px',
+  fontSize: '16px',
+  border: 'none',
+  borderRadius: '12px',
+  cursor: 'pointer',
 };
