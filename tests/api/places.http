@@ -2,7 +2,7 @@
 @baseUrl = http://localhost:3001/api
 
 // ログイン後に取得したJWTトークンを保存するための変数
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwidXNlcm5hbWUiOiJuYWthbmlzaGkzIiwiaWF0IjoxNzUxMzQ3NDc4LCJleHAiOjE3NTEzNTEwNzh9.8eEX6DdJIiJOQNJYmKUhDFNmB8hOk2CjRM1AB0QMMSI
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwidXNlcm5hbWUiOiJuYWthbmlzaGkyIiwiaWF0IjoxNzUxNTQ3OTMxLCJleHAiOjE3NTE1NTE1MzF9.TemD4P0yXnuW1yRBptzrMSRz-cZHW6uLW6UghbRqFNQ
 
 ### 場所一覧を取得
 GET {{baseUrl}}/places
@@ -22,7 +22,7 @@ Content-Type: application/json
 Authorization: Bearer {{authToken}}
 
 {
-  "name": "東京スカイツリー",
+  "name": "東京スカイツリー2",
   "description": "東京の観光名所として有名な高さ634mの電波塔",
   "category": "観光",
   "address": "東京都墨田区押上1丁目1−2",
@@ -116,6 +116,29 @@ Authorization: Bearer {{authToken}}
   "lat": 35.4475,
   "lng": 139.6421,
   "image_url": "https://placehold.co/600x400/3357FF/ffffff?text=OtherUser_Spot1"
+}
+
+### 緯度経度のみを指定して場所を作成（最小限の必須項目のみ）
+POST {{baseUrl}}/places
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "lat": 35.6892,
+  "lng": 139.6917
+}
+
+### nullの名前を明示的に指定して場所を作成
+POST {{baseUrl}}/places
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "name": null,
+  "description": "名前をnullにした場所のテスト",
+  "lat": 35.6877,
+  "lng": 139.7030,
+  "address": "東京都千代田区"
 }
 
 ### 現在認証中のユーザー（トークンの所有者）自身が作成した場所を取得
