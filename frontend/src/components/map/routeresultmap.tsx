@@ -182,7 +182,7 @@ export default function RouteResultMap() {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=jp&addressdetails=1`,
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&addressdetails=1`,
         {
           headers: {
             'User-Agent': 'NavigationApp/1.0'
@@ -578,11 +578,11 @@ export default function RouteResultMap() {
   const { center, zoom } = getMapSettings();
 
   return (
-    <div className="h-screen w-screen relative" style={{ height: "100vh", width: "100vw" }}>
+    <div className="h-screen w-screen relative" style={{ height: "600px", width: "100vw" }}>
       <MapContainer 
         center={center} 
         zoom={zoom} 
-        style={{ height: "75%", width: "100%" }}
+        style={{ height: "100%", width: "100%" }}
         className="z-0"
        >
         <TileLayer
