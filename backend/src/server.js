@@ -43,7 +43,7 @@ async function startServer() {
     // エラーがあってもサーバーを起動
     app.listen(PORT, () => {
       console.log(`
-  🚀 サーバーが起動しました（エラーあり）
+  🚀 サーバーが起動しました（エラーあり: ${error.message}）
   📡 http://localhost:${PORT}
   🕒 ${new Date().toLocaleString()}
   `);
