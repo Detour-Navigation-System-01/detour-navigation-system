@@ -1,9 +1,9 @@
 /**
  * @fileoverview カメラビューコンポーネント
  * @description カメラ機能を提供し、写真撮影・保存機能を実装
- * @author 作成者名
- * @created YYYY-MM-DD
- * @updated YYYY-MM-DD
+ * @author 尾﨑諒
+ * @created 2025/07/03
+ * @updated 2025/07/03
  * @version 1.0.1
  */
 

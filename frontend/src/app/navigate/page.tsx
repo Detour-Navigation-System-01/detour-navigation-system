@@ -1,11 +1,17 @@
-// 出発地点と到着地点が入った地図とその経路
-// かかる時間(分)と距離(km)を表示する
-// 入力画面戻るボタンとナビゲーション開始ボタン
-// components/input/TripInputForm.tsxで得られた場所(座標をもらって)行う
+/**
+ * @fileoverview ナビゲーションページコンポーネント
+ * @description 旅行情報のナビゲーション結果とナビゲーション開始ボタンを表示するページ
+ * @author 尾﨑諒
+ * @created 2025/07/03
+ * @updated 2025/07/03
+ * @version 1.0.0
+ */
+
 "use client";
 
 import { Suspense } from 'react';
 import NavigatePage from '../../components/map/routeresultmap';
+import ToNavigating from '../../components/navigationButtons/ToNavigating'; 
 
 // Loading コンポーネント
 function NavigateLoading() {
@@ -23,6 +29,7 @@ export default function Navigate() {
   return (
     <Suspense fallback={<NavigateLoading />}>
       <NavigatePage />
+      <ToNavigating />
     </Suspense>
   );
 }

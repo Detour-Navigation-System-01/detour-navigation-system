@@ -1,3 +1,12 @@
+/**
+ * @fileoverview 現在地取得コンポーネント
+ * @description ブラウザのジオロケーションAPIを使って現在地を取得し表示するコンポーネント
+ * @author 尾﨑諒
+ * @created 2025/07/03
+ * @updated 2025/07/03
+ * @version 1.0.0
+ */
+
 "use client";
 
 import { useState } from "react";

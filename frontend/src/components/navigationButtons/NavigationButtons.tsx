@@ -1,3 +1,17 @@
+/**
+ * @fileoverview ナビゲーション画面のためのボタンコンポーネント
+ * @description
+ * - 入力画面への遷移ボタン（虫眼鏡アイコン付き）
+ * - プロフィール画面への遷移ボタン
+ * - カメラ画面への遷移ボタン
+ * - タッチ時の簡易アニメーション効果付き
+ * 
+ * @author 尾﨑諒
+ * @created 2025/07/03
+ * @updated 2025/07/03
+ * @version 1.0.0
+ */
+
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -27,8 +41,8 @@ export default function NavigationButtons() {
     minHeight: "48px",
     fontSize: "1.3rem", // ← bigger text
     fontWeight: 600,
-    backgroundColor: "#0070f3",
-    color: "#fff",
+    backgroundColor: "while",
+    color: "black",
     border: "none",
     borderRadius: "50px",
     boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
@@ -41,6 +55,7 @@ export default function NavigationButtons() {
     gap: "0.8em",
   };
 
+  
   return (
     <>
       <button
@@ -58,7 +73,7 @@ export default function NavigationButtons() {
           xmlns="http://www.w3.org/2000/svg"
           height="1.6em"
           viewBox="0 0 24 24"
-          fill="white"
+          fill="black"
           style={{ flexShrink: 0 }}
         >
           <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 
@@ -68,16 +83,10 @@ export default function NavigationButtons() {
                    6 9.5S8.01 5 10.5 5 15 7.01 15 
                    9.5 12.99 14 10.5 14z" />
         </svg>
-        入力する
+        
       </button>
 
-      <button style={{ ...sharedButtonStyle, top: "200px" }} onClick={() => router.push("/login")}>
-        profileボタン
-      </button>
       
-      <button style={{ ...sharedButtonStyle, top: "400px" }} onClick={() => router.push("/camera")}>
-        cameraボタン
-      </button>
     </>
   );
 }

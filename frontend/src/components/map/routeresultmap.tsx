@@ -1,6 +1,23 @@
+/**
+ * @fileoverview ルート検索結果を地図上に表示し、出発地・目的地のマーカーやルートのポリラインを描画します。
+ * また、ルート情報の保存やナビゲーション開始の操作も提供します。
+ * 
+ * @description
+ * - URLパラメータから出発地・目的地・制限時間を取得し、現在地取得やジオコーディングを行います。
+ * - バックエンドAPIを呼び出してルート情報を取得し、地図に描画します。
+ * - ルート情報の保存やナビゲーション画面への遷移を実装しています。
+ * 
+ * @author 尾﨑諒
+ * @created 2025/07/03
+ * @updated 2025/07/03
+ * @version 1.0.0
+ */
+
+
 "use client";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -9,6 +26,51 @@ interface Coordinate {
   lat: number;
   lon: number;
 }
+
+// 新しいデータベース形式のレスポンス
+interface RouteResponse {
+  success: boolean;
+  message: string;
+  data: {
+    route: {
+      id?: number;
+      name: string;
+      description: string;
+      userId: number | null;
+      origin_lat: number;
+      origin_lng: number;
+      destination_lat: number;
+      destination_lng: number;
+      distance: number;
+      duration: number;
+      profile: string;
+      detourLevel: number;
+      routeType: string;
+      createdAt?: string;
+      updatedAt?: string;
+    };
+    coordinates?: Array<{
+      lat: number;
+      lng: number;
+    }>;
+    steps?: Array<{
+      sequence: number;
+      instruction: string;
+      distance: number;
+      duration: number;
+      start_lat: number;
+      start_lng: number;
+      end_lat: number | null;
+      end_lng: number | null;
+      maneuver: string;
+    }>;
+    geometry?: string;
+    overview_polyline?: string;
+  };
+}
+
+// バックエンドAPIのベースURL
+const API_BASE_URL = "http://localhost:3001/api";
 
 // アイコン作成用のヘルパー関数
 const createStartIcon = () => L.icon({
@@ -48,17 +110,20 @@ export default function RouteResultMap() {
     startIcon: L.Icon;
     endIcon: L.Icon;
   } | null>(null);
+  const [routeSteps, setRouteSteps] = useState<Array<any>>([]);
+  const [routeId, setRouteId] = useState<number | null>(null);
 
   // URLパラメータを取得
   const fromParam = searchParams.get('from');
   const toParam = searchParams.get('to');
   const timeParam = searchParams.get('time');
 
+  const router = useRouter();
+
   // アイコンを初期化する関数
   const initializeIcons = () => {
     if (typeof window !== "undefined") {
       try {
-        // カスタムアイコンの作成
         const startIcon = createStartIcon();
         const endIcon = createEndIcon();
         
@@ -74,20 +139,53 @@ export default function RouteResultMap() {
     return false;
   };
 
+  // 現在地を取得する関数
+  const getCurrentLocation = async (): Promise<Coordinate> => {
+    console.log("📍 現在地取得開始");
+    
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        const errorMsg = "このブラウザでは位置情報が利用できません。";
+        console.error("❌ " + errorMsg);
+        reject(new Error(errorMsg));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coordinate = {
+            lat: pos.coords.latitude,
+            lon: pos.coords.longitude
+          };
+          console.log("✅ 現在地取得成功:", coordinate);
+          resolve(coordinate);
+        },
+        (err) => {
+          const errorMsg = "位置情報の取得に失敗しました: " + err.message;
+          console.error("❌ " + errorMsg);
+          reject(new Error(errorMsg));
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000
+        }
+      );
+    });
+  };
+
   // ジオコーディング関数（住所 → 座標）
   const geocodeAddress = async (address: string): Promise<Coordinate> => {
     console.log(`🔍 ジオコーディング開始: "${address}"`);
     
     try {
-      // 少し待機を入れてAPIレート制限を回避
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Nominatim API（OpenStreetMapのジオコーディングサービス）を使用
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=jp&addressdetails=1`,
         {
           headers: {
-            'User-Agent': 'NavigationApp/1.0' // User-Agentを追加
+            'User-Agent': 'NavigationApp/1.0'
           }
         }
       );
@@ -115,56 +213,148 @@ export default function RouteResultMap() {
     }
   };
 
-  // ルート取得関数
+  // 座標取得関数（現在地または住所に対応）
+  const getCoordinate = async (location: string): Promise<Coordinate> => {
+    if (location === "現在地") {
+      return await getCurrentLocation();
+    } else {
+      return await geocodeAddress(location);
+    }
+  };
+
+  // バックエンドAPIを使用したルート取得関数（新しいDB形式対応）
   const fetchRoute = async (from: Coordinate, to: Coordinate) => {
-    console.log("🚗 ルート取得開始:", { from, to });
+    console.log("🚗 ルート取得開始（バックエンドAPI使用）:", { from, to });
     
     try {
-      // 少し待機を入れてAPIレート制限を回避
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      const response = await fetch(
-        `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson&steps=true`
-      );
+      const requestBody = {
+        origin: {
+          lat: from.lat,
+          lng: from.lon
+        },
+        destination: {
+          lat: to.lat,
+          lng: to.lon
+        },
+        profile: "walking",
+        includeSteps: true,
+        requestedDuration: timeParam ? parseInt(timeParam) * 60 : null 
+      };
+
+      console.log("📤 API送信データ:", requestBody);
+
+      const response = await fetch(`${API_BASE_URL}/routes/calculate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
       
       if (!response.ok) {
-        throw new Error(`OSRM API エラー: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error("❌ API エラーレスポンス:", errorText);
+        throw new Error(`バックエンドAPI エラー: ${response.status} ${response.statusText}`);
       }
       
-      const data = await response.json();
-      console.log("📊 ルート取得結果:", data);
+      const data: RouteResponse = await response.json();
+      console.log("📊 バックエンドAPI ルート取得結果:", data);
       
-      if (data.routes && data.routes.length > 0) {
-        const route = data.routes[0];
+      if (data.success && data.data && data.data.route) {
+        const route = data.data.route;
         
-        // geometryが存在することを確認
-        if (!route.geometry || !route.geometry.coordinates) {
-          throw new Error("ルートの詳細情報が取得できませんでした");
+        // ルートIDを保存（後で保存機能で使用）
+        if (route.id) {
+          setRouteId(route.id);
         }
         
-        const coords = route.geometry.coordinates.map(([lon, lat]: [number, number]) => [lat, lon] as [number, number]);
+        // 座標データの処理
+        let coords: [number, number][] = [];
+        
+        if (data.data.coordinates && data.data.coordinates.length > 0) {
+          // coordinatesが存在する場合
+          coords = data.data.coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
+        } else {
+          // coordinatesがない場合は始点と終点のみ表示
+          coords = [
+            [route.origin_lat, route.origin_lng],
+            [route.destination_lat, route.destination_lng]
+          ];
+          console.log("⚠️ 詳細な座標情報がないため、始点と終点のみ表示します");
+        }
         
         setRouteCoords(coords);
         setDistance((route.distance / 1000).toFixed(1));
-        setDuration(Math.round(route.duration / 60));
+        setDuration(Math.round(route.duration / 60)); // 秒から分に変換
+        setRouteSteps(data.data.steps || []);
         
         console.log("✅ ルート設定完了:", {
           distance: (route.distance / 1000).toFixed(1) + "km",
           duration: Math.round(route.duration / 60) + "分",
-          points: coords.length
+          points: coords.length,
+          steps: data.data.steps?.length || 0,
+          routeId: route.id
         });
         
         return true;
       } else {
-        throw new Error("指定された地点間のルートが見つかりませんでした");
+        throw new Error(data.message || "指定された地点間のルートが見つかりませんでした");
       }
     } catch (err) {
-      console.error("❌ ルート取得エラー:", err);
-      throw err;
+      console.error("❌ バックエンドAPI ルート取得エラー:", err);
+      //エラーページに飛ぶ
+      router.push("/error");
+      return false;
+      // // フォールバック: 直接OSRM APIを使用
+      // console.log("🔄 フォールバック: 直接OSRM APIを使用");
+      // return await fetchRouteOSRM(from, to);
     }
   };
 
-  // 時間フォーマット
+  // // フォールバック用のOSRM API直接呼び出し
+  // const fetchRouteOSRM = async (from: Coordinate, to: Coordinate) => {
+  //   console.log("🚗 フォールバック ルート取得開始:", { from, to });
+    
+  //   try {
+  //     await new Promise(resolve => setTimeout(resolve, 300));
+      
+  //     const response = await fetch(
+  //       `https://router.project-osrm.org/route/v1/walking/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson&steps=true`
+  //     );
+      
+  //     if (!response.ok) {
+  //       throw new Error(`OSRM API エラー: ${response.status} ${response.statusText}`);
+  //     }
+      
+  //     const data = await response.json();
+  //     console.log("📊 OSRM ルート取得結果:", data);
+      
+  //     if (data.routes && data.routes.length > 0) {
+  //       const route = data.routes[0];
+        
+  //       if (!route.geometry || !route.geometry.coordinates) {
+  //         throw new Error("ルートの詳細情報が取得できませんでした");
+  //       }
+        
+  //       const coords = route.geometry.coordinates.map(([lon, lat]: [number, number]) => [lat, lon] as [number, number]);
+        
+  //       setRouteCoords(coords);
+  //       setDistance((route.distance / 1000).toFixed(1));
+  //       setDuration(Math.round(route.duration / 60)); // 秒から分に変換
+        
+  //       console.log("✅ フォールバック ルート設定完了");
+  //       return true;
+  //     } else {
+  //       throw new Error("指定された地点間のルートが見つかりませんでした");
+  //     }
+  //   } catch (err) {
+  //     console.error("❌ フォールバック ルート取得エラー:", err);
+  //     throw err;
+  //   }
+  // };
+
+  // 時間フォーマット関数
   const formatDuration = (minutes: number): string => {
     if (minutes < 60) {
       return `${minutes}分`;
@@ -174,52 +364,108 @@ export default function RouteResultMap() {
     return `${hours}時間${remainingMinutes > 0 ? remainingMinutes + '分' : ''}`;
   };
 
-  // 中心点とズームレベル計算（改善版）
+  // 中心点とズームレベル計算
   const getMapSettings = () => {
     if (!fromCoord || !toCoord) {
       return { center: [35.681236, 139.767125] as [number, number], zoom: 13 };
     }
     
-    // 中点を計算
     const centerLat = (fromCoord.lat + toCoord.lat) / 2;
     const centerLon = (fromCoord.lon + toCoord.lon) / 2;
     
-    // 2点間の距離を計算してズームレベルを決定
     const latDiff = Math.abs(fromCoord.lat - toCoord.lat);
     const lonDiff = Math.abs(fromCoord.lon - toCoord.lon);
     
-    // より適切なズームレベル計算
     const maxDiff = Math.max(latDiff, lonDiff);
     let zoom = 15;
     
-    if (maxDiff > 2) zoom = 7;        // 200km以上
-    else if (maxDiff > 1) zoom = 8;   // 100km程度
-    else if (maxDiff > 0.5) zoom = 9; // 50km程度
-    else if (maxDiff > 0.2) zoom = 10; // 20km程度
-    else if (maxDiff > 0.1) zoom = 11; // 10km程度
-    else if (maxDiff > 0.05) zoom = 12; // 5km程度
-    else if (maxDiff > 0.02) zoom = 13; // 2km程度
-    else if (maxDiff > 0.01) zoom = 14; // 1km程度
+    if (maxDiff > 2) zoom = 7;
+    else if (maxDiff > 1) zoom = 8;
+    else if (maxDiff > 0.5) zoom = 9;
+    else if (maxDiff > 0.2) zoom = 10;
+    else if (maxDiff > 0.1) zoom = 11;
+    else if (maxDiff > 0.05) zoom = 12;
+    else if (maxDiff > 0.02) zoom = 13;
+    else if (maxDiff > 0.01) zoom = 14;
     
-    console.log(`🗺️ マップ設定: 中心点(${centerLat.toFixed(4)}, ${centerLon.toFixed(4)}), ズーム: ${zoom}, 距離差: ${maxDiff.toFixed(4)}`);
+    console.log(`🗺️ マップ設定: 中心点(${centerLat.toFixed(4)}, ${centerLon.toFixed(4)}), ズーム: ${zoom}`);
     
     return { center: [centerLat, centerLon] as [number, number], zoom };
   };
 
+  // ルートを保存する関数（新しいDB形式対応）
+  const saveRoute = async () => {
+    if (!fromCoord || !toCoord || !fromParam || !toParam) {
+      alert("ルート情報が不完全です");
+      return;
+    }
+
+    try {
+      // 既にルートが保存されている場合は保存済みメッセージを表示
+      if (routeId) {
+        alert(`ルートは既に保存済みです (ID: ${routeId})`);
+        return;
+      }
+
+      const saveData = {
+        name: `${fromParam}から${toParam}へのルート`,
+        description: `時間制限: ${timeParam ? timeParam + '分' : 'なし'}`,
+        origin: {
+          lat: fromCoord.lat,
+          lng: fromCoord.lon
+        },
+        destination: {
+          lat: toCoord.lat,
+          lng: toCoord.lon
+        },
+        profile: "walking",
+        detourLevel: 1,
+        routeType: "normal"
+      };
+
+      console.log("💾 ルート保存データ:", saveData);
+
+      const response = await fetch(`${API_BASE_URL}/routes/save`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(saveData)
+      });
+
+      if (response.ok) {
+        const result: RouteResponse = await response.json();
+        console.log("✅ ルート保存成功:", result);
+        
+        if (result.success && result.data && result.data.route && result.data.route.id) {
+          setRouteId(result.data.route.id);
+          alert(`ルートが保存されました (ID: ${result.data.route.id})`);
+        } else {
+          alert("ルートが保存されました");
+        }
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "ルート保存に失敗しました");
+      }
+    } catch (err) {
+      console.error("❌ ルート保存エラー:", err);
+      const errorMessage = err instanceof Error ? err.message : "ルート保存に失敗しました";
+      alert(errorMessage);
+    }
+  };
+
   useEffect(() => {
-    let isMounted = true; // コンポーネントがマウントされているかのフラグ
+    let isMounted = true;
     
     const initializeNavigation = async () => {
       try {
         console.log("🚀 ナビゲーション初期化開始");
         console.log("📋 URLパラメータ:", { from: fromParam, to: toParam, time: timeParam });
         
-        // 早期リターンでパラメータチェック
         if (!fromParam || !toParam) {
           throw new Error("出発地または目的地が指定されていません");
         }
         
-        // クライアントサイド確認
         if (typeof window === "undefined") {
           return;
         }
@@ -227,41 +473,31 @@ export default function RouteResultMap() {
         if (!isMounted) return;
         setIsClient(true);
         
-        // ステップ1: Leafletアイコンを初期化
+        // Leafletアイコンを初期化
         if (!isMounted) return;
         setStep("マップライブラリを初期化中...");
-        console.log("📦 Leaflet初期化開始");
         initializeIcons();
-        console.log("✅ Leaflet初期化完了");
         
-        // ステップ2: 出発地の座標取得
+        // 出発地の座標取得
         if (!isMounted) return;
-        setStep("出発地の座標を取得中...");
-        console.log("🏠 出発地ジオコーディング開始");
-        const fromCoords = await geocodeAddress(fromParam);
+        setStep(fromParam === "現在地" ? "現在地を取得中..." : "出発地の座標を取得中...");
+        const fromCoords = await getCoordinate(fromParam);
         if (!isMounted) return;
         setFromCoord(fromCoords);
-        console.log("✅ 出発地座標設定完了");
         
-        // ステップ3: 目的地の座標取得
+        // 目的地の座標取得
         if (!isMounted) return;
         setStep("目的地の座標を取得中...");
-        console.log("🎯 目的地ジオコーディング開始");
-        const toCoords = await geocodeAddress(toParam);
+        const toCoords = await getCoordinate(toParam);
         if (!isMounted) return;
         setToCoord(toCoords);
-        console.log("✅ 目的地座標設定完了");
         
-        // ステップ4: ルート計算
+        // ルート計算
         if (!isMounted) return;
         setStep("ルートを計算中...");
-        console.log("🛣️ ルート計算開始");
         await fetchRoute(fromCoords, toCoords);
         if (!isMounted) return;
-        console.log("✅ ルート計算完了");
         
-        // 完了
-        if (!isMounted) return;
         setStep("完了");
         setLoading(false);
         console.log("🎉 全ての初期化処理が完了しました");
@@ -271,23 +507,27 @@ export default function RouteResultMap() {
         
         const errorMessage = err instanceof Error ? err.message : "不明なエラーが発生しました";
         console.error("❌ ナビゲーション初期化エラー:", errorMessage);
-        console.error("エラーの詳細:", err);
         
         setError(errorMessage);
         setLoading(false);
       }
     };
     
-    // 初期化実行
     initializeNavigation();
     
-    // クリーンアップ関数
     return () => {
       isMounted = false;
-      console.log("🧹 useEffectクリーンアップ実行");
     };
-  }, [fromParam, toParam, timeParam]); // 依存配列を明確化
-
+  }, [fromParam, toParam, timeParam]);
+  
+  useEffect(() => {
+    if (routeSteps.length > 0 && routeCoords.length > 0) {
+      sessionStorage.setItem("routeSteps", JSON.stringify(routeSteps));
+      sessionStorage.setItem("routeCoordinates", JSON.stringify(routeCoords));
+      console.log("✅ routeSteps と routeCoordinates を sessionStorage に保存しました");
+    }
+  }, [routeSteps, routeCoords]);
+  
   if (loading || !isClient || !leafletIcons) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -338,22 +578,19 @@ export default function RouteResultMap() {
   const { center, zoom } = getMapSettings();
 
   return (
-    <div className="h-screen w-screen relative">
+    <div className="h-screen w-screen relative" style={{ height: "100vh", width: "100vw" }}>
       <MapContainer 
         center={center} 
         zoom={zoom} 
-        style={{ height: "500px", width: "100%" }}
+        style={{ height: "75%", width: "100%" }}
         className="z-0"
-  //       center={[35.681236, 139.767125]} 
-  // zoom={13} 
-  // style={{ height: "500px", width: "100%" }}
-      >
+       >
         <TileLayer
           attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        {/* ルート表示（マーカーより下に表示されるよう先に配置） */}
+        {/* ルート表示 */}
         {routeCoords.length > 0 && (
           <Polyline 
             positions={routeCoords} 
@@ -364,7 +601,7 @@ export default function RouteResultMap() {
           />
         )}
         
-        {/* 出発地マーカー（緑色） */}
+        {/* 出発地マーカー */}
         {fromCoord && leafletIcons && (
           <Marker position={[fromCoord.lat, fromCoord.lon]} icon={leafletIcons.startIcon}>
             <Popup>
@@ -373,7 +610,9 @@ export default function RouteResultMap() {
                   <span className="w-3 h-3 bg-green-500 rounded-full"></span>
                   <strong className="text-green-700">出発地</strong>
                 </div>
-                <div className="text-sm text-gray-700 mb-2">{fromParam}</div>
+                <div className="text-sm text-gray-700 mb-2">
+                  {fromParam === "現在地" ? "現在地" : fromParam}
+                </div>
                 <div className="text-xs text-gray-500">
                   緯度: {fromCoord.lat.toFixed(6)}<br />
                   経度: {fromCoord.lon.toFixed(6)}
@@ -383,7 +622,7 @@ export default function RouteResultMap() {
           </Marker>
         )}
         
-        {/* 目的地マーカー（赤色） */}
+        {/* 目的地マーカー */}
         {toCoord && leafletIcons && (
           <Marker position={[toCoord.lat, toCoord.lon]} icon={leafletIcons.endIcon}>
             <Popup>
@@ -403,87 +642,77 @@ export default function RouteResultMap() {
         )}
       </MapContainer>
 
-      {/* 情報表示パネル */}
-      <div className="absolute top-4 left-4 bg-white p-6 rounded-xl shadow-lg z-[1000] min-w-[320px] max-w-[400px]">
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold mb-3 text-gray-800 flex items-center gap-2">
-            🧭 ナビゲーション情報
-          </h3>
-          
-          <div className="space-y-3 text-sm mb-4">
-            <div className="flex items-start gap-3">
-              <span className="w-3 h-3 bg-green-500 rounded-full mt-1 flex-shrink-0"></span>
-              <div>
-                <div className="font-medium text-gray-700">出発地</div>
-                <div className="text-gray-600">{fromParam}</div>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <span className="w-3 h-3 bg-red-500 rounded-full mt-1 flex-shrink-0"></span>
-              <div>
-                <div className="font-medium text-gray-700">目的地</div>
-                <div className="text-gray-600">{toParam}</div>
-              </div>
-            </div>
-            
-            {timeParam && (
-              <div className="flex items-start gap-3">
-                <span className="w-3 h-3 bg-yellow-500 rounded-full mt-1 flex-shrink-0"></span>
-                <div>
-                  <div className="font-medium text-gray-700">制限時間</div>
-                  <div className="text-gray-600">{timeParam}分</div>
-                </div>
-              </div>
-            )}
+      {/* 上部情報パネル */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-md z-[1000] w-[90%] max-w-md px-4 py-3">
+        {/* 上のバー */}
+        <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-2" />
+
+        {/* 時間と距離 */}
+        <div className="text-center mb-3">
+          <div className="text-lg font-bold text-gray-800 mb-1">
+            {duration ? formatDuration(duration) : '計算中...'} ({distance}km)
           </div>
           
-          <div className="border-t pt-4 space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600 font-medium">距離:</span>
-              <span className="text-lg font-semibold text-blue-600">{distance} km</span>
+          {timeParam && duration && (
+            <div className={`text-sm font-medium ${
+              duration <= parseInt(timeParam)
+                ? 'text-green-600'
+                : 'text-red-600'
+            }`}>
+              {duration <= parseInt(timeParam)
+                ? `制限時間内に到着可能`
+                : `制限時間を${duration - parseInt(timeParam)}分超過`
+              }
             </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600 font-medium">予想時間:</span>
-              <span className="text-lg font-semibold text-blue-600">
-                {duration ? formatDuration(duration) : '計算中...'}
-              </span>
+          )}
+
+          {/* {routeSteps.length > 0 && (
+            <div className="text-xs text-gray-500 mt-1">
+              {routeSteps.length}つのステップ
             </div>
-            
-            {timeParam && duration && (
-              <div className={`text-sm p-3 rounded-lg font-medium ${
-                duration <= parseInt(timeParam) 
-                  ? 'bg-green-100 text-green-800 border border-green-200' 
-                  : 'bg-red-100 text-red-800 border border-red-200'
-              }`}>
-                {duration <= parseInt(timeParam) 
-                  ? `✅ 制限時間内に到着可能です` 
-                  : `⚠️ 制限時間を${duration - parseInt(timeParam)}分超過します`
-                }
-              </div>
-            )}
-          </div>
+          )}
+
+          {routeId && (
+            <div className="text-xs text-blue-600 mt-1">
+              ルートID: {routeId}
+            </div>
+          )} */}
         </div>
-        
-        <div className="flex gap-3 flex-wrap">
+
+        {/* ボタンエリア */}
+        {/* <div className="flex justify-between gap-3">
           <button 
             onClick={() => window.history.back()}
-            className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors flex-1"
+            className="flex-1 py-2 rounded-full bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors"
           >
-            戻る
+            入力に戻る
           </button>
-          
+
+          <button 
+            onClick={saveRoute}
+            className={`flex-1 py-2 rounded-full text-sm font-semibold transition-colors ${
+              routeId 
+                ? 'bg-green-100 text-green-700 cursor-default'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+            disabled={!!routeId}
+          >
+            {routeId ? '保存済み' : '保存'}
+          </button>
+
           <button 
             onClick={() => {
-              console.log("🧭 ナビゲーション開始");
-              alert("ナビゲーション開始！");
+              if (routeSteps.length > 0) {
+                sessionStorage.setItem("routeSteps", JSON.stringify(routeSteps));
+              }
+              router.push("/navigating");
             }}
-            className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors flex-1"
+            className="flex-1 py-2 rounded-full bg-green-800 text-white text-sm font-semibold flex items-center justify-center gap-1 hover:bg-green-700 transition-colors"
           >
-            ナビ開始
+            <span>🧭</span>
+            開始
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );
