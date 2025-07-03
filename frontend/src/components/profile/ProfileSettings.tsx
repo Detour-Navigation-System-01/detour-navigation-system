@@ -1,7 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { fetcher } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
 import { User } from '@/types/user';
-import { useState } from 'react';
 
 type Props = {
   user: User;
@@ -9,7 +11,28 @@ type Props = {
 
 export default function ProfileSettings({ user }: Props) {
   const [isPublic, setIsPublic] = useState(user.isPublic ?? false);
-  const [someSetting, setSomeSetting] = useState(true);
+  const { refresh } = useAuth();
+
+  useEffect(() => {
+    setIsPublic(user.isPublic ?? false);
+  }, [user]);
+
+  const handleToggle = async () => {
+    const next = !isPublic;
+    setIsPublic(next); // UIに先に反映
+
+    try {
+      await fetcher(`/api/users/${user.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ public_settings: next }),
+      });
+      await refresh(); // 最新状態に更新（オプション）
+    } catch (err: any) {
+      console.error('❌ 公開設定更新失敗:', err);
+      alert(err.message || '公開設定の更新に失敗しました');
+      setIsPublic(!next); // 元に戻す
+    }
+  };
 
   return (
     <div style={{ padding: '0 24px' }}>
@@ -17,18 +40,9 @@ export default function ProfileSettings({ user }: Props) {
         <input
           type="checkbox"
           checked={isPublic}
-          onChange={() => setIsPublic(!isPublic)}
+          onChange={handleToggle}
         />
         自分の保存したスポットを外部に公開する
-      </label>
-      <br />
-      <label>
-        <input
-          type="checkbox"
-          checked={someSetting}
-          onChange={() => setSomeSetting(!someSetting)}
-        />
-        何かしらの設定
       </label>
     </div>
   );
