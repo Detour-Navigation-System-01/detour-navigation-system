@@ -1,3 +1,12 @@
+/**
+ * @fileoverview ユーザービジネスモデル
+ * @description ユーザー関連のビジネスロジックを扱うモデルクラス。データアクセスはリポジトリに委譲し、ビジネスルールを集中管理する。
+ * @author 笠置啓太
+ * @created 2025-06-17
+ * @updated 2025-07-01
+ * @version 1.1.0
+ */
+
 // backend/src/models/User.js
 /**
  * ユーザーのビジネスモデル

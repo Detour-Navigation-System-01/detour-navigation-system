@@ -1,3 +1,12 @@
+/**
+ * @fileoverview ユーザーサービス
+ * @description ユーザー関連のビジネスロジックを実装。ユーザーの取得、作成、更新、削除、認証処理を提供する。
+ * @author 笠置啓太
+ * @created 2025-06-17
+ * @updated 2025-07-01
+ * @version 1.2.0
+ */
+
 // backend/src/services/userService.js
 
 const User = require('../models/User');
