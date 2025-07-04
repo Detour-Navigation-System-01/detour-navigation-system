@@ -1,3 +1,14 @@
+/**
+ * @fileoverview 保存スポット一覧画面（仮データ表示 + 詳細遷移・削除ボタン付き）
+ * @description 仮の保存スポット画像データを一覧表示し、クリックで詳細画面に遷移。
+ *              各カードに削除ボタンを表示し、クリックで削除（現在はアラートによる仮動作）。
+ *              今後、API連携により動的にデータ取得・削除処理を行う予定。
+ * @author 赤津
+ * @created 2025-06-13
+ * @updated 2025-07-04
+ * @version 2.1.2
+ */
+
 'use client';
 
 import { useRouter } from 'next/navigation';

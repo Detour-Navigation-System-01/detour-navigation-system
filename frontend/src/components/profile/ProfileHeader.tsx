@@ -1,3 +1,14 @@
+/**
+ * @fileoverview プロフィールヘッダー表示コンポーネント
+ * @description ユーザーのプロフィール画像、名前、ユーザー名を中央揃えで表示。
+ *              「編集」ボタンを押すことでプロフィール編集ページ（/profile/edit）へ遷移可能。
+ *              画像が未設定の場合はデフォルト画像を表示するようフォールバック処理を実装。
+ * @author 赤津
+ * @created 2025-06-12
+ * @updated 2025-07-04
+ * @version 2.1.2
+ */
+
 import { User } from '@/types/user';
 import Link from 'next/link';
 
