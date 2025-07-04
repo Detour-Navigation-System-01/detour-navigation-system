@@ -10,8 +10,8 @@ type Props = {
 };
 
 export default function ProfileEditForm({ user }: Props) {
-  const [name, setName] = useState(user.name);
-  const [isPublic, setIsPublic] = useState(user.isPublic);
+  const [name, setName] = useState(user.username);
+  const [isPublic, setIsPublic] = useState(user.public_settings);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
