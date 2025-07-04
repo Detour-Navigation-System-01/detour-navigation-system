@@ -6,19 +6,16 @@ import { useRouter } from "next/navigation";
 export default function CameraView() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
   const router = useRouter();
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
 
+  // カメラ起動
   useEffect(() => {
-    if (!videoRef.current) return;
-
     navigator.mediaDevices.getUserMedia({ video: true })
       .then((stream) => {
-        mediaStreamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.play().catch(console.error);
+          videoRef.current.play();
         }
       })
       .catch((err) => {
@@ -27,18 +24,19 @@ export default function CameraView() {
       });
 
     return () => {
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-        mediaStreamRef.current = null;
+      if (videoRef.current?.srcObject instanceof MediaStream) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
       }
     };
   }, []);
 
+  // 写真を撮る
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) return;
 
-    const video = videoRef.current;
     const canvas = canvasRef.current;
+    const video = videoRef.current;
+
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
@@ -46,45 +44,11 @@ export default function CameraView() {
     if (!ctx) return;
 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    // PNG形式のままBase64文字列を取得（不可逆圧縮なし）
     const dataUrl = canvas.toDataURL("image/png");
     setPhotoDataUrl(dataUrl);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const payload = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-          image_url: dataUrl,
-        };
-
-        fetch("http://localhost:3001/api/photos", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        })
-          .then((res) => {
-            if (!res.ok) throw new Error("アップロード失敗");
-            console.log("✅ 画像と位置情報を送信しました");
-          })
-          .catch((err) => {
-            console.error("送信エラー:", err);
-            alert("写真の保存に失敗しました。");
-          });
-      },
-      (error) => {
-        console.error("位置情報取得失敗:", error);
-        alert("位置情報の取得に失敗しました。");
-      }
-    );
   };
 
-  const handleGoBack = () => {
-    router.back();
-  };
+  console.log(photoDataUrl);
 
   return (
     <div style={{ position: "relative", height: "100vh", backgroundColor: "#000" }}>
@@ -100,56 +64,46 @@ export default function CameraView() {
         <img
           src={photoDataUrl}
           alt="撮影画像"
-          style={{ width: "100%", height: "100%", objectFit: "contain", backgroundColor: "#000" }}
+          style={{ width: "100%", height: "100%", objectFit: "contain" }}
         />
       )}
 
       <canvas ref={canvasRef} style={{ display: "none" }} />
 
-      <div
-        style={{
-          position: "absolute",
-          bottom: "30px",
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-around",
-          padding: "0 20px",
-          boxSizing: "border-box",
-        }}
-      >
+      <div style={{
+        position: "absolute",
+        bottom: "30px",
+        width: "100%",
+        display: "flex",
+        justifyContent: "space-around",
+      }}>
         <button
-          onClick={handleGoBack}
+          onClick={() => router.back()}
           style={{
             padding: "12px 24px",
             fontSize: "16px",
             borderRadius: "8px",
+            backgroundColor: "#555",
+            color: "white",
             border: "none",
-            backgroundColor: "#666",
-            color: "#fff",
             cursor: "pointer",
-            userSelect: "none",
           }}
         >
           戻る
         </button>
 
-        {!photoDataUrl && (
-          <button
-            onClick={capturePhoto}
-            style={{
-              padding: "12px 24px",
-              fontSize: "16px",
-              borderRadius: "50%",
-              border: "none",
-              backgroundColor: "#0070f3",
-              color: "#fff",
-              cursor: "pointer",
-              width: "60px",
-              height: "60px",
-            }}
-            aria-label="撮影"
-          />
-        )}
+        <button
+          onClick={capturePhoto}
+          style={{
+            width: "60px",
+            height: "60px",
+            borderRadius: "50%",
+            backgroundColor: "#0070f3",
+            border: "none",
+            cursor: "pointer",
+          }}
+          aria-label="写真を撮る"
+        />
       </div>
     </div>
   );

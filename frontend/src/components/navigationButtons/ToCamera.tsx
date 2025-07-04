@@ -2,11 +2,41 @@
 
 import { useRouter } from "next/navigation";
 import { fetcher } from "@/lib/api";
+import { useEffect, useState } from "react";
 
 export default function ToCamera() {
   const router = useRouter();
-
+  const [position, setPosition] = useState<[number, number] | null>(null);
  
+// 現在地取得をuseEffectで行う
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      console.warn("⚠️ Geolocation APIはこのブラウザでサポートされていません。");
+      setPosition([35.681236, 139.767125]); // 東京駅（デフォルト）
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        console.log("✅ 現在地取得成功:", coords);
+        setPosition(coords);
+      },
+      (err) => {
+        console.error("❌ 位置情報取得に失敗:", {
+          code: err.code,
+          message: err.message,
+        });
+        setPosition([35.681236, 139.767125]); // 失敗時は東京駅
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  }, []);
+
 
   return (
     <>
@@ -81,9 +111,7 @@ export default function ToCamera() {
           paddingLeft: 0,
         }}
         onClick={async () => {
-          const lat = 35.7100;
-          const lng = 139.8107;
-
+          const [lat, lng] = position;
           try {
             await fetcher("/api/places", {
               method: "POST",
