@@ -9,37 +9,57 @@
  * @version 2.1.2
  */
 
-import { User } from '@/types/user';
-import Link from 'next/link';
+'use client';
 
-type Props = {
+import React from 'react';
+import Link from 'next/link';
+import { User } from '@/types/user';
+
+interface Props {
   user: User;
-};
+}
 
 export default function ProfileHeader({ user }: Props) {
   return (
-    <div style={{ textAlign: 'center', padding: '24px' }}>
-      <img
-        src={user.imageUrl || '/images/default-user.svg'}
-        alt="ユーザー画像"
-        width={120}
-        height={120}
-        style={{ borderRadius: '50%' }}
-      />
-      <h2>{user.name}</h2>
-      <p>@{user.username}</p>
-      <Link href="/profile/edit">
-        <button
-          style={{
-            backgroundColor: '#5d9a8f',
-            color: 'white',
-            padding: '10px 20px',
-            borderRadius: '10px',
-          }}
-        >
-          編集
-        </button>
+    <div style={headerStyle}>
+      <h2 style={nameStyle}>{user.username}</h2>
+      <p style={idStyle}>ID: {user.id}</p>
+      <Link href={`/profile/${user.id}/edit`}>
+        <button style={editButtonStyle}>編集</button>
       </Link>
     </div>
   );
 }
+
+const headerStyle: React.CSSProperties = {
+  backgroundColor: '#74A799',
+  paddingTop: '48px',
+  paddingBottom: '24px',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  color: '#fff',
+};
+
+const nameStyle: React.CSSProperties = {
+  fontSize: '20px',
+  fontWeight: 'bold',
+  marginBottom: '4px',
+  color: '#000',
+};
+
+const idStyle: React.CSSProperties = {
+  fontSize: '14px',
+  color: '#333',
+  marginBottom: '12px',
+};
+
+const editButtonStyle: React.CSSProperties = {
+  backgroundColor: '#74A799',
+  color: 'white',
+  padding: '10px 24px',
+  fontSize: '16px',
+  border: 'none',
+  borderRadius: '12px',
+  cursor: 'pointer',
+};
