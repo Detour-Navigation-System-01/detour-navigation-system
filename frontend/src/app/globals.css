@@ -1,17 +1,16 @@
 /**
  * @fileoverview グローバルスタイル定義
  * @description アプリケーション全体で使用するCSS変数とベーススタイル
- * @author 作成者名
+ * @author 赤津
  * @created 2025-06-22
- * @updated 2025-06-22
- * @version 1.0.1
+ * @updated 2025-07-04
+ * @version 1.0.2
  */
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
 }
-
 
 body {
   background: var(--background-color);

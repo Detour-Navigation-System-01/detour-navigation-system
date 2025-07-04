@@ -1,3 +1,12 @@
+/**
+ * @fileoverview 保存スポット詳細表示画面
+ * @description パラメータで指定されたスポットIDに基づき、対応する画像と説明を表示する詳細ビュー。
+ *              IDに一致する画像データが存在しない場合は、エラーメッセージを表示する。
+ * @author 赤津
+ * @created 2025-06-12
+ * @updated 2025-07-04
+ * @version 2.1.3
+ */
 'use client';
 
 import Image from 'next/image';

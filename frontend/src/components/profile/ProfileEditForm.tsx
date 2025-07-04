@@ -1,4 +1,11 @@
-// src/components/profile/ProfileEditForm.tsx
+/**
+ * @fileoverview プロフィール編集フォーム
+ * @description ユーザーの名前とプロフィール公開設定を編集するフォームコンポーネント。
+ * @author 赤津
+ * @created 2025-06-12
+ * @updated 2025-07-04
+ * @version 2.1.2
+ */
 
 'use client';
 
