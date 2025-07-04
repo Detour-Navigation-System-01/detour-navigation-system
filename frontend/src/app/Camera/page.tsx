@@ -1,16 +1,32 @@
 /**
  * @fileoverview カメラページコンポーネント
- * @description カメラビューを表示するページコンポーネント
+ * @description カメラビューを表示するページコンポーネント（認証付き）
  * @author 尾﨑諒
  * @created 2025/07/03
- * @updated YYYY-MM-DD
- * @version 1.0.0
+ * @updated 2025-07-04
+ * @version 1.1.0
  */
 
 "use client";
 
-import CameraView from "@/components/camera/CameraView";
+import CameraView from '@/components/camera/CameraView';
+import { useAuth } from '@/lib/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function CameraPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return <p>読み込み中...</p>;
+  }
+
   return <CameraView />;
 }

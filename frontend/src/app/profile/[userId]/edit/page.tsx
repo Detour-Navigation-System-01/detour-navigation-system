@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { fetcher } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -60,13 +59,7 @@ export default function ProfileEditPage() {
           textAlign: 'center',
         }}
       >
-        <Image
-          src="/default-user-icon.png"
-          alt="ユーザーアイコン"
-          width={120}
-          height={120}
-          style={{ borderRadius: '50%', marginBottom: '8px' }}
-        />
+
         <h2 style={{ fontSize: '20px', fontWeight: 'bold' }}>{username}</h2>
         <p style={{ color: '#333' }}>@{user?.username}</p>
       </div>
