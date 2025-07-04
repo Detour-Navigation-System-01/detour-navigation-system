@@ -21,7 +21,7 @@ export default function ToNavigating() {
   const backStyle = {
     position: "absolute" as const,
     top: "82vh",
-    left: "22%",
+    left: "20%",
     transform: "translateX(-50%)",
     width: "30vw",
     height: "8vh",
@@ -45,9 +45,9 @@ export default function ToNavigating() {
   const toNavigatingStyle = {
     position: "absolute" as const,
     top: "82vh",
-    left: "70%",
+    left: "67%",
     transform: "translateX(-50%)",
-    width: "50vw",
+    width: "55vw",
     height: "8vh",
     minHeight: "48px",
     fontSize: "1.3rem", // ← bigger text
@@ -82,12 +82,21 @@ export default function ToNavigating() {
           (e.currentTarget.style.transform = "translateX(-50%)")
         }
       >
-        ナビゲーション開始
+      <svg
+          xmlns="http://www.w3.org/2000/svg"
+          height="1.4em"
+          viewBox="0 0 24 24"
+          fill="white"
+        >
+          <path d="M0 0h24v24H0V0z" fill="none" />
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+        </svg>
+        ナビ開始
       </button>
 
 
       <button style={backStyle} onClick={() => window.history.back()}>
-        入力に戻る
+        戻る
       </button>
       
       
