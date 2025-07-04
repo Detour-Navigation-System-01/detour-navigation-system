@@ -1,0 +1,88 @@
+### 既存画像でスポット更新テスト
+@baseUrl = http://localhost:3001/api
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJhbDIzMDM3IiwiaWF0IjoxNzUxNjEzNTEwLCJleHAiOjE3NTE2MTcxMTB9.le_hybMuoERVcblxWMzzHdLSi-Keelihxlc8PWLOh7c
+### ログイン
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "al23037", 
+  "password": "testtest"
+}
+
+### レスポンスからトークンをコピーして上の@authTokenに貼り付けてください
+
+### 新しい画像付きスポット1を作成
+POST {{baseUrl}}/places
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "name": "画像テストスポット1",
+  "description": "実際の画像ファイルを使ったテストスポット",
+  "category": "テスト",
+  "address": "東京都渋谷区神宮前",
+  "prefecture": "東京都",
+  "lat": 35.6580,
+  "lng": 139.7016,
+  "image_url": "http://localhost:3001/images/image-1750842092056-99036958.jpg"
+}
+
+### 新しい画像付きスポット2を作成
+POST {{baseUrl}}/places
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "name": "画像テストスポット2", 
+  "description": "2つ目の画像付きテストスポット",
+  "category": "テスト",
+  "address": "東京都新宿区西新宿",
+  "prefecture": "東京都",
+  "lat": 35.6896,
+  "lng": 139.6917,
+  "image_url": "http://localhost:3001/images/image-1750901721791-493635753.jpg"
+}
+
+### 新しい画像付きスポット3を作成
+POST {{baseUrl}}/places
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "name": "画像テストスポット3",
+  "description": "3つ目の画像付きテストスポット", 
+  "category": "テスト",
+  "address": "東京都港区六本木",
+  "prefecture": "東京都",
+  "lat": 35.6627,
+  "lng": 139.7311,
+  "image_url": "http://localhost:3001/images/image-1751191897714-983251976.jpg"
+}
+
+### スポット1に画像URLを追加
+PUT {{baseUrl}}/places/1
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "image_url": "http://localhost:3001/images/image-1750842092056-99036958.jpg"
+}
+
+### スポット2に画像URLを追加  
+PUT {{baseUrl}}/places/2
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "image_url": "http://localhost:3001/images/image-1750901721791-493635753.jpg"
+}
+
+### スポット3に画像URLを追加
+PUT {{baseUrl}}/places/3
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "image_url": "http://localhost:3001/images/image-1751191897714-983251976.jpg"
+}

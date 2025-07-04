@@ -1,3 +1,12 @@
+/**
+ * @fileoverview 保存スポット詳細画面（画像 + 地図表示）
+ * @description URLパラメータから保存スポットのIDを取得し、対応する画像を表示。
+ *              また、ブラウザの位置情報APIを使用して現在地を取得し、Leafletを用いた地図にマーカー表示。
+ * @author 赤津
+ * @created 2025-06-10
+ * @updated 2025-07-04
+ * @version 2.2.3
+ */
 'use client';
 
 import { useEffect, useState } from 'react';
