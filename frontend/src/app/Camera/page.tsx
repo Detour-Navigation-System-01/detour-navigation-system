@@ -7,12 +7,12 @@
  * @version 1.1.0
  */
 
-"use client";
+'use client';
 
-import CameraView from '@/components/camera/CameraView';
 import { useAuth } from '@/lib/AuthContext';
-import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import CameraView from '@/components/camera/CameraView';
 
 export default function CameraPage() {
   const { user, loading } = useAuth();
@@ -20,13 +20,11 @@ export default function CameraPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login');
+      router.push('/login?redirect=/camera'); // ✅ ここを追加
     }
-  }, [user, loading, router]);
+  }, [user, loading]);
 
-  if (loading || !user) {
-    return <p>読み込み中...</p>;
-  }
+  if (loading || !user) return <p>読み込み中...</p>;
 
   return <CameraView />;
 }

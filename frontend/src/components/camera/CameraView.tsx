@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // ✅ 追加
 import { useAuth } from '@/lib/AuthContext';
 import { fetcher, API_BASE } from '@/lib/api';
 
@@ -10,6 +11,7 @@ export default function CameraView() {
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { user } = useAuth();
+  const router = useRouter(); // ✅ 追加
 
   useEffect(() => {
     if (!navigator.mediaDevices || !videoRef.current) return;
@@ -37,7 +39,6 @@ export default function CameraView() {
       setPhotoDataUrl(dataUrl);
     }
 
-    // 位置情報取得
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
@@ -89,6 +90,7 @@ export default function CameraView() {
       });
 
       alert('保存に成功しました！');
+      router.push('/navigating'); // ✅ 自動で戻る
     } catch (err) {
       console.error('送信エラー:', err);
       alert('送信に失敗しました');
