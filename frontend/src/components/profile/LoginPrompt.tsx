@@ -1,3 +1,14 @@
+/**
+ * @fileoverview ログインプロンプト表示コンポーネント
+ * @description 未ログイン状態のユーザーに対して、ログインを促すUIを提供。
+ *              プロフィール画像とメッセージを表示し、「ログイン」ボタンでログインページに遷移可能。
+ *              主に保存スポット機能の利用を促進する目的で使用される。
+ * @author 赤津
+ * @created 2025-06-12
+ * @updated 2025-07-04
+ * @version 2.1.1
+ */
+
 'use client';
 
 import Link from 'next/link';

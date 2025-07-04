@@ -3,19 +3,21 @@
 /**
  * @fileoverview 認証コンポーネント
  * @description ログイン画面用css
- * @author 平野
+ * @author 平野,赤津
  * @created 2025-06-10
- * @updated 2025-07-02
- * @version 2.1.4
+ * @updated 2025-07-03
+ * @version 2.1.5
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
 
 export const fetcher = async <T = unknown>(
   input: RequestInfo,
   init?: RequestInit
 ): Promise<T> => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
 
   try {
     const res = await fetch(API_BASE + input, {
@@ -40,4 +42,3 @@ export const fetcher = async <T = unknown>(
     throw err;
   }
 };
-

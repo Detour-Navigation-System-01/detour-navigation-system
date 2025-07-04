@@ -1,3 +1,12 @@
+/**
+ * @fileoverview プロフィール設定画面（公開設定など）
+ * @description ユーザーのプロフィールに関する設定を切り替えるUIを提供。
+ *              現在は「スポットの公開可否」および仮の「その他設定」をトグルスイッチ形式で実装。
+ * @author 赤津
+ * @created 2025-06-10
+ * @updated 2025-07-04
+ * @version 2.2.3
+ */
 'use client';
 
 import { useState, useEffect } from 'react';
