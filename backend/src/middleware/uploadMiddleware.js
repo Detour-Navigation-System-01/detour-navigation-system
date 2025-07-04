@@ -35,14 +35,41 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MBまで
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MBまでに引き上げ
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed!'), false);
+      cb(new Error('画像ファイルのみアップロード可能です'), false);
     }
   }
 });
 
-exports.uploadImage = upload.single('image');
+// エラーハンドリング機能を追加したアップロードミドルウェア
+exports.uploadImage = (req, res, next) => {
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        // Multerエラーの処理（サイズ制限など）
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({
+            success: false,
+            message: '画像サイズが大きすぎます。10MB以下のファイルを選択してください。'
+          });
+        }
+        return res.status(400).json({
+          success: false,
+          message: `アップロードエラー: ${err.message}`
+        });
+      } else {
+        // その他のエラー処理
+        return res.status(400).json({
+          success: false,
+          message: err.message
+        });
+      }
+    }
+    // エラーがなければ次のミドルウェアへ
+    next();
+  });
+};
