@@ -1,6 +1,3 @@
-
-'use client';
-
 /**
  * @fileoverview プロフィールヘッダー表示コンポーネント
  * @description ユーザーのプロフィール画像、名前、ユーザー名を中央揃えで表示。
@@ -11,6 +8,8 @@
  * @updated 2025-07-04
  * @version 2.1.2
  */
+
+'use client';
 
 import React from 'react';
 import Link from 'next/link';
