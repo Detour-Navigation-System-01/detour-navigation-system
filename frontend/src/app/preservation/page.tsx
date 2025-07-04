@@ -1,4 +1,5 @@
 /**
+<<<<<<< HEAD
  * @fileoverview 保存スポットギャラリー画面
  * @description APIから取得したスポットデータを月別にグループ化し、ギャラリー形式で表示。
  *              各スポットは画像付きで表示され、クリックで詳細ページに遷移する。
@@ -7,10 +8,23 @@
  * @updated 2025-07-04
  * @version 2.1.2
  */
+=======
+ * @fileoverview 保存スポットコンポーネント
+ * @description ログインによるページ遷移判定
+ * @author 平野
+ * @created 2025-07-03
+ * @updated 2025-07-03
+ * @version 1.0.0
+ */
+
+
+>>>>>>> d6408986d9e6db28a2179946214104f693cb92e7
 'use client';
 
-import '../../styles/preservation.css';
+import { useEffect } from 'react';
+import { useAuth } from '@/lib/AuthContext';
 import { useRouter } from 'next/navigation';
+<<<<<<< HEAD
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { fetcher } from '@/lib/api';
@@ -47,9 +61,15 @@ const galleryData = {
   '4月': [{ id: 3, imageUrl: '/images/test3.jpg' }],
 };
 export default function PreservationGallery() {
+=======
+
+export default function PreservationRedirectPage() {
+  const { user, loading } = useAuth();
+>>>>>>> d6408986d9e6db28a2179946214104f693cb92e7
   const router = useRouter();
   const { user } = useAuth();
 
+<<<<<<< HEAD
   // 状態管理を追加
   const [groupedSpots, setGroupedSpots] = useState<GroupedSpots>({});
   const [loading, setLoading] = useState(false);
@@ -200,4 +220,17 @@ export default function PreservationGallery() {
       </nav>
     </div>
   );
+=======
+  useEffect(() => {
+    if (!loading) {
+      if (user) {
+        router.push(`/preservation/${user.id}`);
+      } else {
+        router.push('/login');
+      }
+    }
+  }, [loading, user]);
+
+  return <p>読み込み中...</p>;
+>>>>>>> d6408986d9e6db28a2179946214104f693cb92e7
 }

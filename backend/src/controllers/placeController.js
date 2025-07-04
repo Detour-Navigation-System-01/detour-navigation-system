@@ -279,11 +279,12 @@ class PlaceController extends BaseController {
     if (!req.file) {
       return this.sendError(res, {
         statusCode: 400,
-        message: 'No image file uploaded.'
+        message: '画像ファイルがアップロードされていません'
       });
     }
 
     const fileName = req.file.filename; // multerが生成したファイル名
+    const fileSize = req.file.size; // ファイルサイズ（バイト）
     
     // クライアントがアクセスするための完全なURLを構築
     // 例: http://localhost:3001/images/your-uploaded-image.jpg
@@ -291,11 +292,14 @@ class PlaceController extends BaseController {
 
     // 成功レスポンスを送信
     return this.sendSuccess(res, {
-      message: '画像がアップロードされました',
+      message: '画像のアップロードに成功しました',
       data: { 
         fileName: fileName,
         imageUrl: imageUrl,
-        path: `/images/${fileName}` 
+        path: `/images/${fileName}`,
+        fileSize: fileSize,
+        fileSizeInMB: (fileSize / (1024 * 1024)).toFixed(2) + ' MB',
+        mimeType: req.file.mimetype
       }
     });
     return this.sendSuccess(res, {

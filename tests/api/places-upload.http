@@ -2,11 +2,13 @@
 @baseUrl = http://localhost:3001/api
 
 // ログイン後に取得したJWTトークンを保存するための変数
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkxIiwiaWF0IjoxNzUxMTkxNjE3LCJleHAiOjE3NTExOTUyMTd9.77Aah85j0izBRsWX3CPAk2cdmsAT-ICfh9zHwUNEDwk
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwidXNlcm5hbWUiOiJuYWthbmlzaGkzIiwiaWF0IjoxNzUxNTkyNDkwLCJleHAiOjE3NTE1OTYwOTB9.sdtTSwLaZzUzcLMZkshDumZCW27FDhsyv8DmnJ77NHU
 
 # multipart/form-dataを使ってファイルをアップロード
 # VS CodeのREST Clientプラグインでは以下のように記述することでファイルをアップロードできます
-# ※実際のファイルのパスに変更してください
+# ※以下の <実際の画像パス> を実在する画像ファイルのパスに変更してください
+# 例: < C:/Users/YourName/Pictures/sample.jpg
+# 注意: サイズ制限は10MBまでです
 
 POST {{baseUrl}}/places/upload-image
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
@@ -16,7 +18,7 @@ Authorization: Bearer {{authToken}}
 Content-Disposition: form-data; name="image"; filename="sample.jpg"
 Content-Type: image/jpeg
 
-< ./path/to/your/sample.jpg
+< C:\Users\Yonosuke\Pictures\Screenshots\スクリーンショット 2025-06-22 120309.png
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ### アップロード後に場所を作成（画像URL付き）- JWT認証が必要

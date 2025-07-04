@@ -9,8 +9,6 @@
 
 const app = require('./app');
 const PORT = process.env.PORT || 3001;
-// データベース初期化モジュールをインポート
-const { initializeDatabase } = require('./database/init');
 
 // リクエストロギングミドルウェア
 app.use((req, res, next) => {
@@ -27,13 +25,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// データベース初期化後にサーバーを起動
+// サーバーを起動する関数
 async function startServer() {
   try {
-    // データベース初期化を実行
-    console.log('🔄 データベースの初期化を開始...');
-    await initializeDatabase();
-    console.log('✅ データベース初期化が完了しました');
+    // index.jsで既にデータベース初期化が行われているため、ここでは省略
     
     // サーバー起動
     app.listen(PORT, () => {
@@ -45,12 +40,10 @@ async function startServer() {
     });
   } catch (error) {
     console.error('❌ サーバー起動中にエラーが発生しました:', error);
-    // データベース初期化に失敗してもサーバーを起動する
-    // ただしエラーログは出力しておく
-    console.log('⚠️ データベース初期化に失敗しましたが、サーバーは起動します');
+    // エラーがあってもサーバーを起動
     app.listen(PORT, () => {
       console.log(`
-  🚀 サーバーが起動しました（データベース初期化エラーあり）
+  🚀 サーバーが起動しました（エラーあり: ${error.message}）
   📡 http://localhost:${PORT}
   🕒 ${new Date().toLocaleString()}
   `);
