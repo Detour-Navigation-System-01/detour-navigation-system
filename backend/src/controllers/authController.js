@@ -105,17 +105,20 @@ class AuthController extends BaseController {
     }
   });
 
-  me = catchAsync(async (req, res) => {
-    const user = req.user;
-    if (!user) {
-      return this.sendError(res, { statusCode: 401, message: '未認証のユーザーです' });
-    }
+me = catchAsync(async (req, res) => {
+  const user = req.user;
+  if (!user) {
+    return this.sendError(res, { statusCode: 401, message: '未認証のユーザーです' });
+  }
 
-    return this.sendSuccess(res, {
-      message: '現在のユーザー情報を返します',
-      data: { user },
-    });
+  const fullUser = await authService.getUserById(user.id); // ← DBから取得
+
+  return this.sendSuccess(res, {
+    message: '現在のユーザー情報を返します',
+    data: { user: fullUser },
   });
+});
+
 }
 
 

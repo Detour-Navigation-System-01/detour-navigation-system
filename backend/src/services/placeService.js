@@ -91,7 +91,10 @@ class PlaceService {
       return place;
     } catch (error) {
       if (error.code === '23505') { // PostgreSQLの一意制約違反
-        throw new AppError('この場所の名前はすでに登録されています', 400);
+        // 場所の名前がnullでなく、ユニーク制約違反の場合
+        if (validatedData.name) {
+          throw new AppError('この場所の名前はすでに登録されています', 400);
+        }
       }
       console.error('❌ 場所作成エラー:', error);
       throw new AppError('場所の登録に失敗しました', 500, error);

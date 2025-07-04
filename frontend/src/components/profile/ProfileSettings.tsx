@@ -15,7 +15,9 @@ export default function ProfileSettings({ user }: Props) {
   const { refresh } = useAuth();
   const router = useRouter();
 
+  // user.public_settings の初期値反映
   useEffect(() => {
+    console.log('👀 user.public_settings 更新確認:', user.public_settings);
     if (typeof user.public_settings === 'boolean') {
       setIsPublic(user.public_settings);
     }
@@ -23,14 +25,16 @@ export default function ProfileSettings({ user }: Props) {
 
   const handleToggle = async () => {
     const next = !isPublic;
-    setIsPublic(next); // UIに反映
+    setIsPublic(next); // 先に UI に反映
+    console.log('📍 トグル押下 → 送信値:', next);
 
     try {
       await fetcher(`/api/users/${user.id}`, {
         method: 'PUT',
         body: JSON.stringify({ public_settings: next }),
       });
-      await refresh();
+      console.log('✅ サーバ送信成功');
+      await refresh(); // 最新の user を AuthContext に反映
     } catch (err: any) {
       console.error('❌ 公開設定更新失敗:', err);
       alert(err.message || '公開設定の更新に失敗しました');
@@ -68,6 +72,8 @@ export default function ProfileSettings({ user }: Props) {
     </div>
   );
 }
+
+// --- スタイル定義 ---
 
 const settingsContainer: React.CSSProperties = {
   padding: '20px',

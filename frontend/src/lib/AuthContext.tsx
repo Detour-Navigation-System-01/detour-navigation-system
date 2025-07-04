@@ -36,6 +36,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
       const res = await fetcher<{ data?: { user: User } }>('/api/auth/me');
+      console.log('🎯 /me の返り値:', res);
       setUser(res.data?.user || null); // ✅ public_settings をそのまま受け取る
     } catch (err) {
       console.warn('⚠️ /me 取得失敗:', err);

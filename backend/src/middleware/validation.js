@@ -73,12 +73,10 @@ const validatePlaceData = (req, res, next) => {
 
   // POST（新規作成）の場合は必須フィールドを確認
   if (req.method === 'POST') {
-    if (!name) errors.push('場所の名称は必須です');
-    if (!category) errors.push('カテゴリーは必須です');
-    if (!address) errors.push('住所は必須です');
-    if (!prefecture) errors.push('都道府県は必須です');
+    // 緯度と経度のみ必須とする
     if (lat === undefined) errors.push('緯度は必須です');
     if (lng === undefined) errors.push('経度は必須です');
+    // その他のフィールドは任意
   }
 
   // 緯度と経度の形式を検証
