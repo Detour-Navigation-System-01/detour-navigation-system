@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { fetcher } from '@/lib/api';
-import type { User } from '@/types/user';
+import type { User } from '@/types/user'; // ✅ public_settings を含む型に統一
 
 type AuthContextType = {
   user: User | null;
@@ -35,22 +35,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     try {
-      const res = await fetcher<{ data?: { user: any } }>('/api/auth/me');
-      const rawUser = res.data?.user;
-
-      if (rawUser) {
-        const transformedUser: User = {
-          id: rawUser.id,
-          username: rawUser.username,
-          email: rawUser.email,
-          image: rawUser.image,
-          name: rawUser.name,
-          isPublic: rawUser.public_settings ?? false, // ✅ 変換ここ！
-        };
-        setUser(transformedUser);
-      } else {
-        setUser(null);
-      }
+      const res = await fetcher<{ data?: { user: User } }>('/api/auth/me');
+      setUser(res.data?.user || null); // ✅ public_settings をそのまま受け取る
     } catch (err) {
       console.warn('⚠️ /me 取得失敗:', err);
       setUser(null);
