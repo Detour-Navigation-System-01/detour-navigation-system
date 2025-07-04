@@ -578,7 +578,7 @@ export default function RouteResultMap() {
   const { center, zoom } = getMapSettings();
 
   return (
-    <div className="h-screen w-screen relative" style={{ height: "600px", width: "100vw" }}>
+    <div className="h-screen w-screen relative" style={{ height: "73vh", width: "100vw" }}>
       <MapContainer 
         center={center} 
         zoom={zoom} 

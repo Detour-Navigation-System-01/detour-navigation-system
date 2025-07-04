@@ -6,13 +6,7 @@ import { fetcher } from "@/lib/api";
 export default function ToCamera() {
   const router = useRouter();
 
-  const handleTouchStart = (e: React.TouchEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.transform = "translateX(-50%) scale(0.95)";
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.transform = "translateX(-50%)";
-  };
+ 
 
   return (
     <>
@@ -40,8 +34,7 @@ export default function ToCamera() {
           paddingLeft: 0,
         }}
         onClick={() => router.push("/camera")}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
+        
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -97,13 +90,14 @@ export default function ToCamera() {
               body: JSON.stringify({ lat, lng }),
             });
             alert("ピンを立てました！");
+            console.log("ピン立て成功:", { lat, lng });
           } catch (err: any) {
             console.error("ピン立て失敗:", err);
-            alert(`失敗しました: ${err.message || "エラーが発生しました"}`);
+            // alert(`失敗しました: ${err.message || "エラーが発生しました"}`);
+            alert('ログインされていません。\nログインはProfileページからできます。');
           }
         }}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
+        
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -144,8 +138,7 @@ export default function ToCamera() {
           justifyContent: "center",
         }}
         onClick={() => router.push("/")}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
+        
       >
         終了
       </button>

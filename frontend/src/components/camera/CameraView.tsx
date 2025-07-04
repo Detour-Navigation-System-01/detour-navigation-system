@@ -1,41 +1,31 @@
-/**
- * @fileoverview カメラビューコンポーネント
- * @description カメラ機能を提供し、写真撮影・保存機能を実装
- * @author 尾﨑諒
- * @created 2025/07/03
- * @updated 2025/07/03
- * @version 1.0.1
- */
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function CameraView() {
-  const videoElementRef = useRef<HTMLVideoElement>(null);
-  const canvasElementRef = useRef<HTMLCanvasElement>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null); // ← 追加
-  const routerInstance = useRouter();
-  const [capturedPhotoDataUrl, setCapturedPhotoDataUrl] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const router = useRouter();
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!videoElementRef.current) return;
+    if (!videoRef.current) return;
 
     navigator.mediaDevices.getUserMedia({ video: true })
-      .then((currentMediaStream) => {
-        mediaStreamRef.current = currentMediaStream; // ← refに保存
-        if (videoElementRef.current) {
-          videoElementRef.current.srcObject = currentMediaStream;
-          videoElementRef.current.play().catch(console.error);
+      .then((stream) => {
+        mediaStreamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(console.error);
         }
       })
-      .catch((cameraError) => {
-        console.error("カメラ起動失敗:", cameraError);
+      .catch((err) => {
+        console.error("カメラ起動失敗:", err);
         alert("カメラの使用が許可されていません。");
       });
 
-    // ページ離脱時にカメラ停止
     return () => {
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach((track) => track.stop());
@@ -45,58 +35,76 @@ export default function CameraView() {
   }, []);
 
   const capturePhoto = () => {
-    if (!videoElementRef.current || !canvasElementRef.current) return;
+    if (!videoRef.current || !canvasRef.current) return;
 
-    const video = videoElementRef.current;
-    const canvas = canvasElementRef.current;
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
-    const context = canvas.getContext("2d");
-    if (!context) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+    // PNG形式のままBase64文字列を取得（不可逆圧縮なし）
     const dataUrl = canvas.toDataURL("image/png");
-    setCapturedPhotoDataUrl(dataUrl);
-  };
+    setPhotoDataUrl(dataUrl);
 
-  const downloadCapturedPhoto = () => {
-    if (!capturedPhotoDataUrl) return;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const payload = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          image_url: dataUrl,
+        };
 
-    const link = document.createElement("a");
-    link.href = capturedPhotoDataUrl;
-    link.download = `photo_${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+        fetch("http://localhost:3001/api/photos", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error("アップロード失敗");
+            console.log("✅ 画像と位置情報を送信しました");
+          })
+          .catch((err) => {
+            console.error("送信エラー:", err);
+            alert("写真の保存に失敗しました。");
+          });
+      },
+      (error) => {
+        console.error("位置情報取得失敗:", error);
+        alert("位置情報の取得に失敗しました。");
+      }
+    );
   };
 
   const handleGoBack = () => {
-    routerInstance.back();
+    router.back();
   };
 
   return (
     <div style={{ position: "relative", height: "100vh", backgroundColor: "#000" }}>
-      {!capturedPhotoDataUrl && (
+      {!photoDataUrl ? (
         <video
-          ref={videoElementRef}
+          ref={videoRef}
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
           autoPlay
           playsInline
           muted
         />
-      )}
-
-      {capturedPhotoDataUrl && (
+      ) : (
         <img
-          src={capturedPhotoDataUrl}
+          src={photoDataUrl}
           alt="撮影画像"
           style={{ width: "100%", height: "100%", objectFit: "contain", backgroundColor: "#000" }}
         />
       )}
 
-      <canvas ref={canvasElementRef} style={{ display: "none" }} />
+      <canvas ref={canvasRef} style={{ display: "none" }} />
 
       <div
         style={{
@@ -125,7 +133,7 @@ export default function CameraView() {
           戻る
         </button>
 
-        {!capturedPhotoDataUrl && (
+        {!photoDataUrl && (
           <button
             onClick={capturePhoto}
             style={{
@@ -136,30 +144,11 @@ export default function CameraView() {
               backgroundColor: "#0070f3",
               color: "#fff",
               cursor: "pointer",
-              userSelect: "none",
               width: "60px",
               height: "60px",
             }}
             aria-label="撮影"
           />
-        )}
-
-        {capturedPhotoDataUrl && (
-          <button
-            onClick={downloadCapturedPhoto}
-            style={{
-              padding: "12px 24px",
-              fontSize: "16px",
-              borderRadius: "8px",
-              border: "none",
-              backgroundColor: "#28a745",
-              color: "#fff",
-              cursor: "pointer",
-              userSelect: "none",
-            }}
-          >
-            保存
-          </button>
         )}
       </div>
     </div>

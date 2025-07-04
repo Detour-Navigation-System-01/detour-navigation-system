@@ -91,12 +91,12 @@ export default function ToNavigating() {
           <path d="M0 0h24v24H0V0z" fill="none" />
           <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
         </svg>
-        ナビゲーション開始
+        ナビ開始
       </button>
 
 
       <button style={backStyle} onClick={() => window.history.back()}>
-        入力に戻る
+        戻る
       </button>
       
       

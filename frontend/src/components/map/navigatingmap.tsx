@@ -22,6 +22,11 @@ interface Step {
   maneuver: string;
 }
 
+interface Coordinate {
+  lat: number;
+  lon: number;
+}
+
 const currentLocationIcon = new L.Icon({
   iconUrl:
     "data:image/svg+xml;base64," +
@@ -33,6 +38,17 @@ const currentLocationIcon = new L.Icon({
   iconSize: [24, 24],
   iconAnchor: [12, 12],
   popupAnchor: [0, -12],
+});
+
+const createEndIcon = () => L.icon({
+  iconUrl: "data:image/svg+xml;base64," + btoa(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#EF4444" width="24" height="24">
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+    </svg>
+  `),
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
 });
 
 function getDistanceMeters(
@@ -90,12 +106,31 @@ export default function NavigatingPage() {
   );
   const [nearbyMessage, setNearbyMessage] = useState<string | null>(null);
   const [heading, setHeading] = useState<number | null>(null); // 初期値nullに変更
+  const [toCoord, setToCoord] = useState<Coordinate | null>(null);
+  const [toParam, setToParam] = useState<string>("");
 
   const watchIdRef = useRef<number | null>(null);
+  const endIcon = createEndIcon();
 
   useEffect(() => {
     const storedSteps = sessionStorage.getItem("routeSteps");
     const storedCoords = sessionStorage.getItem("routeCoordinates");
+    const storedParam = sessionStorage.getItem("toParam");
+    const storedToCoord = sessionStorage.getItem("toCoord");
+
+    // // デバッグ用ログ
+    // console.log("=== SessionStorage Debug ===");
+    // console.log("storedSteps:", storedSteps);
+    // console.log("storedCoords:", storedCoords);
+    // console.log("storedParam:", storedParam);
+    // console.log("storedToCoord:", storedToCoord);
+    
+    // 全てのsessionStorageキーを確認
+    console.log("All sessionStorage keys:", Object.keys(sessionStorage));
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      // console.log(`${key}: ${sessionStorage.getItem(key)}`);
+    }
 
     if (storedSteps) {
       const parsedSteps: Step[] = JSON.parse(storedSteps);
@@ -117,7 +152,30 @@ export default function NavigatingPage() {
           parsedCoords.reduce((sum, c) => sum + c[1], 0) / parsedCoords.length;
         setCenter([avgLat, avgLng]);
       }
+
+      // ルート座標の最終地点を目的地として設定（fallback）
+      if (parsedCoords.length > 0 && !storedToCoord) {
+        const lastCoord = parsedCoords[parsedCoords.length - 1];
+        setToCoord({ lat: lastCoord[0], lon: lastCoord[1] });
+        console.log("Using route end as destination:", { lat: lastCoord[0], lon: lastCoord[1] });
+      }
     }
+
+    if (storedParam) {
+      setToParam(storedParam);
+      console.log("toParam set to:", storedParam);
+    }
+
+    if (storedToCoord) {
+      try {
+        const parsedToCoord: Coordinate = JSON.parse(storedToCoord);
+        setToCoord(parsedToCoord);
+        console.log("toCoord set to:", parsedToCoord);
+      } catch (e) {
+        console.error("Error parsing toCoord:", e);
+      }
+    }
+    
   }, []);
 
   // 端末の向き取得
@@ -220,7 +278,7 @@ export default function NavigatingPage() {
         <p>案内データが見つかりませんでした。</p>
       ) : (
         <>
-          <div style={{ height: "763px", width: "100%" }}>
+          <div style={{ height: "92.2vh", width: "100%" }}>
             <MapContainer
               center={center}
               zoom={17}
@@ -263,6 +321,26 @@ export default function NavigatingPage() {
                   )}
                 </>
               )}
+              
+              {/* 目的地マーカー */}
+              {console.log("Rendering destination marker check:", { toCoord, toParam })}
+              {toCoord && (
+                <Marker position={[toCoord.lat, toCoord.lon]} icon={endIcon}>
+                  <Popup>
+                    <div className="text-center p-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="w-3 h-3 bg-red-500 rounded-full"></span>
+                        <strong className="text-red-700">目的地</strong>
+                      </div>
+                      <div className="text-sm text-gray-700 mb-2">{toParam}</div>
+                      <div className="text-xs text-gray-500">
+                        緯度: {toCoord.lat.toFixed(6)}<br />
+                        経度: {toCoord.lon.toFixed(6)}
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              )}
             </MapContainer>
 
             {nearbyMessage && (
@@ -294,7 +372,7 @@ export default function NavigatingPage() {
             )}
           </div>
 
-          <ol className="space-y-4">
+          {/* <ol className="space-y-4">
             {steps.map((step, idx) => (
               <li
                 key={idx}
@@ -311,7 +389,7 @@ export default function NavigatingPage() {
                 </p>
               </li>
             ))}
-          </ol>
+          </ol> */}
         </>
       )}
     </div>
