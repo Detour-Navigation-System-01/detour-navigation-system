@@ -1,166 +1,109 @@
-/**
- * @fileoverview カメラビューコンポーネント
- * @description カメラ機能を提供し、写真撮影・保存機能を実装
- * @author 尾﨑諒
- * @created 2025/07/03
- * @updated 2025/07/03
- * @version 1.0.1
- */
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function CameraView() {
-  const videoElementRef = useRef<HTMLVideoElement>(null);
-  const canvasElementRef = useRef<HTMLCanvasElement>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null); // ← 追加
-  const routerInstance = useRouter();
-  const [capturedPhotoDataUrl, setCapturedPhotoDataUrl] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const router = useRouter();
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
 
+  // カメラ起動
   useEffect(() => {
-    if (!videoElementRef.current) return;
-
     navigator.mediaDevices.getUserMedia({ video: true })
-      .then((currentMediaStream) => {
-        mediaStreamRef.current = currentMediaStream; // ← refに保存
-        if (videoElementRef.current) {
-          videoElementRef.current.srcObject = currentMediaStream;
-          videoElementRef.current.play().catch(console.error);
+      .then((stream) => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
         }
       })
-      .catch((cameraError) => {
-        console.error("カメラ起動失敗:", cameraError);
+      .catch((err) => {
+        console.error("カメラ起動失敗:", err);
         alert("カメラの使用が許可されていません。");
       });
 
-    // ページ離脱時にカメラ停止
     return () => {
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-        mediaStreamRef.current = null;
+      if (videoRef.current?.srcObject instanceof MediaStream) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
       }
     };
   }, []);
 
+  // 写真を撮る
   const capturePhoto = () => {
-    if (!videoElementRef.current || !canvasElementRef.current) return;
+    if (!videoRef.current || !canvasRef.current) return;
 
-    const video = videoElementRef.current;
-    const canvas = canvasElementRef.current;
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
-    const context = canvas.getContext("2d");
-    if (!context) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL("image/png");
-    setCapturedPhotoDataUrl(dataUrl);
+    setPhotoDataUrl(dataUrl);
   };
 
-  const downloadCapturedPhoto = () => {
-    if (!capturedPhotoDataUrl) return;
-
-    const link = document.createElement("a");
-    link.href = capturedPhotoDataUrl;
-    link.download = `photo_${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleGoBack = () => {
-    routerInstance.back();
-  };
+  console.log(photoDataUrl);
 
   return (
     <div style={{ position: "relative", height: "100vh", backgroundColor: "#000" }}>
-      {!capturedPhotoDataUrl && (
+      {!photoDataUrl ? (
         <video
-          ref={videoElementRef}
+          ref={videoRef}
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
           autoPlay
           playsInline
           muted
         />
-      )}
-
-      {capturedPhotoDataUrl && (
+      ) : (
         <img
-          src={capturedPhotoDataUrl}
+          src={photoDataUrl}
           alt="撮影画像"
-          style={{ width: "100%", height: "100%", objectFit: "contain", backgroundColor: "#000" }}
+          style={{ width: "100%", height: "100%", objectFit: "contain" }}
         />
       )}
 
-      <canvas ref={canvasElementRef} style={{ display: "none" }} />
+      <canvas ref={canvasRef} style={{ display: "none" }} />
 
-      <div
-        style={{
-          position: "absolute",
-          bottom: "30px",
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-around",
-          padding: "0 20px",
-          boxSizing: "border-box",
-        }}
-      >
+      <div style={{
+        position: "absolute",
+        bottom: "30px",
+        width: "100%",
+        display: "flex",
+        justifyContent: "space-around",
+      }}>
         <button
-          onClick={handleGoBack}
+          onClick={() => router.back()}
           style={{
             padding: "12px 24px",
             fontSize: "16px",
             borderRadius: "8px",
+            backgroundColor: "#555",
+            color: "white",
             border: "none",
-            backgroundColor: "#666",
-            color: "#fff",
             cursor: "pointer",
-            userSelect: "none",
           }}
         >
           戻る
         </button>
 
-        {!capturedPhotoDataUrl && (
-          <button
-            onClick={capturePhoto}
-            style={{
-              padding: "12px 24px",
-              fontSize: "16px",
-              borderRadius: "50%",
-              border: "none",
-              backgroundColor: "#0070f3",
-              color: "#fff",
-              cursor: "pointer",
-              userSelect: "none",
-              width: "60px",
-              height: "60px",
-            }}
-            aria-label="撮影"
-          />
-        )}
-
-        {capturedPhotoDataUrl && (
-          <button
-            onClick={downloadCapturedPhoto}
-            style={{
-              padding: "12px 24px",
-              fontSize: "16px",
-              borderRadius: "8px",
-              border: "none",
-              backgroundColor: "#28a745",
-              color: "#fff",
-              cursor: "pointer",
-              userSelect: "none",
-            }}
-          >
-            保存
-          </button>
-        )}
+        <button
+          onClick={capturePhoto}
+          style={{
+            width: "60px",
+            height: "60px",
+            borderRadius: "50%",
+            backgroundColor: "#0070f3",
+            border: "none",
+            cursor: "pointer",
+          }}
+          aria-label="写真を撮る"
+        />
       </div>
     </div>
   );

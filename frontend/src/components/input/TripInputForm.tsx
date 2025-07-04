@@ -9,8 +9,8 @@
 
 
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react"; 
+import { useRouter } from "next/navigation"; //画面遷移に必要
 
 export default function TripInputForm() {
   const [from, setFrom] = useState("");
@@ -18,7 +18,7 @@ export default function TripInputForm() {
   const [time, setTime] = useState("");
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const router = useRouter();
+  const router = useRouter(); // 画面遷移に必要
 
   // 履歴をlocalStorageから読み込む
   const loadSearchHistory = () => {

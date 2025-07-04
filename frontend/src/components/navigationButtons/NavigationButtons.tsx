@@ -34,9 +34,9 @@ export default function NavigationButtons() {
   const inputButtonStyle = {
     position: "absolute" as const,
     top: "5vh",
-    left: "50%",
+    left: "55%",
     transform: "translateX(-50%)",
-    width: "60vw",
+    width: "70vw",
     height: "10vh",
     minHeight: "48px",
     fontSize: "1.3rem", // ← bigger text
