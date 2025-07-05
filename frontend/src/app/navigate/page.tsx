@@ -1,10 +1,10 @@
 /**
- * @fileoverview ナビゲーションページコンポーネント
+ * @fileoverview 経路表示ページコンポーネント
  * @description 旅行情報のナビゲーション結果とナビゲーション開始ボタンを表示するページ
  * @author 尾﨑諒
- * @created 2025/07/03
- * @updated 2025/07/03
- * @version 1.0.0
+ * @created 2025-06-24
+ * @updated 2025-07-01
+ * @version 1.0.1
  */
 
 "use client";

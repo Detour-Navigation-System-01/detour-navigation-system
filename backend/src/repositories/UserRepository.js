@@ -223,6 +223,27 @@ class UserRepository extends BaseRepository {
   }
   
   /**
+   * ユーザープロフィール画像を更新
+   * @param {number} id - ユーザーID
+   * @param {string} imageUrl - プロフィール画像のURL
+   * @returns {Promise<Object|null>} 更新されたユーザーオブジェクト
+   */
+  async updateProfileImage(id, imageUrl) {
+    try {
+      const userData = {
+        image_url: imageUrl
+        // updated_atは BaseRepository.update メソッドが自動的に設定するので省略
+      };
+      
+      // ベースリポジトリのupdateメソッドを呼び出し
+      return await super.update(id, userData);
+    } catch (error) {
+      console.error('プロフィール画像更新エラー:', error);
+      throw error;
+    }
+  }
+  
+  /**
    * 特定の条件でユーザーを検索
    * @param {Object} criteria - 検索条件
    * @returns {Promise<Array>} ユーザーオブジェクトの配列

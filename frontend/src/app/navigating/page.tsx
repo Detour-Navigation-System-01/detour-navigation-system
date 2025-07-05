@@ -2,9 +2,9 @@
  * @fileoverview ナビゲーション中ページコンポーネント
  * @description ナビゲーション中の地図表示とカメラ画面遷移ボタンを表示するページ
  * @author 尾﨑諒
- * @created 2025/07/03
- * @updated 2025/07/03
- * @version 1.0.0
+ * @created 2025-06-24
+ * @updated 2025-07-01
+ * @version 1.0.2
  */
 
 'use client';

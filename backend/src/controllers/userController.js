@@ -167,6 +167,60 @@ class UserController extends BaseController {
       message: `ID: ${userId} のユーザーが正常に削除されました`
     });
   });
+
+  /**
+   * ユーザープロフィール画像をアップロード
+   */
+  uploadProfileImage = catchAsync(async (req, res) => {
+    // 認証ユーザーIDの確認
+    const userId = req.user?.id;
+    if (!userId) {
+      return this.sendError(res, {
+        statusCode: 401,
+        message: '認証されていないユーザーです'
+      });
+    }
+    
+    // uploadImageミドルウェアがreq.fileにファイル情報をセットしてくれる
+    if (!req.file) {
+      return this.sendError(res, {
+        statusCode: 400,
+        message: '画像ファイルがアップロードされていません'
+      });
+    }
+
+    const fileName = req.file.filename;
+    const fileSize = req.file.size;
+    
+    // クライアントがアクセスするための完全なURLを構築
+    const imageUrl = `${req.protocol}://${req.get('host')}/images/${fileName}`;
+
+    try {
+      // プロフィール画像URLをユーザーレコードに更新
+      const updatedUser = await userService.updateProfileImage(userId, imageUrl);
+      
+      // 成功レスポンスを送信
+      return this.sendSuccess(res, {
+        message: 'プロフィール画像のアップロードに成功しました',
+        data: {
+          user: updatedUser,
+          image: {
+            fileName: fileName,
+            imageUrl: imageUrl,
+            path: `/images/${fileName}`,
+            fileSize: fileSize,
+            fileSizeInMB: (fileSize / (1024 * 1024)).toFixed(2) + ' MB',
+            mimeType: req.file.mimetype
+          }
+        }
+      });
+    } catch (error) {
+      return this.sendError(res, {
+        statusCode: error.statusCode || 500,
+        message: error.message || 'プロフィール画像の更新中にエラーが発生しました'
+      });
+    }
+  });
 }
 
 // シングルトンインスタンスとしてエクスポート

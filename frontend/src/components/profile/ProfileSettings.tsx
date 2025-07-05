@@ -118,3 +118,5 @@ const logoutButtonStyle: React.CSSProperties = {
   borderRadius: '12px',
   cursor: 'pointer',
 };
+
+

@@ -38,6 +38,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: wanderdb
+      TZ: Asia/Tokyo
+      PGTZ: Asia/Tokyo
     volumes:
       - postgres_data:/var/lib/postgresql/data    # ヘルスチェックを追加して起動を確実に監視
     healthcheck:

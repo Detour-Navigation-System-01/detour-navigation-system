@@ -51,7 +51,7 @@ class User {  /**
    */
   static async update(id, userData) {
     // 更新可能なフィールドのバリデーション（ビジネスルールとして）
-    const allowedFields = ['username', 'email', 'first_name', 'last_name', 'password', 'public_settings'];
+    const allowedFields = ['username', 'email', 'first_name', 'last_name', 'password', 'public_settings', 'image_url'];
     const updateData = {};
     
     // 許可されたフィールドのみを抽出
@@ -66,6 +66,16 @@ class User {  /**
     }
     
     return userRepository.update(id, updateData);
+  }
+  
+  /**
+   * ユーザーのプロフィール画像を更新
+   * @param {number} id - ユーザーID
+   * @param {string} imageUrl - 画像のURL
+   * @returns {Promise<Object|null>} 更新されたユーザーオブジェクト
+   */
+  static async updateProfileImage(id, imageUrl) {
+    return userRepository.updateProfileImage(id, imageUrl);
   }
   
   /**
