@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation'; // ✅ 追加
 import { useAuth } from '@/lib/AuthContext';
 import { fetcher, API_BASE } from '@/lib/api';
 
+export async function reverseGeocode(lat: number, lng: number): Promise<string> {
+  const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+  const data = await res.json();
+  return data.display_name || '不明な場所';
+}
+
 export default function CameraView() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -49,53 +55,58 @@ export default function CameraView() {
     );
   };
 
-  const uploadPhoto = async () => {
-    if (!photoDataUrl || !location || !user) return;
+ const uploadPhoto = async () => {
+  if (!photoDataUrl || !location || !user) return;
 
-    try {
-      const blob = await (await fetch(photoDataUrl)).blob();
-      const formData = new FormData();
-      formData.append('image', blob, 'photo.jpg');
+  try {
+    const blob = await (await fetch(photoDataUrl)).blob();
+    const formData = new FormData();
+    formData.append('image', blob, 'photo.jpg');
 
-      const token = localStorage.getItem('jwt_token');
+    const token = localStorage.getItem('jwt_token');
 
-      const uploadRes = await fetch(`${API_BASE}/api/places/upload-image`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+    const uploadRes = await fetch(`${API_BASE}/api/places/upload-image`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
 
-      if (!uploadRes.ok) {
-        const errorText = await uploadRes.text();
-        throw new Error(errorText);
-      }
-
-      const { data } = await uploadRes.json();
-      const imageUrl = data.imageUrl;
-
-      await fetcher('/api/places', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: `自動保存地点-${Date.now()}`,
-          description: 'カメラで撮影されたスポット',
-          category: 'spot',
-          address: '不明',
-          prefecture: '不明',
-          lat: location.lat,
-          lng: location.lng,
-          image_url: imageUrl,
-        }),
-      });
-
-      alert('保存に成功しました！');
-      router.push('/navigating'); // ✅ 自動で戻る
-    } catch (err) {
-      console.error('送信エラー:', err);
-      alert('送信に失敗しました');
+    if (!uploadRes.ok) {
+      const errorText = await uploadRes.text();
+      throw new Error(errorText);
     }
-  };
+
+    const { data } = await uploadRes.json();
+    const imageUrl = data.imageUrl;
+
+    // ✅ ここで住所を取得
+    const address = await reverseGeocode(location.lat, location.lng);
+
+    // ✅ サーバに投稿
+    await fetcher('/api/places', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: `自動保存地点-${Date.now()}`,
+        description: 'カメラで撮影されたスポット',
+        category: 'spot',
+        address, // ← ここで取得した住所を使う
+        prefecture: '不明',
+        lat: location.lat,
+        lng: location.lng,
+        image_url: imageUrl,
+      }),
+    });
+
+    alert('保存に成功しました！');
+    router.push('/navigating');
+  } catch (err) {
+    console.error('送信エラー:', err);
+    alert('送信に失敗しました');
+  }
+};
+
 
   return (
     <div style={{ textAlign: 'center' }}>
