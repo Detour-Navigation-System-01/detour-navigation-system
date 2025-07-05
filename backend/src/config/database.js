@@ -16,6 +16,7 @@ const dbConfig = {
   user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'wanderdb',
+  timezone: 'Asia/Tokyo',  // 日本時間を指定
 };
 
 module.exports = dbConfig;

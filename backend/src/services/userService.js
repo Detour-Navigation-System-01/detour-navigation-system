@@ -205,6 +205,36 @@ class UserService {
       throw new AppError('認証に失敗しました', 500);
     }
   }
+
+  /**
+   * ユーザープロフィール画像を更新
+   * @param {number} userId - ユーザーID
+   * @param {string} imageUrl - 画像URL
+   * @returns {Promise<Object>} 更新されたユーザーオブジェクト
+   * @throws {AppError} ユーザーが見つからないか、更新に失敗した場合
+   */
+  async updateProfileImage(userId, imageUrl) {
+    try {
+      // ユーザーの存在確認
+      const existingUser = await User.findById(userId);
+      if (!existingUser) {
+        throw new AppError('ユーザーが見つかりません', 404);
+      }
+      
+      // プロフィール画像の更新
+      const updatedUser = await User.updateProfileImage(userId, imageUrl);
+      if (!updatedUser) {
+        throw new AppError('プロフィール画像の更新に失敗しました', 500);
+      }
+      
+      return updatedUser;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw new AppError(`プロフィール画像更新エラー: ${error.message}`, 500);
+    }
+  }
 }
 
 // シングルトンとしてエクスポート

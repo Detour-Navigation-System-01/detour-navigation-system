@@ -10,11 +10,7 @@
  * @version 2.1.2
  */
 
-import { User } from '@/types/user';
-import Link from 'next/link';
-=======
 'use client';
->>>>>>> d6408986d9e6db28a2179946214104f693cb92e7
 
 import React from 'react';
 import Link from 'next/link';

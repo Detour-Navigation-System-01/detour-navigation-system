@@ -1,5 +1,14 @@
-"use client";
-import { useEffect, useState, useRef } from "react";
+/**
+ * @fileoverview ナビゲーション用地図表示コンポーネント
+ * @description 10秒置きに現在地を取得し、ナビゲーション中の地図を表示します。
+ * @author 尾﨑諒
+ * @created 2025-06-24
+ * @updated 2025-07-04
+ * @version 4.0.2
+ */
+
+'use client';
+import { useEffect, useState, useRef } from 'react';
 import {
   MapContainer,
   TileLayer,
@@ -8,9 +17,9 @@ import {
   Popup,
   CircleMarker,
   Polygon,
-} from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+} from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
 interface Step {
   sequence: number;
@@ -29,7 +38,7 @@ interface Coordinate {
 
 const currentLocationIcon = new L.Icon({
   iconUrl:
-    "data:image/svg+xml;base64," +
+    'data:image/svg+xml;base64,' +
     btoa(`
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#2563eb" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="8" stroke="white" stroke-width="2" fill="#2563eb" />
@@ -40,16 +49,19 @@ const currentLocationIcon = new L.Icon({
   popupAnchor: [0, -12],
 });
 
-const createEndIcon = () => L.icon({
-  iconUrl: "data:image/svg+xml;base64," + btoa(`
+const createEndIcon = () =>
+  L.icon({
+    iconUrl:
+      'data:image/svg+xml;base64,' +
+      btoa(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#EF4444" width="24" height="24">
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
     </svg>
   `),
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32],
-});
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
 
 function getDistanceMeters(
   lat1: number,
@@ -100,23 +112,25 @@ function generateViewCone(
 export default function NavigatingPage() {
   const [steps, setSteps] = useState<Step[]>([]);
   const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
-  const [center, setCenter] = useState<[number, number]>([35.681236, 139.767125]); // 東京駅
-  const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(
-    null
-  );
+  const [center, setCenter] = useState<[number, number]>([
+    35.681236, 139.767125,
+  ]); // 東京駅
+  const [currentPosition, setCurrentPosition] = useState<
+    [number, number] | null
+  >(null);
   const [nearbyMessage, setNearbyMessage] = useState<string | null>(null);
   const [heading, setHeading] = useState<number | null>(null); // 初期値nullに変更
   const [toCoord, setToCoord] = useState<Coordinate | null>(null);
-  const [toParam, setToParam] = useState<string>("");
+  const [toParam, setToParam] = useState<string>('');
 
   const watchIdRef = useRef<number | null>(null);
   const endIcon = createEndIcon();
 
   useEffect(() => {
-    const storedSteps = sessionStorage.getItem("routeSteps");
-    const storedCoords = sessionStorage.getItem("routeCoordinates");
-    const storedParam = sessionStorage.getItem("toParam");
-    const storedToCoord = sessionStorage.getItem("toCoord");
+    const storedSteps = sessionStorage.getItem('routeSteps');
+    const storedCoords = sessionStorage.getItem('routeCoordinates');
+    const storedParam = sessionStorage.getItem('toParam');
+    const storedToCoord = sessionStorage.getItem('toCoord');
 
     // // デバッグ用ログ
     // console.log("=== SessionStorage Debug ===");
@@ -124,9 +138,9 @@ export default function NavigatingPage() {
     // console.log("storedCoords:", storedCoords);
     // console.log("storedParam:", storedParam);
     // console.log("storedToCoord:", storedToCoord);
-    
+
     // 全てのsessionStorageキーを確認
-    console.log("All sessionStorage keys:", Object.keys(sessionStorage));
+    console.log('All sessionStorage keys:', Object.keys(sessionStorage));
     for (let i = 0; i < sessionStorage.length; i++) {
       const key = sessionStorage.key(i);
       // console.log(`${key}: ${sessionStorage.getItem(key)}`);
@@ -157,25 +171,27 @@ export default function NavigatingPage() {
       if (parsedCoords.length > 0 && !storedToCoord) {
         const lastCoord = parsedCoords[parsedCoords.length - 1];
         setToCoord({ lat: lastCoord[0], lon: lastCoord[1] });
-        console.log("Using route end as destination:", { lat: lastCoord[0], lon: lastCoord[1] });
+        console.log('Using route end as destination:', {
+          lat: lastCoord[0],
+          lon: lastCoord[1],
+        });
       }
     }
 
     if (storedParam) {
       setToParam(storedParam);
-      console.log("toParam set to:", storedParam);
+      console.log('toParam set to:', storedParam);
     }
 
     if (storedToCoord) {
       try {
         const parsedToCoord: Coordinate = JSON.parse(storedToCoord);
         setToCoord(parsedToCoord);
-        console.log("toCoord set to:", parsedToCoord);
+        console.log('toCoord set to:', parsedToCoord);
       } catch (e) {
-        console.error("Error parsing toCoord:", e);
+        console.error('Error parsing toCoord:', e);
       }
     }
-    
   }, []);
 
   // 端末の向き取得
@@ -188,34 +204,40 @@ export default function NavigatingPage() {
     };
 
     if (
-      typeof DeviceOrientationEvent !== "undefined" &&
-      typeof DeviceOrientationEvent.requestPermission === "function"
+      typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission === 'function'
     ) {
       // iOS向け許可取得
       DeviceOrientationEvent.requestPermission()
         .then((response) => {
-          if (response === "granted") {
-            window.addEventListener("deviceorientation", handleOrientation, true);
+          if (response === 'granted') {
+            window.addEventListener(
+              'deviceorientation',
+              handleOrientation,
+              true
+            );
           }
         })
         .catch(() => {
-          console.log("Device orientation permission denied or unsupported.");
+          console.log('Device orientation permission denied or unsupported.');
         });
-    } else if ("DeviceOrientationEvent" in window) {
-      window.addEventListener("deviceorientation", handleOrientation, true);
+    } else if ('DeviceOrientationEvent' in window) {
+      window.addEventListener('deviceorientation', handleOrientation, true);
     } else {
-      console.log("DeviceOrientationEvent is not supported on this device/browser.");
+      console.log(
+        'DeviceOrientationEvent is not supported on this device/browser.'
+      );
     }
 
     return () => {
-      window.removeEventListener("deviceorientation", handleOrientation);
+      window.removeEventListener('deviceorientation', handleOrientation);
     };
   }, []);
 
   // 現在地取得（10秒毎）
   useEffect(() => {
     if (!navigator.geolocation) {
-      console.warn("位置情報はこのブラウザでサポートされていません");
+      console.warn('位置情報はこのブラウザでサポートされていません');
       return;
     }
 
@@ -230,7 +252,9 @@ export default function NavigatingPage() {
           console.log(
             `📍 現在地更新: lat=${coords[0].toFixed(
               6
-            )}, lon=${coords[1].toFixed(6)} (${new Date().toLocaleTimeString()})`
+            )}, lon=${coords[1].toFixed(
+              6
+            )} (${new Date().toLocaleTimeString()})`
           );
 
           if (steps.length > 0) {
@@ -243,15 +267,15 @@ export default function NavigatingPage() {
             );
             if (distance < 100) {
               setNearbyMessage(`${nextStep.instruction}`);
-              console.log("案内表示");
+              console.log('案内表示');
             } else {
               setNearbyMessage(null);
-              console.log("案内非表示");
+              console.log('案内非表示');
             }
           }
         },
         (err) => {
-          console.error("位置情報の取得に失敗しました:", err.message);
+          console.error('位置情報の取得に失敗しました:', err.message);
         },
         {
           enableHighAccuracy: true,
@@ -278,11 +302,11 @@ export default function NavigatingPage() {
         <p>案内データが見つかりませんでした。</p>
       ) : (
         <>
-          <div style={{ height: "92.2vh", width: "100%" }}>
+          <div style={{ height: '92.2vh', width: '100%' }}>
             <MapContainer
               center={center}
               zoom={17}
-              style={{ height: "100%", width: "100%" }}
+              style={{ height: '100%', width: '100%' }}
             >
               <TileLayer
                 attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -307,23 +331,26 @@ export default function NavigatingPage() {
                     center={currentPosition}
                     radius={8}
                     pathOptions={{
-                      color: "#2563eb",
-                      fillColor: "#2563eb",
+                      color: '#2563eb',
+                      fillColor: '#2563eb',
                       fillOpacity: 1,
                     }}
                   />
 
-                  {typeof heading === "number" && !isNaN(heading) && (
+                  {typeof heading === 'number' && !isNaN(heading) && (
                     <Polygon
                       positions={generateViewCone(currentPosition, heading)}
-                      pathOptions={{ color: "#2563eb", fillOpacity: 0.3 }}
+                      pathOptions={{ color: '#2563eb', fillOpacity: 0.3 }}
                     />
                   )}
                 </>
               )}
-              
+
               {/* 目的地マーカー */}
-              {console.log("Rendering destination marker check:", { toCoord, toParam })}
+              {console.log('Rendering destination marker check:', {
+                toCoord,
+                toParam,
+              })}
               {toCoord && (
                 <Marker position={[toCoord.lat, toCoord.lon]} icon={endIcon}>
                   <Popup>
@@ -332,9 +359,12 @@ export default function NavigatingPage() {
                         <span className="w-3 h-3 bg-red-500 rounded-full"></span>
                         <strong className="text-red-700">目的地</strong>
                       </div>
-                      <div className="text-sm text-gray-700 mb-2">{toParam}</div>
+                      <div className="text-sm text-gray-700 mb-2">
+                        {toParam}
+                      </div>
                       <div className="text-xs text-gray-500">
-                        緯度: {toCoord.lat.toFixed(6)}<br />
+                        緯度: {toCoord.lat.toFixed(6)}
+                        <br />
                         経度: {toCoord.lon.toFixed(6)}
                       </div>
                     </div>
@@ -346,25 +376,25 @@ export default function NavigatingPage() {
             {nearbyMessage && (
               <div
                 style={{
-                  position: "absolute",
-                  top: "30px",
-                  left: "55%",
-                  transform: "translateX(-50%)",
-                  width: "80vw",
-                  height: "10vh",
-                  minHeight: "48px",
-                  fontSize: "1.5rem",
-                  backgroundColor: "#003300",
-                  color: "white",
-                  padding: "0",
-                  borderRadius: "8px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  position: 'absolute',
+                  top: '30px',
+                  left: '55%',
+                  transform: 'translateX(-50%)',
+                  width: '80vw',
+                  height: '10vh',
+                  minHeight: '48px',
+                  fontSize: '1.5rem',
+                  backgroundColor: '#003300',
+                  color: 'white',
+                  padding: '0',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
                   zIndex: 1000,
-                  fontWeight: "bold",
-                  display: "flex",
-                  maxWidth: "90%",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  maxWidth: '90%',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
                 {nearbyMessage}

@@ -1,24 +1,18 @@
-/**
- * @fileoverview 認証コンポーネント
- * @description ログイン画面ロジック
- * @author 平野
- * @created 2025-06-24
- * @updated 2025-07-03
- * @version 2.2.1
- */
-
 'use client';
 
 import { useState } from 'react';
 import { fetcher } from '@/lib/api';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation'; // ✅ 追加
 import styles from './LoginForm.module.css';
 import Link from 'next/link';
-import { useAuth } from '@/lib/AuthContext'; // ✅ 追加
+import { useAuth } from '@/lib/AuthContext';
 
 export default function LoginForm() {
   const router = useRouter();
-  const { refresh } = useAuth(); // ✅ 追加
+  const searchParams = useSearchParams(); // ✅ 追加
+  const redirectPath = searchParams.get('redirect') || null; // ✅ 追加
+
+  const { refresh } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
@@ -46,10 +40,12 @@ export default function LoginForm() {
 
       if (user && token) {
         localStorage.setItem('jwt_token', token);
-        await refresh(); // ✅ グローバル状態にuserを反映！
+        await refresh();
 
         setStatusMessage(`ようこそ、${user.username}さん！`);
-        router.push(`/profile/${user.id}`);
+
+        // ✅ リダイレクト先が指定されていればそちらへ、なければプロフィール
+        router.push(redirectPath || `/profile/${user.id}`);
       } else {
         setStatusMessage(res.message || 'ログイン失敗');
       }
