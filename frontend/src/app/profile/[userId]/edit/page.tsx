@@ -61,7 +61,7 @@ export default function ProfileEditPage() {
       >
 
         <h2 style={{ fontSize: '20px', fontWeight: 'bold' }}>{username}</h2>
-        <p style={{ color: '#333' }}>@{user?.username}</p>
+        
       </div>
 
       <form

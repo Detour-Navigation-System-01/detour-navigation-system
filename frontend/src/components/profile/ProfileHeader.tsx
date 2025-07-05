@@ -23,7 +23,6 @@ export default function ProfileHeader({ user }: Props) {
   return (
     <div style={headerStyle}>
       <h2 style={nameStyle}>{user.username}</h2>
-      <p style={idStyle}>ID: {user.id}</p>
       <Link href={`/profile/${user.id}/edit`}>
         <button style={editButtonStyle}>編集</button>
       </Link>
