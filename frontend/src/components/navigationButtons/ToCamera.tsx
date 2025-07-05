@@ -1,3 +1,11 @@
+/**
+ * @fileoverview カメラ画面に遷移するため、お気に入り保存するためのボタンコンポーネント
+ * @description カメラ画面の遷移や現在地の取得、お気に入りスポットをバックエンドに送信する機能を提供します。
+ * @author 尾﨑諒
+ * @created 2025-06-28
+ * @updated 2025-07-04
+ * @version 4.0.3
+ */
 "use client";
 
 import { useRouter } from "next/navigation";

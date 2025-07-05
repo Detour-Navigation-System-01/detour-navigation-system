@@ -1,9 +1,9 @@
 /**
- * @fileoverview ホームページコンポーネント
+ * @fileoverview メイン画面のページコンポーネント
  * @description 地図表示機能とタイトルを含むメインページコンポーネント
- * @author 作成者名
- * @created 2025-06-22
- * @updated 2025-06-22
+ * @author 尾﨑諒
+ * @created 2025-06-17
+ * @updated 2025-06-24
  * @version 1.0.1
  */
 

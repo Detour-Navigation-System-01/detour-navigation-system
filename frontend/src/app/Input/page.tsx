@@ -2,9 +2,9 @@
  * @fileoverview 入力ページコンポーネント
  * @description 旅行情報入力フォームを表示するページコンポーネント
  * @author 尾﨑諒
- * @created 2025/07/03
- * @updated 2025/07/03
- * @version 1.0.0
+ * @created 2025-06-17
+ * @updated 2025-06-24
+ * @version 1.0.1
  */
 
 import React from "react";
