@@ -9,9 +9,10 @@
 
 "use client";
 
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import NavigatePage from '../../components/map/routeresultmap';
 import ToNavigating from '../../components/navigationButtons/ToNavigating'; 
+import RouteResultMap from '../../components/map/routeresultmap';
 
 // Loading コンポーネント
 function NavigateLoading() {
@@ -25,11 +26,27 @@ function NavigateLoading() {
   );
 }
 
+interface NavigatePageProps {
+  onComplete?: () => void;
+}
+
+
 export default function Navigate() {
+  const [showButtons, setShowButtons] = useState(false);
+
+  
+  const handleNavigateComplete = () => {
+    console.log("handleNavigateComplete called");
+    setShowButtons(true);
+  }
+  
+  useEffect(() => {
+    console.log("Navigate page rendered");
+  });
   return (
     <Suspense fallback={<NavigateLoading />}>
-      <NavigatePage />
-      <ToNavigating />
+      <RouteResultMap onComplete={handleNavigateComplete} />
+      {showButtons && <ToNavigating />}
     </Suspense>
   );
 }
