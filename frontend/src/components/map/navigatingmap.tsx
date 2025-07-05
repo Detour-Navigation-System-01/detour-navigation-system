@@ -1,3 +1,12 @@
+/**
+ * @fileoverview ナビゲーション用地図表示コンポーネント
+ * @description 10秒置きに現在地を取得し、ナビゲーション中の地図を表示します。
+ * @author 尾﨑諒
+ * @created 2025-06-24
+ * @updated 2025-07-04
+ * @version 4.0.2
+ */
+
 "use client";
 import { useEffect, useState, useRef } from "react";
 import {

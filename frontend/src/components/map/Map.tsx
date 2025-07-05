@@ -1,10 +1,10 @@
 /**
- * @fileoverview マップ表示コンポーネント
+ * @fileoverview メイン画面の地図表示コンポーネント
  * @description 地図表示とナビゲーションボタンを重ねて表示するコンポーネント
  * @author 尾﨑諒
- * @created 2025/07/03
- * @updated 2025/07/03
- * @version 1.0.0
+ * @created 2025-06-17
+ * @updated 2025-06-24
+ * @version 1.0.1
  */
 
 "use client";

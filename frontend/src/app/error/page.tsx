@@ -2,8 +2,8 @@
  * @fileoverview エラーページコンポーネント
  * @description エラーフォームを表示するページコンポーネント
  * @author 尾﨑諒
- * @created 2025/07/03
- * @updated 2025/07/03
+ * @created 2025-07-03
+ * @updated 2025-07-03
  * @version 1.0.0
  */
 
