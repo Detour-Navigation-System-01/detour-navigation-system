@@ -34,6 +34,15 @@ interface NavigatePageProps {
 export default function Navigate() {
   const [showButtons, setShowButtons] = useState(false);
 
+  useEffect(() => {
+    console.log("Navigate page rendered");
+
+    // スクロール禁止
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
   
   const handleNavigateComplete = () => {
     console.log("handleNavigateComplete called");
