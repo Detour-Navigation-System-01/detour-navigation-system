@@ -29,7 +29,7 @@ class TimeConstrainedDetourService {
         // Phase 2: 局所改善（全候補評価）
         local: {
           candidateCount: 8,           
-          searchRadius: 400,           
+          // searchRadius: 動的に計算（_calculateLocalSearchRadius）
           radiusMultipliers: [0.2, 0.4, 0.7, 1.0, 1.3, 1.7, 2.1, 2.6],
           maxEvaluations: 8            // 全8候補を必ず評価
         },
@@ -37,18 +37,18 @@ class TimeConstrainedDetourService {
         // Phase 3: 微調整（全候補評価）
         fine: {
           candidateCount: 4,           
-          searchRadius: 200,           
+          // searchRadius: 動的に計算（_calculateFinetuningRadius）
           radiusMultipliers: [0.3, 0.6, 1.0, 1.4],
           maxEvaluations: 4            // 全4候補を必ず評価
         }
       },
       
-      // 動的パラメータ
+      // 動的パラメータ (時間差に基づく半径計算用)
       radius: {
-        WALKING_SPEED_MPS: 1.25,
-        BASE_RADIUS_FACTOR: 0.4,
-        MIN_RADIUS: 150,
-        MAX_RADIUS: 3000
+        WALKING_SPEED_MPS: 1.25,        // 歩行速度 1.25m/秒
+        BASE_RADIUS_FACTOR: 0.4,        // 基本半径計算の係数
+        MIN_RADIUS: 150,                // 最小半径 (m)
+        MAX_RADIUS: 3000                // 最大半径 (m)
       },
       
       // 評価パラメータ
@@ -99,6 +99,8 @@ class TimeConstrainedDetourService {
       const destination = shortestRoute.coordinates[shortestRoute.coordinates.length - 1];
       const timeDifference = targetDuration - shortestRoute.duration;
       
+      console.log(`🔍 探索半径情報: 目標時間差=${timeDifference}秒`);
+      
       let bestRoute = shortestRoute;
       let totalEvaluations = 0;
       let phaseResults = [];
@@ -120,7 +122,7 @@ class TimeConstrainedDetourService {
       // 4. Phase 2: 局所改善（必ず実行）
       console.log('\n🎯 Phase 2: 局所改善開始');
       const localResult = await this._executeLocalImprovement(
-        origin, destination, bestRoute, targetDuration, options
+        origin, destination, bestRoute, targetDuration, options, phaseResults
       );
       
       totalEvaluations += localResult.evaluations;
@@ -136,7 +138,7 @@ class TimeConstrainedDetourService {
       // 5. Phase 3: 微調整（必ず実行）
       console.log('\n🔧 Phase 3: 微調整開始');
       const fineResult = await this._executeFinetuning(
-        origin, destination, bestRoute, targetDuration, options
+        origin, destination, bestRoute, targetDuration, options, phaseResults
       );
       
       totalEvaluations += fineResult.evaluations;
@@ -151,6 +153,21 @@ class TimeConstrainedDetourService {
 
       // 6. 最終結果の構築
       const result = this._buildHierarchicalResult(bestRoute, targetDuration, phaseResults, totalEvaluations);
+      
+      // 探索半径の変化を要約表示
+      const coarseRadius = phaseResults.find(r => r.phase === 'coarse')?.baseRadius;
+      const localRadius = phaseResults.find(r => r.phase === 'local')?.searchRadius;
+      const fineRadius = phaseResults.find(r => r.phase === 'fine')?.searchRadius;
+      
+      console.log('📏 探索半径サマリー:', {
+        phase1_粗探索: coarseRadius ? `${coarseRadius.toFixed(0)}m` : '不明',
+        phase2_局所改善: localRadius ? `${localRadius.toFixed(0)}m` : '不明',
+        phase3_微調整: fineRadius ? `${fineRadius.toFixed(0)}m` : '不明',
+        phase1to2: coarseRadius && localRadius ? 
+          `${(localRadius/coarseRadius*100).toFixed(1)}%` : '不明',
+        phase2to3: localRadius && fineRadius ? 
+          `${(fineRadius/localRadius*100).toFixed(1)}%` : '不明',
+      });
       
       console.log('🎉 全候補評価階層探索遠回りルート生成完了:', {
         finalDuration: result.duration,
@@ -181,6 +198,8 @@ class TimeConstrainedDetourService {
     
     const config = this.config.phases.coarse;
     const baseRadius = this._calculateBaseRadius(timeDifference);
+    
+    console.log(`🔍 Phase 1 半径: ${baseRadius.toFixed(0)}m (粗探索基準)`);
     
     // 大きな間隔で候補点を生成
     const candidates = this._generateRadialCandidates(
@@ -241,6 +260,7 @@ class TimeConstrainedDetourService {
       bestScore: bestScore,
       evaluations: evaluations,
       totalCandidates: candidates.length,
+      baseRadius: baseRadius,  // 半径情報を追加
       allResults: allResults
     };
   }
@@ -249,7 +269,7 @@ class TimeConstrainedDetourService {
    * Phase 2: 局所改善の実行（全候補評価）
    * @private
    */
-  async _executeLocalImprovement(origin, destination, currentBest, targetDuration, options) {
+  async _executeLocalImprovement(origin, destination, currentBest, targetDuration, options, phaseResults = []) {
     console.log('🎯 局所改善: 現在のベスト候補周辺を詳細探索（全候補必須評価）');
     
     if (!currentBest.waypoint) {
@@ -260,12 +280,25 @@ class TimeConstrainedDetourService {
     const config = this.config.phases.local;
     const currentScore = this._calculateRouteScore(currentBest, targetDuration);
     
-    // 現在のベスト候補周辺で新しい候補を生成
+    // 🔥 修正: 前のフェーズの結果に基づいて動的に探索半径を計算
+    const timeDifference = Math.abs(targetDuration - currentBest.duration);
+    console.log(`⏱️ 局所改善: 目標時間差=${timeDifference}秒 (目標${targetDuration}秒 - 現在${currentBest.duration}秒)`);
+    const dynamicSearchRadius = this._calculateLocalSearchRadius(timeDifference);
+    
+    console.log(`🔍 Phase 2 半径: ${dynamicSearchRadius.toFixed(0)}m (局所改善用)`);
+    if (phaseResults && Array.isArray(phaseResults) && phaseResults.length > 0) {
+      const phase1Result = phaseResults.find(r => r && r.phase === 'coarse');
+      if (phase1Result && phase1Result.baseRadius) {
+        console.log(`📊 半径変化: Phase 1→2: ${phase1Result.baseRadius.toFixed(0)}m → ${dynamicSearchRadius.toFixed(0)}m (${dynamicSearchRadius < phase1Result.baseRadius ? '縮小' : '拡大'})`);
+      }
+    }
+    
+    // 現在のベスト候補周辺で新しい候補を生成（動的半径使用）
     const candidates = this._generateLocalCandidates(
-      currentBest.waypoint, config.searchRadius, config.radiusMultipliers, config.candidateCount
+      currentBest.waypoint, dynamicSearchRadius, config.radiusMultipliers, config.candidateCount
     );
     
-    console.log(`📍 局所改善候補: ${candidates.length}個 (基準点周辺${config.searchRadius}m)`);
+    console.log(`📍 局所改善候補: ${candidates.length}個 (基準点周辺${dynamicSearchRadius.toFixed(0)}m)`);
     
     let bestCandidate = null;
     let bestScore = currentScore;
@@ -321,6 +354,7 @@ class TimeConstrainedDetourService {
       evaluations: evaluations,
       isImprovement: isImprovement,
       improvement: isImprovement ? bestScore - currentScore : 0,
+      searchRadius: dynamicSearchRadius,  // 半径情報を追加
       allResults: allResults
     };
   }
@@ -329,7 +363,7 @@ class TimeConstrainedDetourService {
    * Phase 3: 微調整の実行（全候補評価）
    * @private
    */
-  async _executeFinetuning(origin, destination, currentBest, targetDuration, options) {
+  async _executeFinetuning(origin, destination, currentBest, targetDuration, options, phaseResults = []) {
     console.log('🔧 微調整: 最終的な品質向上（全候補必須評価）');
     
     if (!currentBest.waypoint) {
@@ -339,12 +373,25 @@ class TimeConstrainedDetourService {
     const config = this.config.phases.fine;
     const currentScore = this._calculateRouteScore(currentBest, targetDuration);
     
-    // より狭い範囲で精密な候補を生成
+    // 🔥 修正: 時間差に基づいて動的に探索半径を計算（微調整はより小さめ）
+    const timeDifference = Math.abs(targetDuration - currentBest.duration);
+    console.log(`⏱️ 微調整: 目標時間差=${timeDifference}秒 (目標${targetDuration}秒 - 現在${currentBest.duration}秒)`);
+    const dynamicSearchRadius = this._calculateFinetuningRadius(timeDifference);
+    
+    console.log(`🔍 Phase 3 半径: ${dynamicSearchRadius.toFixed(0)}m (微調整用)`);
+    if (phaseResults && Array.isArray(phaseResults) && phaseResults.length > 0) {
+      const phase2Result = phaseResults.find(r => r && r.phase === 'local');
+      if (phase2Result && phase2Result.searchRadius) {
+        console.log(`📊 半径変化: Phase 2→3: ${phase2Result.searchRadius.toFixed(0)}m → ${dynamicSearchRadius.toFixed(0)}m (${dynamicSearchRadius < phase2Result.searchRadius ? '縮小' : '拡大'})`);
+      }
+    }
+    
+    // より狭い範囲で精密な候補を生成（動的半径使用）
     const candidates = this._generateLocalCandidates(
-      currentBest.waypoint, config.searchRadius, config.radiusMultipliers, config.candidateCount
+      currentBest.waypoint, dynamicSearchRadius, config.radiusMultipliers, config.candidateCount
     );
     
-    console.log(`📍 微調整候補: ${candidates.length}個 (基準点周辺${config.searchRadius}m)`);
+    console.log(`📍 微調整候補: ${candidates.length}個 (基準点周辺${dynamicSearchRadius.toFixed(0)}m)`);
     
     let bestCandidate = null;
     let bestScore = currentScore;
@@ -401,6 +448,7 @@ class TimeConstrainedDetourService {
       evaluations: evaluations,
       isImprovement: isImprovement,
       improvement: isImprovement ? bestScore - currentScore : 0,
+      searchRadius: dynamicSearchRadius,  // 半径情報を追加
       allResults: allResults
     };
   }
@@ -520,6 +568,58 @@ class TimeConstrainedDetourService {
       this.config.radius.MIN_RADIUS,
       Math.min(baseRadius, this.config.radius.MAX_RADIUS)
     );
+  }
+
+  /**
+   * Phase 2: 局所改善用の半径計算
+   * 粗探索よりも狭い範囲を重点的に
+   * @private
+   */
+  _calculateLocalSearchRadius(timeDifference) {
+    // 局所改善は粗探索の結果から細かく探索
+    const additionalDistance = timeDifference * this.config.radius.WALKING_SPEED_MPS;
+    
+    console.log(`📏 局所改善半径計算: 時間差=${timeDifference}秒, 距離基準=${additionalDistance.toFixed(0)}m`);
+    
+    // 粗探索より小さい係数を使用
+    const localFactor = this.config.radius.BASE_RADIUS_FACTOR * 0.3;
+    const localRadius = additionalDistance * localFactor;
+    
+    // 最小半径/最大半径のバウンド
+    const finalRadius = Math.max(
+      0, // 局所探索の最小半径
+      Math.min(localRadius, 600) // 局所探索の最大半径
+    );
+    
+    console.log(`📏 局所改善半径決定: 係数=${localFactor.toFixed(2)}, 基本半径=${localRadius.toFixed(0)}m, 最終半径=${finalRadius.toFixed(0)}m`);
+    
+    return finalRadius;
+  }
+
+  /**
+   * Phase 3: 微調整用の半径計算
+   * さらに絞った範囲で探索
+   * @private
+   */
+  _calculateFinetuningRadius(timeDifference) {
+    // 微調整フェーズはさらに小さな範囲を探索
+    const additionalDistance = timeDifference * this.config.radius.WALKING_SPEED_MPS;
+    
+    console.log(`📏 微調整半径計算: 時間差=${timeDifference}秒, 距離基準=${additionalDistance.toFixed(0)}m`);
+    
+    // 局所改善よりさらに小さい係数を使用
+    const fineTuningFactor = this.config.radius.BASE_RADIUS_FACTOR * 0.1;
+    const fineTuningRadius = additionalDistance * fineTuningFactor;
+    
+    // 最小半径/最大半径のバウンド
+    const finalRadius = Math.max(
+      0, // 微調整の最小半径
+      Math.min(fineTuningRadius, 300) // 微調整の最大半径
+    );
+    
+    console.log(`📏 微調整半径決定: 係数=${fineTuningFactor.toFixed(2)}, 基本半径=${fineTuningRadius.toFixed(0)}m, 最終半径=${finalRadius.toFixed(0)}m`);
+    
+    return finalRadius;
   }
 
   async _evaluateWaypointCandidate(origin, destination, candidate, options) {
@@ -666,7 +766,17 @@ class TimeConstrainedDetourService {
     }
     
     const timeDifference = Math.abs(route.duration - targetDuration);
-    score -= (timeDifference / 60) * 0.5;
+    
+    // 🔥 修正: 目標時間を超えた場合、より強く減点
+    if (route.duration > targetDuration) {
+      // 超過時間に対して二次関数的に減点を強化
+      const overageMinutes = (route.duration - targetDuration) / 60;
+      score -= Math.pow(overageMinutes, 1.5) * 1.2;
+    } else {
+      // 不足時間に対しては線形減点
+      const underageMinutes = (targetDuration - route.duration) / 60;
+      score -= underageMinutes * 0.5;
+    }
     
     return Math.max(0, score);
   }
