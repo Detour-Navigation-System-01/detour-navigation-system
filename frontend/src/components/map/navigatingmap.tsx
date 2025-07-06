@@ -250,7 +250,7 @@ export default function NavigatingPage() {
               nextStep.start_lat,
               nextStep.start_lng
             );
-            if (distance < 100) {
+            if (distance <20) {
               setNearbyMessage(`${nextStep.instruction}`);
               console.log("案内表示");
             } else {

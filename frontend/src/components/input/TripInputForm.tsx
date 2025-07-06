@@ -125,8 +125,8 @@ const saveSearchHistory = (fromValue: string, toValue: string) => {
   };
 
   // スタイル定義
-  const containerStyle = { display: "flex", alignItems: "flex-start", justifyContent: "center", minHeight: "50vh", padding: "1rem" };
-  const formStyle = { display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", width: "100%", maxWidth: "600px" };
+  const containerStyle = { display: "flex", alignItems: "flex-start", justifyContent: "center", minHeight: "50vh", padding: "1rem" , marginTop: "0rem"};
+  const formStyle = { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.8rem", width: "100%", maxWidth: "600px" };
   const inputContainerStyle = { position: "relative", width: "100%" };
   const inputWrapperStyle = { width: "100%", minHeight: "3.5rem" };
   const inputStyle = {
@@ -146,7 +146,7 @@ const saveSearchHistory = (fromValue: string, toValue: string) => {
   };
   const targetIconStyle = { width: "14px", height: "14px", fill: "currentColor" };
   const historyButtonStyle = {
-    backgroundColor: "white", border: "1px solid #d1d5db", borderRadius: "0.5rem", padding: "0.75rem 1rem", fontSize: "0.875rem",
+    backgroundColor: "white", border: "1px solid #d1d5db", borderRadius: "0.5rem", padding: "0.5rem 1rem", fontSize: "0.875rem",
     cursor: "pointer", transition: "all 0.2s", fontFamily: "Arial, Helvetica, sans-serif", color: "#374151", width: "100%", textAlign: "left",
     marginBottom: "0.5rem"
   };
