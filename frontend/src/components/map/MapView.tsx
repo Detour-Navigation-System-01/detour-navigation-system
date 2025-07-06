@@ -7,7 +7,8 @@
  * @version 4.0.2
  */
 
-"use client";
+'use client';
+
 
 import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polygon } from "react-leaflet";
@@ -19,6 +20,7 @@ import { User } from "@/types/user";
 type Props = {
   user: User;
 }
+
 
 interface Place {
   id: string;
@@ -37,7 +39,7 @@ interface ApiResponse {
 //現在地アイコン
 const currentLocationIcon = new L.Icon({
   iconUrl:
-    "data:image/svg+xml;base64," +
+    'data:image/svg+xml;base64,' +
     btoa(`
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#2563eb" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="8" stroke="white" stroke-width="2" fill="#2563eb" />
@@ -51,7 +53,7 @@ const currentLocationIcon = new L.Icon({
 //場所ピンアイコン
 const placeIcon = new L.Icon({
   iconUrl:
-    "data:image/svg+xml;base64," +
+    'data:image/svg+xml;base64,' +
     btoa(`
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#ef4444" viewBox="0 0 24 24">
         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" stroke="white" stroke-width="1"/>
@@ -61,7 +63,6 @@ const placeIcon = new L.Icon({
   iconAnchor: [12, 24],
   popupAnchor: [0, -24],
 });
-
 
 // 扇形（視野コーン）を計算する関数
 function generateViewCone(
@@ -101,19 +102,24 @@ export default function MapView({ user }: Props) {
   // 現在地取得
   useEffect(() => {
     if (!navigator.geolocation) {
-      console.warn("⚠️ Geolocation APIはこのブラウザでサポートされていません。");
+      console.warn(
+        '⚠️ Geolocation APIはこのブラウザでサポートされていません。'
+      );
       setPosition([35.681236, 139.767125]); // 東京駅（デフォルト）
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
-        console.log("✅ 現在地取得成功:", coords);
+        const coords: [number, number] = [
+          pos.coords.latitude,
+          pos.coords.longitude,
+        ];
+        console.log('✅ 現在地取得成功:', coords);
         setPosition(coords);
       },
       (err) => {
-        console.error("❌ 位置情報取得に失敗:", {
+        console.error('❌ 位置情報取得に失敗:', {
           code: err.code,
           message: err.message,
         });
@@ -135,37 +141,45 @@ export default function MapView({ user }: Props) {
       setAuthError(null);
 
       try {
+
         const data: ApiResponse = await fetcher("/api/places/public", {
           method: "GET",
         });
         
         console.log("✅ 場所データ取得成功:", data);
         // console.log('👀 user.public_settings 更新確認:', user.public_settings);
+
         // data.data を使用（data.places ではなく）
         if (data.data && data.data.length > 0) {
           data.data.forEach((place, index) => {
             console.log(`${index + 1}:`, {
               id: place.id,
+
               latitude: place.lat,      // lat プロパティ
               longitude: place.lng,     // lng プロパティ
               usrid: place.user_id,
               
+
             });
           });
         } else {
-          console.log("取得した場所データが空です");
+          console.log('取得した場所データが空です');
         }
-        
+
         // data.data を state に設定
         setPlaces(data.data || []);
-        
       } catch (err: any) {
-        console.error("❌ 場所データ取得に失敗:", err);
-        
-        if (err.message?.includes("認証") || err.message?.includes("ログイン")) {
-          setAuthError("ログインされていません。Profileページからログインしてください。");
+        console.error('❌ 場所データ取得に失敗:', err);
+
+        if (
+          err.message?.includes('認証') ||
+          err.message?.includes('ログイン')
+        ) {
+          setAuthError(
+            'ログインされていません。Profileページからログインしてください。'
+          );
         } else {
-          setError(err.message || "場所データの取得に失敗しました");
+          setError(err.message || '場所データの取得に失敗しました');
         }
       } finally {
         setLoading(false);
@@ -174,7 +188,6 @@ export default function MapView({ user }: Props) {
 
     fetchPlaces();
   }, []);
-
 
   // デバイス向き取得
   useEffect(() => {
@@ -185,26 +198,32 @@ export default function MapView({ user }: Props) {
     };
 
     if (
-      typeof DeviceOrientationEvent !== "undefined" &&
-      typeof DeviceOrientationEvent.requestPermission === "function"
+      typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission === 'function'
     ) {
       DeviceOrientationEvent.requestPermission()
         .then((response) => {
-          if (response === "granted") {
-            window.addEventListener("deviceorientation", handleOrientation, true);
+          if (response === 'granted') {
+            window.addEventListener(
+              'deviceorientation',
+              handleOrientation,
+              true
+            );
           }
         })
         .catch(() => {
-          console.log("Device orientation permission denied or unsupported.");
+          console.log('Device orientation permission denied or unsupported.');
         });
-    } else if ("DeviceOrientationEvent" in window) {
-      window.addEventListener("deviceorientation", handleOrientation, true);
+    } else if ('DeviceOrientationEvent' in window) {
+      window.addEventListener('deviceorientation', handleOrientation, true);
     } else {
-      console.log("DeviceOrientationEvent is not supported on this device/browser.");
+      console.log(
+        'DeviceOrientationEvent is not supported on this device/browser.'
+      );
     }
 
     return () => {
-      window.removeEventListener("deviceorientation", handleOrientation);
+      window.removeEventListener('deviceorientation', handleOrientation);
     };
   }, []);
 
@@ -213,7 +232,11 @@ export default function MapView({ user }: Props) {
   }
 
   return (
-    <MapContainer center={position} zoom={16} style={{ height: "100%", width: "100%" }}>
+    <MapContainer
+      center={position}
+      zoom={16}
+      style={{ height: '100%', width: '100%' }}
+    >
       <TileLayer
         attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -223,36 +246,38 @@ export default function MapView({ user }: Props) {
       </Marker>
 
       {/* headingが有効なら扇形表示 */}
-      {typeof heading === "number" && !isNaN(heading) && (
+      {typeof heading === 'number' && !isNaN(heading) && (
         <Polygon
           positions={generateViewCone(position, heading)}
-          pathOptions={{ color: "#2563eb", fillOpacity: 0.3 }}
+          pathOptions={{ color: '#2563eb', fillOpacity: 0.3 }}
         />
       )}
 
       {/* 場所ピンの表示 */}
-      {places && places.length > 0 && places
-            .filter(place => place.lat && place.lng) // 有効な座標のみフィルタリング
-            .map((place) => (
-              <Marker
-                key={place.id}
-                position={[parseFloat(place.lat), parseFloat(place.lng)]} // lat, lng を使用
-                icon={placeIcon}
-              >
-                <Popup>
-                  <div>
-                    <h3>{place.name || '名前未設定'}</h3>
-                    <p>{place.address || '住所未設定'}</p>
-                    <p>{place.description || '説明なし'}</p>
-                    <p>作成日: {new Date(place.created_at).toLocaleDateString()}</p>
-                  </div>
-                </Popup>
-              </Marker>
-            ))
-          }
+      {places &&
+        places.length > 0 &&
+        places
+          .filter((place) => place.lat && place.lng) // 有効な座標のみフィルタリング
+          .map((place) => (
+            <Marker
+              key={place.id}
+              position={[parseFloat(place.lat), parseFloat(place.lng)]} // lat, lng を使用
+              icon={placeIcon}
+            >
+              <Popup>
+                <div>
+                  <h3>{place.name || '名前未設定'}</h3>
+                  <p>{place.address || '住所未設定'}</p>
+                  <p>{place.description || '説明なし'}</p>
+                  <p>
+                    作成日: {new Date(place.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
 
       {/* エラーメッセージの表示 */}
     </MapContainer>
-    
   );
 }

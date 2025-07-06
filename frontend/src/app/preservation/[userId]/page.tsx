@@ -99,7 +99,6 @@ export default function PreservationDetail() {
         ← 戻る
       </button>
 
-
       {spotData.image_url && (
         <img
           src={spotData.image_url}
