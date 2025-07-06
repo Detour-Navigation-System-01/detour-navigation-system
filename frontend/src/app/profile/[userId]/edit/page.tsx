@@ -9,13 +9,11 @@ export default function ProfileEditPage() {
   const router = useRouter();
   const { user, refresh } = useAuth();
 
-  // 初期値は空。userが取得されてから useEffect でセット
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // ✅ userが読み込まれたタイミングでフォームに反映
   useEffect(() => {
     if (user) {
       setUsername(user.username || '');
@@ -37,12 +35,12 @@ export default function ProfileEditPage() {
         body: JSON.stringify({
           username,
           email,
-          ...(password && { password }), // パスワードがあれば送信
+          ...(password && { password }),
         }),
       });
 
       alert('プロフィールを更新しました');
-      await refresh(); // 再取得
+      await refresh();
       router.push(`/profile/${user?.id}`);
     } catch (err: any) {
       console.error('❌ 更新エラー', err);
@@ -59,9 +57,14 @@ export default function ProfileEditPage() {
           textAlign: 'center',
         }}
       >
-
+        <img
+          src={user?.image_url || '/images/default-user.svg'}
+          alt="プロフィール画像"
+          width={120}
+          height={120}
+          style={{ borderRadius: '50%', objectFit: 'cover', marginBottom: '12px' }}
+        />
         <h2 style={{ fontSize: '20px', fontWeight: 'bold' }}>{username}</h2>
-        <p style={{ color: '#333' }}>@{user?.username}</p>
       </div>
 
       <form
@@ -143,8 +146,6 @@ export default function ProfileEditPage() {
     </div>
   );
 }
-
-// --- スタイル定義 ---
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
