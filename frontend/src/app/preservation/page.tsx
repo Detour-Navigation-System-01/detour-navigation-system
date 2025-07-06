@@ -1,18 +1,17 @@
 /**
-<<<<<<< HEAD
  * @fileoverview 保存スポットギャラリー画面
  * @description APIから取得したスポットデータを月別にグループ化し、ギャラリー形式で表示。
  *              各スポットは画像付きで表示され、クリックで詳細ページに遷移する。
  *              ログインユーザーの保存スポットのみを表示。
+ *              画像がないスポット（ピンのみ）は表示しない。
  * @author 赤津
  * @created 2025-06-10
  * @updated 2025-07-04
- * @version 2.2.0
+ * @version 2.3.0
  */
 'use client';
 import '@/styles/preservation.css';
 import { useRouter } from 'next/navigation';
-<<<<<<< HEAD
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { fetcher } from '@/lib/api';
@@ -46,11 +45,6 @@ type GroupedSpots = {
 };
 
 export default function PreservationGallery() {
-=======
-
-export default function PreservationRedirectPage() {
-  const { user, loading } = useAuth();
->>>>>>> d6408986d9e6db28a2179946214104f693cb92e7
   const router = useRouter();
   const { user, loading } = useAuth();
 
@@ -96,7 +90,13 @@ export default function PreservationRedirectPage() {
         const spots: Spot[] = response.data;
         console.log('✅ 自分のスポット数:', spots.length);
 
-        const grouped = groupSpotsByMonth(spots);
+        // 🔥 画像がないスポットを除外
+        const spotsWithImages = spots.filter(
+          (spot) => spot.image_url && spot.image_url.trim() !== ''
+        );
+        console.log('📷 画像付きスポット数:', spotsWithImages.length);
+
+        const grouped = groupSpotsByMonth(spotsWithImages);
         setGroupedSpots(grouped);
       }
     } catch (err) {
@@ -224,57 +224,33 @@ export default function PreservationRedirectPage() {
         {!dataLoading && !error && Object.keys(groupedSpots).length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>📍</div>
-            <div>まだ保存されたスポットがありません</div>
+            <div>まだ画像付きのスポットがありません</div>
             <div style={{ fontSize: '14px', marginTop: '8px' }}>
-              マップでスポットを追加してみましょう！
+              カメラで写真を撮ってスポットを保存してみましょう！
             </div>
           </div>
         )}
 
         {/* 月別スポット表示 */}
-        {Object.entries(groupedSpots).map(([month, spots]) => {
-          const filled = [...spots];
-          while (filled.length < 8) filled.push(null); // 4x2 = 8枠固定
-          return (
-            <section key={month} className="month-section">
-              <h2 className="month-title">{month}</h2>
-              <div className="image-grid">
-                {filled.map((spot, i) =>
-                  spot ? (
-                    <div
-                      key={spot.id}
-                      className="spot-box"
-                      onClick={() => handleClick(spot)}
-                      title={`${spot.name}${
-                        spot.description ? ' - ' + spot.description : ''
-                      }`}
-                    >
-                      {spot.image_url ? (
-                        <img src={spot.image_url} alt={spot.name} />
-                      ) : (
-                        <div
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            backgroundColor: '#f0f0f0',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#999',
-                          }}
-                        >
-                          📷
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div key={`empty-${i}`} className="spot-box empty" />
-                  )
-                )}
-              </div>
-            </section>
-          );
-        })}
+        {Object.entries(groupedSpots).map(([month, spots]) => (
+          <section key={month} className="month-section">
+            <h2 className="month-title">{month}</h2>
+            <div className="image-grid">
+              {spots.map((spot) => (
+                <div
+                  key={spot.id}
+                  className="spot-box"
+                  onClick={() => handleClick(spot)}
+                  title={`${spot.name}${
+                    spot.description ? ' - ' + spot.description : ''
+                  }`}
+                >
+                  <img src={spot.image_url} alt={spot.name} />
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
       </main>
       <nav className="bottom-tab">
         <a href="/">🗺 map</a>
