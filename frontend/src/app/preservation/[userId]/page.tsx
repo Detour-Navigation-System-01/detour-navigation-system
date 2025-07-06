@@ -99,17 +99,15 @@ export default function PreservationDetail() {
         ← 戻る
       </button>
 
-      <h1>{spotData.name}</h1>
 
       {spotData.image_url && (
         <img
           src={spotData.image_url}
           alt={spotData.name}
-          style={{ width: '100%', maxHeight: '300px', objectFit: 'cover' }}
+          style={{ width: '100%', maxHeight: '100%', objectFit: 'cover' }}
         />
       )}
 
-      <p>{spotData.description}</p>
       <p>📍 {spotData.address}</p>
     </div>
   );

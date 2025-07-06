@@ -1,0 +1,26 @@
+### ユーザープロフィール画像アップロードテスト（JWT認証が必要）
+@baseUrl = http://localhost:3001/api
+
+// ログイン後に取得したJWTトークンを保存するための変数
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYWthbmlzaGkzIiwiaWF0IjoxNzUxNjgyNDc1LCJleHAiOjE3NTE2ODYwNzV9.TqOO4q7qCRQ0nbJs4TUruYm10ZrWsrl3GioiGHtmWF0
+
+# multipart/form-dataを使ってファイルをアップロード
+# 以下の <実際の画像パス> を実在する画像ファイルのパスに変更してください
+# 例: < C:/Users/YourName/Pictures/profile.jpg
+# 注意: サイズ制限は10MBまでです
+
+POST {{baseUrl}}/users/profile-image
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+Authorization: Bearer {{authToken}}
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="profile.jpg"
+Content-Type: image/jpeg
+
+< C:\Users\Yonosuke\Pictures\Screenshots\user-profile.png
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### ユーザー情報を取得（プロフィール画像URL確認用）
+GET {{baseUrl}}/users/3
+Content-Type: application/json
+Authorization: Bearer {{authToken}}

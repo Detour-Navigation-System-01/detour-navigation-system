@@ -29,6 +29,8 @@ const pool = new Pool({
   idleTimeoutMillis: 30000,
   // 接続タイムアウト（ミリ秒）
   connectionTimeoutMillis: 2000,
+  // タイムゾーンを日本時間に設定
+  timezone: 'Asia/Tokyo',
 });
 
 console.log('💾 データベース接続設定を初期化:', {
