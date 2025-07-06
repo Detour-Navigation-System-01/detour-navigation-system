@@ -26,7 +26,7 @@ export default function BottomNav() {
         onClick={() => router.push('/')}
       >
         <Image src="/icons/map.svg" alt="Map Icon" width={24} height={24} />
-        <span>Map</span>
+        <span>マップ</span>
       </div>
 
       <div
@@ -34,7 +34,7 @@ export default function BottomNav() {
         onClick={() => router.push('/preservation')}
       >
         <Image src="/icons/preserve.svg" alt="Preserve Icon" width={24} height={24} />
-        <span>Preserve</span>
+        <span>ギャラリー</span>
       </div>
 
       <div
@@ -42,7 +42,7 @@ export default function BottomNav() {
         onClick={handleProfileClick}
       >
         <Image src="/icons/profile.svg" alt="Profile Icon" width={24} height={24} />
-        <span>Profile</span>
+        <span>プロフィール</span>
       </div>
     </nav>
   );
