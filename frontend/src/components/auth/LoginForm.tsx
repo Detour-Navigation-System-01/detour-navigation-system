@@ -1,6 +1,16 @@
+/**
+ * @fileoverview ログインフォーム
+ * @description ユーザログインフォームコンポーネント
+ * @author 平野
+ * @created 2025-06-17
+ * @updated 2025-07-05
+ * @version 2.4.0
+ */
+
 'use client';
 
 import { useState } from 'react';
+import { useEffect } from 'react';
 import { fetcher } from '@/lib/api';
 import { useRouter, useSearchParams } from 'next/navigation'; // ✅ 追加
 import styles from './LoginForm.module.css';
@@ -16,6 +26,17 @@ export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  
+  useEffect(() => {
+    // スクロールを無効にする
+    const original = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    // コンポーネントがアンマウントされたときに戻す
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

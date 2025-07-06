@@ -216,6 +216,7 @@
                 </div>
                 <button id="calculateBtn">経路を計算</button>
                 <button id="calculateMinRouteBtn" class="btn-secondary">最短経路を計算</button>
+                <button id="testWaypointsBtn" class="btn-secondary">ウェイポイントテスト</button>
                 
                 <div class="preset-locations">
                     <h4>プリセット位置</h4>
@@ -714,6 +715,72 @@
         document.getElementById('calculateMinRouteBtn').addEventListener('click', () => {
             calculateRoute(false); // 最短経路
         });
+        
+        // ウェイポイントテスト用の関数
+        async function testWaypoints() {
+            try {
+                // 固定のテストデータ
+                const testData = {
+                    origin: { lat: 35.6812, lng: 139.7671 }, // 東京駅
+                    destination: { lat: 35.6853, lng: 139.7528 }, // 皇居
+                    waypoints: [
+                        { lat: 35.6844, lng: 139.7544 } // 日比谷公園（中間地点）
+                    ],
+                    profile: 'walking'
+                };
+                
+                console.log('🧪 ウェイポイントテスト開始:', testData);
+                
+                setLoading(true);
+                
+                const response = await fetch(`${API_BASE_URL}/routes/test-waypoints`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const result = await response.json();
+                console.log('🧪 ウェイポイントテスト結果:', result);
+                
+                if (result.success) {
+                    showSuccess(`ウェイポイントテスト成功: ${result.data.testInfo.coordinatesCount}座標点`);
+                    
+                    // マップに表示
+                    clearAll();
+                    displayRouteInfo(result.data, false);
+                    displayRoute(result.data, false);
+                    
+                    // マーカー表示
+                    showMarker(testData.origin, 'origin');
+                    showMarker(testData.destination, 'destination');
+                    // ウェイポイントも表示
+                    testData.waypoints.forEach(wp => {
+                        L.marker([wp.lat, wp.lng], {
+                            icon: L.divIcon({
+                                className: 'custom-div-icon',
+                                html: `<div style="background-color: #f39c12; width: 10px; height: 10px; border-radius: 50%;"></div>`,
+                                iconSize: [10, 10],
+                                iconAnchor: [5, 5]
+                            })
+                        }).addTo(map).bindPopup('ウェイポイント');
+                    });
+                    
+                } else {
+                    showError(`ウェイポイントテスト失敗: ${result.message}`);
+                }
+                
+            } catch (error) {
+                console.error('ウェイポイントテストエラー:', error);
+                showError(`テストエラー: ${error.message}`);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // テストウェイポイントボタンのイベントリスナー
+        document.getElementById('testWaypointsBtn').addEventListener('click', testWaypoints);
         
         // プリセットボタンのイベントリスナー設定
         document.querySelectorAll('.preset-btn').forEach(btn => {

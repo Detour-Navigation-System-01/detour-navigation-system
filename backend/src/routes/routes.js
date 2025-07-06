@@ -219,4 +219,81 @@ router.get('/history', authenticate, (req, res) => routeController.getRouteHisto
  */
 router.get('/:id', authenticate, (req, res) => routeController.getRouteDetails(req, res));
 
+/**
+ * @route   POST /api/routes/test-waypoints
+ * @desc    複数ウェイポイント機能のテスト
+ * @access  Public
+ */
+router.post('/test-waypoints', async (req, res) => {
+  try {
+    const { 
+      origin, 
+      destination, 
+      waypoints = [],
+      profile = 'walking'
+    } = req.body;
+    
+    console.log('🧪 複数ウェイポイントテスト開始:', {
+      origin,
+      destination, 
+      waypoints,
+      waypointCount: waypoints.length
+    });
+    
+    // 入力検証
+    if (!origin || !destination) {
+      return res.status(400).json({
+        success: false,
+        message: '出発地と目的地が必要です'
+      });
+    }
+    
+    if (!waypoints || waypoints.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: '最低1つのウェイポイントが必要です'
+      });
+    }
+    
+    // MapService直接呼び出し
+    const result = await mapService.calculateRoute(
+      origin,
+      destination,
+      waypoints,
+      profile,
+      { includeSteps: true }
+    );
+    
+    if (result.success) {
+      return res.status(200).json({
+        success: true,
+        message: `複数ウェイポイント経路計算成功`,
+        data: {
+          ...result.data,
+          testInfo: {
+            waypointsUsed: waypoints.length,
+            totalDistance: result.data.distance,
+            totalDuration: result.data.duration,
+            coordinatesCount: result.data.coordinates ? result.data.coordinates.length : 0
+          }
+        }
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        message: `複数ウェイポイント経路計算失敗: ${result.message}`,
+        error: result.error
+      });
+    }
+    
+  } catch (error) {
+    console.error('複数ウェイポイントテストでエラー:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'テスト中にエラーが発生しました',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

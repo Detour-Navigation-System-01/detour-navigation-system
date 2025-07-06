@@ -4,19 +4,27 @@
  * @author 尾﨑諒
  * @created 2025-06-17
  * @updated 2025-07-04
- * @version 4.0.1
+ * @version 4.0.2
  */
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polygon } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { fetcher } from '@/lib/api';
+
+import { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Polygon } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { fetcher } from "@/lib/api";
+import { User } from "@/types/user";
+
+type Props = {
+  user: User;
+}
+
 
 interface Place {
   id: string;
+  usrid: string; 
   name: string;
   latitude: number;
   longitude: number;
@@ -83,14 +91,14 @@ function generateViewCone(
   return points;
 }
 
-export default function MapView() {
+export default function MapView({ user }: Props) {
   const [position, setPosition] = useState<[number, number] | null>(null);
   const [heading, setHeading] = useState<number | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
-
+  const [isPublic, setIsPublic] = useState<boolean>(false);
   // 現在地取得
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -133,22 +141,25 @@ export default function MapView() {
       setAuthError(null);
 
       try {
-        const data: ApiResponse = await fetcher('/api/places', {
-          method: 'GET',
-        });
 
-        console.log('✅ 場所データ取得成功:', data);
+        const data: ApiResponse = await fetcher("/api/places/public", {
+          method: "GET",
+        });
+        
+        console.log("✅ 場所データ取得成功:", data);
+        // console.log('👀 user.public_settings 更新確認:', user.public_settings);
 
         // data.data を使用（data.places ではなく）
         if (data.data && data.data.length > 0) {
           data.data.forEach((place, index) => {
             console.log(`${index + 1}:`, {
               id: place.id,
-              latitude: place.lat, // lat プロパティ
-              longitude: place.lng, // lng プロパティ
-              // name: place.name,
-              // address: place.address,
-              // description: place.description
+
+              latitude: place.lat,      // lat プロパティ
+              longitude: place.lng,     // lng プロパティ
+              usrid: place.user_id,
+              
+
             });
           });
         } else {

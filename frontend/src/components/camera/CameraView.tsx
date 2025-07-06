@@ -1,3 +1,12 @@
+/**
+ * @fileoverview カメラビュー
+ * @description お気に入りスポットの保存用カメラ画面
+ * @author 平野
+ * @created 2025-06-17
+ * @updated 2025-07-05
+ * @version 1.4.0
+ */
+
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
