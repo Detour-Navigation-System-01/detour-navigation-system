@@ -3,8 +3,8 @@
  * @description 入力画面への遷移ボタン（虫眼鏡アイコン付き）
  * @author 尾﨑諒
  * @created 2025-06-17
- * @updated 2025-06-24
- * @version 1.0.3
+ * @updated 2025-07-01
+ * @version 1.0.4
  */
 
 "use client";

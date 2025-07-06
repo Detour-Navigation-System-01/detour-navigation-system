@@ -3,8 +3,8 @@
  * @description Leafletを使用して現在地を中心にマップを表示し、お気に入りスポットを設置するコンポーネント
  * @author 尾﨑諒
  * @created 2025-06-17
- * @updated 2025-07-04
- * @version 4.0.2
+ * @updated 2025-07-05
+ * @version 4.1.1
  */
 
 "use client";

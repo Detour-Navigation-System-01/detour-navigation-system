@@ -27,7 +27,7 @@ export default function TripInputForm() {
       if (stored) {
         setSearchHistory(JSON.parse(stored));
       } else {
-        const defaultHistory = ['芝浦工業大学豊洲キャンパス', 'ららぽーと豊洲', '東京駅', '品川', '横浜', '川崎', '池袋', '上野'];
+        const defaultHistory = ['芝浦工業大学豊洲キャンパス', 'ららぽーと豊洲'];
         setSearchHistory(defaultHistory);
       }
     } catch (error) {
