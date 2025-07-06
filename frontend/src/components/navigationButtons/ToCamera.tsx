@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { fetcher } from '@/lib/api';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/lib/AuthContext'; // 追加
 
 // ポップアップの種類
 type PopupType = 'success' | 'error' | null;
@@ -15,6 +16,7 @@ interface PopupState {
 
 export default function ToCamera() {
   const router = useRouter();
+  const { user } = useAuth(); // 追加
   const [position, setPosition] = useState<[number, number] | null>(null);
   const [popup, setPopup] = useState<PopupState>({
     type: null,
@@ -240,6 +242,12 @@ export default function ToCamera() {
           paddingLeft: 0,
         }}
         onClick={async () => {
+          // ログインチェック - 未ログインの場合は自動でログイン画面に遷移
+          if (!user) {
+            router.push('/login');
+            return;
+          }
+
           if (!position) {
             showPopup(
               'error',
@@ -263,7 +271,7 @@ export default function ToCamera() {
             console.error('ピン立て失敗:', err);
             showPopup(
               'error',
-              'ログインされていません。\nProfileページからログインしてください。'
+              'ピンの作成に失敗しました。もう一度お試しください。'
             );
           }
         }}
