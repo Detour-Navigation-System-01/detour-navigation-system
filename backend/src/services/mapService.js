@@ -91,6 +91,15 @@ class MapService {
    */
   async calculateRoute(origin, destination, waypoints = [], profile = 'driving', options = {}) {
     try {
+      // 🔥 追加: ウェイポイントのデバッグログ
+      console.log('🛣️ MapService 経路計算開始:', {
+        origin: `[${origin.lat}, ${origin.lng}]`,
+        destination: `[${destination.lat}, ${destination.lng}]`,
+        waypoints: waypoints.map(w => `[${w.lat}, ${w.lng}]`),
+        waypointCount: waypoints.length,
+        profile: profile
+      });
+
       // 移動手段プロファイルの検証
       if (!Object.values(this.profiles).includes(profile)) {
         profile = this.profiles.CAR; // デフォルトは車
@@ -103,10 +112,25 @@ class MapService {
         [destination.lng, destination.lat] // 目的地
       ];
       
+      // 🔥 追加: 座標配列のデバッグログ
+      console.log('📍 OSRM座標配列:', {
+        totalPoints: coordinatesArray.length,
+        coordinates: coordinatesArray.map(coord => coord.join(',')),
+        expectedFormat: 'lng,lat;lng,lat;lng,lat...'
+      });
+      
       // 座標文字列に変換
       const coordinatesString = coordinatesArray
         .map(point => point.join(','))
         .join(';');
+        
+      // 🔥 追加: 最終的なOSRM URL確認
+      console.log('🌐 OSRM URL構成要素:', {
+        baseUrl: this.baseUrl,
+        profile: profile,
+        coordinatesString: coordinatesString,
+        coordinatesLength: coordinatesString.length
+      });
       
       // APIオプションの設定
       const apiOptions = {
