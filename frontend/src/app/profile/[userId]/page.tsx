@@ -1,3 +1,13 @@
+/**
+ * @fileoverview プロフィールコンポーネント
+ * @description ユーザー情報を表示するページコンポーネント
+ * @author 平野
+ * @created 2025-06-24
+ * @updated 2025-07-05
+ * @version 2.1.0
+ */
+
+
 'use client';
 
 import { useRouter } from 'next/navigation';

@@ -1,3 +1,13 @@
+/**
+ * @fileoverview ルーティング
+ * @description ページ下部のボタンでのルーティング管理
+ * @author 平野
+ * @created 2025-06-17
+ * @updated 2025-07-05
+ * @version 2.1.1
+ */
+
+
 'use client';
 
 import Image from 'next/image';
