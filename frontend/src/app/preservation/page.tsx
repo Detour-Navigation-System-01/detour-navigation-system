@@ -7,7 +7,7 @@
  * @author 赤津
  * @created 2025-06-10
  * @updated 2025-07-04
- * @version 2.1.2
+ * @version 2.2.0
  */
 'use client';
 import '@/styles/preservation.css';

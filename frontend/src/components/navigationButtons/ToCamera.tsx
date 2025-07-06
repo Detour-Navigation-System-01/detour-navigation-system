@@ -1,7 +1,12 @@
 /**
  * @fileoverview カメラ画面に遷移するため、お気に入り保存するためのボタンコンポーネント
  * @description カメラ画面の遷移や現在地の取得、お気に入りスポットをバックエンドに送信する機能を提供します。
+ * @fileoverview カメラ画面に遷移するため、お気に入り保存するためのボタンコンポーネント
+ * @description カメラ画面の遷移や現在地の取得、お気に入りスポットをバックエンドに送信する機能を提供します。
  * @author 尾﨑諒
+ * @created 2025-06-28
+ * @updated 2025-07-04
+ * @version 4.0.3
  * @created 2025-06-28
  * @updated 2025-07-04
  * @version 4.0.3
@@ -110,6 +115,7 @@ export default function ToCamera() {
         {/* カメラアイコン (Material Icons の例) */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
+          height="1.3rem"
           height="1.3rem"
           viewBox="0 0 24 24"
           fill="white"

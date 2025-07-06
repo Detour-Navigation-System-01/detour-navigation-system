@@ -26,7 +26,6 @@ export default function CameraView() {
   const { user } = useAuth();
   const router = useRouter(); // ✅ 追加
 
-  // カメラ起動
   useEffect(() => {
     if (!navigator.mediaDevices || !videoRef.current) return;
 
