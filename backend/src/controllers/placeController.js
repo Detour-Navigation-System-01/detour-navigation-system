@@ -41,7 +41,7 @@ class PlaceController extends BaseController {
     const filters = this.getFilterOptions(req.query, ['name', 'category', 'prefecture']);
     
     // サービスにオプションを渡して場所取得
-    const options = { 
+      const options = { 
       orderBy: sort, 
       direction, 
       limit, 
@@ -112,7 +112,7 @@ class PlaceController extends BaseController {
       prefecture,
       lat,
       lng,
-      image_url: image_url || null, // image_urlがない場合はnullをセット
+      image_url: image_url || null,
       userId: authUserId // 認証済みユーザーIDを使用
     });
     
@@ -162,7 +162,9 @@ class PlaceController extends BaseController {
     if (prefecture !== undefined) updateData.prefecture = prefecture;
     if (lat !== undefined) updateData.lat = lat;
     if (lng !== undefined) updateData.lng = lng;
-    if (image_url !== undefined) updateData.image_url = image_url;
+    if (image_url !== undefined) {
+      updateData.image_url = image_url;
+    }
     
     console.log(`場所ID: ${placeId} の情報を更新します (ユーザーID: ${authUserId})`);
     const updatedPlace = await placeService.updatePlace(placeId, updateData);
@@ -288,7 +290,7 @@ class PlaceController extends BaseController {
     
     // クライアントがアクセスするための完全なURLを構築
     // 例: http://localhost:3001/images/your-uploaded-image.jpg
-    const imageUrl = `${req.protocol}://${req.get('host')}/images/${fileName}`;
+    const imageUrl = `https://${req.get('host')}/images/${fileName}`;
 
     // 成功レスポンスを送信
     return this.sendSuccess(res, {
@@ -296,7 +298,7 @@ class PlaceController extends BaseController {
       data: { 
         fileName: fileName,
         imageUrl: imageUrl,
-        path: `/images/${fileName}`,
+        path: `https://${req.get('host')}/images/${fileName}`,
         fileSize: fileSize,
         fileSizeInMB: (fileSize / (1024 * 1024)).toFixed(2) + ' MB',
         mimeType: req.file.mimetype

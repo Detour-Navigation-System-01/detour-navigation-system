@@ -4,7 +4,7 @@ const userService = require('./userService');
 const { AppError } = require('../middleware/errorHandler');
 const tokenBlacklistRepo = require('../repositories/TokenBlacklistRepository');
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-very-secret-key';
 
 /**
  * 認証関連の機能を提供するサービス

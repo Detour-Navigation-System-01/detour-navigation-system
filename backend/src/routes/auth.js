@@ -31,9 +31,9 @@ router.put('/password/:id', authenticate, validateIdParam, authController.change
 /**
  * @route POST /api/auth/logout
  * @desc ユーザーログアウト（トークンを無効化）
- * @access Private
+ * @access Public
  */
-router.post('/logout', authenticate, authController.logout);
+router.post('/logout', authController.logout);
 
 /**
  * @route GET /api/auth/me

@@ -10,7 +10,7 @@
 const jwt = require('jsonwebtoken');
 const { AppError } = require('./errorHandler');
 const tokenBlacklistRepo = require('../repositories/TokenBlacklistRepository');
-const SECRET_KEY = process.env.JWT_SECRET || 'your_jwt_secret';
+const SECRET_KEY = process.env.JWT_SECRET || 'your-very-secret-key';
 
 module.exports = async (req, res, next) => {
   const authHeader = req.headers.authorization;

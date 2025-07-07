@@ -66,9 +66,6 @@ interface RouteResponse {
   };
 }
 
-// バックエンドAPIのベースURL
-const API_BASE_URL = "http://localhost:3001/api";
-
 // アイコン作成用のヘルパー関数
 const createStartIcon = () => L.icon({
   iconUrl: "data:image/svg+xml;base64," + btoa(`
@@ -241,7 +238,7 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
 
       console.log("📤 API送信データ:", requestBody);
 
-      const response = await fetch(`${API_BASE_URL}/routes/calculate`, {
+      const response = await fetch(`/api/routes/calculate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

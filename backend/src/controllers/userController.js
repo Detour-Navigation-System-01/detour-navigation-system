@@ -193,7 +193,7 @@ class UserController extends BaseController {
     const fileSize = req.file.size;
     
     // クライアントがアクセスするための完全なURLを構築
-    const imageUrl = `${req.protocol}://${req.get('host')}/images/${fileName}`;
+    const imageUrl = `https://${req.get('host')}/images/${fileName}`;
 
     try {
       // プロフィール画像URLをユーザーレコードに更新
