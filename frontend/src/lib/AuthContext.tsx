@@ -1,3 +1,13 @@
+/**
+ * @fileoverview 認証管理
+ * @description ユーザー認証を行うためのモジュール
+ * @author 平野
+ * @created 2025-06-17
+ * @updated 2025-07-05
+ * @version 2.6.0
+ */
+
+
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';

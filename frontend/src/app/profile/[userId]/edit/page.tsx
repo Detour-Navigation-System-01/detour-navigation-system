@@ -1,3 +1,13 @@
+/**
+ * @fileoverview ログインページコンポーネント
+ * @description ユーザー情報を編集するページコンポーネント
+ * @author 平野
+ * @created 2025-06-24
+ * @updated 2025-07-05
+ * @version 2.3.0
+ */
+
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
