@@ -36,28 +36,58 @@ export default function TripInputForm() {
     }
   };
 
+  // 入力データをセッションストレージから復元する
+  const restoreInputData = () => {
+    try {
+      const storedFrom = sessionStorage.getItem("inputFrom");
+      const storedTo = sessionStorage.getItem("inputTo");
+      const storedTime = sessionStorage.getItem("inputTime");
+      
+      if (storedFrom) setFrom(storedFrom);
+      if (storedTo) setTo(storedTo);
+      if (storedTime) setTime(storedTime);
+    } catch (error) {
+      console.error("入力データの復元に失敗しました:", error);
+    }
+  };
+
+  // 入力データをセッションストレージに保存
+  const saveInputData = (fromValue: string, toValue: string, timeValue: string) => {
+    try {
+      // セッションストレージに保存
+      sessionStorage.setItem("inputFrom", fromValue);
+      sessionStorage.setItem("inputTo", toValue);
+      sessionStorage.setItem("inputTime", timeValue);
+    } catch (error) {
+      console.error("入力データの保存に失敗しました:", error);
+    }
+  };
+
   // 履歴をlocalStorageに保存
-const saveSearchHistory = (fromValue: string, toValue: string) => {
-  try {
-    const current = JSON.parse(localStorage.getItem("searchHistory") || "[]");
+  const saveSearchHistory = (fromValue: string, toValue: string) => {
+    try {
+      const current = JSON.parse(localStorage.getItem("searchHistory") || "[]");
 
-    const candidates: string[] = [];
-    if (fromValue !== "現在地") {
-      candidates.push(fromValue);
-    }
-    if (toValue) {
-      candidates.push(toValue);
-    }
+      const candidates: string[] = [];
+      if (fromValue !== "現在地") {
+        candidates.push(fromValue);
+      }
+      if (toValue) {
+        candidates.push(toValue);
+      }
 
-    const updated = Array.from(new Set([...candidates, ...current]));
-    localStorage.setItem("searchHistory", JSON.stringify(updated.slice(0, 10)));
-  } catch (error) {
-    console.error("履歴の保存に失敗しました:", error);
-  }
-};
+      const updated = Array.from(new Set([...candidates, ...current]));
+      localStorage.setItem("searchHistory", JSON.stringify(updated.slice(0, 10)));
+    } catch (error) {
+      console.error("履歴の保存に失敗しました:", error);
+    }
+  };
 
   useEffect(() => {
+    // コンポーネントマウント時に実行
     loadSearchHistory();
+    // 入力データの復元
+    restoreInputData();
   }, []);
 
   const validateInputs = () => {
@@ -81,6 +111,7 @@ const saveSearchHistory = (fromValue: string, toValue: string) => {
   const handleSubmit = () => {
     if (!validateInputs()) return;
     saveSearchHistory(from, to);
+    saveInputData(from, to, time); // 入力データをセッションストレージに保存
     // alert(`出発: ${from}, 目的地: ${to}, 時間: ${time}`);
     router.push(
       `/navigate?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&time=${encodeURIComponent(time)}`
@@ -124,6 +155,8 @@ const saveSearchHistory = (fromValue: string, toValue: string) => {
     }
   };
 
+
+
   // スタイル定義
   const containerStyle = { display: "flex", alignItems: "flex-start", justifyContent: "center", minHeight: "50vh", padding: "1rem" , marginTop: "0rem"};
   const formStyle = { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.8rem", width: "100%", maxWidth: "600px" };
@@ -143,6 +176,14 @@ const saveSearchHistory = (fromValue: string, toValue: string) => {
   const submitButtonStyle = {
     width: "160px", backgroundColor: "#065f46", color: "white", padding: "0.8rem 1.5rem", borderRadius: "1.5rem", fontSize: "0.9rem",
     fontWeight: "600", border: "none", cursor: "pointer", transition: "all 0.2s", fontFamily: "Arial, Helvetica, sans-serif", marginTop: "0.5rem"
+  };
+
+  const buttonContainerStyle = {
+    display: "flex", 
+    justifyContent: "center", 
+    alignItems: "center",
+    width: "100%",
+    marginTop: "0.5rem"
   };
   const targetIconStyle = { width: "14px", height: "14px", fill: "currentColor" };
   const historyButtonStyle = {
@@ -191,7 +232,9 @@ const saveSearchHistory = (fromValue: string, toValue: string) => {
           </div>
 
           {/* 送信ボタン */}
-          <button onClick={handleSubmit} style={submitButtonStyle}>経路を計算</button>
+          <div style={buttonContainerStyle}>
+            <button onClick={handleSubmit} style={submitButtonStyle}>経路を計算</button>
+          </div>
 
           {/* 履歴 */}
           {searchHistory.length > 0 && (
