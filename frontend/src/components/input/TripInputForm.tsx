@@ -86,8 +86,14 @@ export default function TripInputForm() {
   useEffect(() => {
     // コンポーネントマウント時に実行
     loadSearchHistory();
-    // 入力データの復元
-    restoreInputData();
+    
+    // ルート表示画面から戻ってきた場合のみ入力データを復元
+    const fromInputForm = sessionStorage.getItem("fromInputForm");
+    if (fromInputForm === "true") {
+      restoreInputData();
+      // 復元後にフラグを削除
+      sessionStorage.removeItem("fromInputForm");
+    }
   }, []);
 
   const validateInputs = () => {
@@ -112,7 +118,10 @@ export default function TripInputForm() {
     if (!validateInputs()) return;
     saveSearchHistory(from, to);
     saveInputData(from, to, time); // 入力データをセッションストレージに保存
-    // alert(`出発: ${from}, 目的地: ${to}, 時間: ${time}`);
+    
+    // ルート表示に遷移する前にフラグを設定
+    sessionStorage.setItem("fromInputForm", "true");
+    
     router.push(
       `/navigate?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&time=${encodeURIComponent(time)}`
     );
