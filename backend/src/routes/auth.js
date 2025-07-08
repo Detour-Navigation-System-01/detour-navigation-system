@@ -33,7 +33,7 @@ router.put('/password/:id', authenticate, validateIdParam, authController.change
  * @desc ユーザーログアウト（トークンを無効化）
  * @access Public
  */
-router.post('/logout', authController.logout);
+router.post('/logout', authenticate, authController.logout);
 
 /**
  * @route GET /api/auth/me

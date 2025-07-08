@@ -57,8 +57,11 @@ const StylishPopup: React.FC<PopupProps> = ({ isVisible, onClose, title, message
 export default function CameraView() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const { user } = useAuth();
   const router = useRouter();
 
@@ -69,14 +72,31 @@ export default function CameraView() {
     type: 'success' as 'success' | 'error',
   });
 
-  useEffect(() => {
-    if (!navigator.mediaDevices || !videoRef.current) return;
-    navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode },
+      });
+      streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
-    }).catch((err) => console.error('カメラ取得失敗:', err));
-  }, []);
+    } catch (err) {
+      console.error('カメラ取得失敗:', err);
+    }
+  };
+
+  const stopCamera = () => {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    if (videoRef.current) videoRef.current.srcObject = null;
+  };
+
+  useEffect(() => {
+    startCamera();
+    return () => {
+      stopCamera();
+    };
+  }, [facingMode]);
 
   const takePhoto = () => {
     const canvas = canvasRef.current;
@@ -94,10 +114,12 @@ export default function CameraView() {
       (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       (err) => console.error('位置情報取得失敗:', err)
     );
+    stopCamera(); // カメラ停止
   };
 
   const discardPhoto = () => {
     setPhotoDataUrl(null);
+    startCamera(); // カメラ再起動
   };
 
   const uploadPhoto = async () => {
@@ -169,6 +191,9 @@ export default function CameraView() {
           <video ref={videoRef} autoPlay playsInline style={{ width: '100%' }} />
           <canvas ref={canvasRef} style={{ display: 'none' }} />
           <button onClick={takePhoto} style={{ marginTop: '16px' }}>📸 写真を撮る</button>
+          <button onClick={() => setFacingMode((prev) => prev === 'user' ? 'environment' : 'user')} style={{ marginLeft: '8px' }}>
+            🔄 カメラ切替
+          </button>
         </>
       )}
 

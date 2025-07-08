@@ -78,32 +78,55 @@ class AuthController extends BaseController {
   /**
    * ユーザーログアウト - 現在のトークンを無効化（ブラックリストに追加）
    */
-  logout = catchAsync(async (req, res) => {
-    const token = req.token;
-    const user = req.user;
-    
-    if (!token || !user) {
-      return this.sendError(res, {
-        statusCode: 400,
-        message: '無効なリクエストです'
-      });
-    }
+//  logout = catchAsync(async (req, res) => {
+//    const token = req.token;
+//    const user = req.user;
+//    
+//    if (!token || !user) {
+//      return this.sendError(res, {
+//        statusCode: 400,
+//        message: '無効なリクエストです'
+//      });
+//    }
+//
+//    try {
+//      // authServiceを使用してトークンを無効化
+//      await authService.invalidateToken(token, user);
+//      
+//      return this.sendSuccess(res, {
+//        message: 'ログアウトしました'
+//      });
+//    } catch (error) {
+//      console.error('ログアウトエラー:', error);
+//      return this.sendError(res, {
+//       statusCode: 500,
+//        message: 'ログアウト処理中にエラーが発生しました'
+//      });
+//    }
+//  });
 
-    try {
-      // authServiceを使用してトークンを無効化
+logout = catchAsync(async (req, res) => {
+  const token = req.token;
+  const user = req.user;
+  
+  try {
+    // 有効なトークンがあれば無効化を試行
+    if (token && user) {
       await authService.invalidateToken(token, user);
-      
-      return this.sendSuccess(res, {
-        message: 'ログアウトしました'
-      });
-    } catch (error) {
-      console.error('ログアウトエラー:', error);
-      return this.sendError(res, {
-        statusCode: 500,
-        message: 'ログアウト処理中にエラーが発生しました'
-      });
     }
-  });
+    
+    // 常にログアウト成功を返す
+    return this.sendSuccess(res, {
+      message: 'ログアウトしました',
+    });
+  } catch (error) {
+    // エラーでもログアウト成功とする
+    console.warn('トークン無効化失敗（ログアウトは成功）:', error);
+    return this.sendSuccess(res, {
+      message: 'ログアウトしました',
+    });
+  }
+});
 
 me = catchAsync(async (req, res) => {
   const user = req.user;
