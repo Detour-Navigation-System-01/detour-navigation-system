@@ -1,3 +1,12 @@
+/**
+ * @fileoverview プロフィールページヘッダ
+ * @description プロフィール画面のヘッダ設定
+ * @author 平野
+ * @created 2025-06-17
+ * @updated 2025-07-07
+ * @version 1.6.0
+ */
+
 'use client';
 
 import React, { useState } from 'react';
@@ -93,14 +102,18 @@ const nameStyle: React.CSSProperties = {
 };
 
 const editButtonStyle: React.CSSProperties = {
-  backgroundColor: '#74A799',
-  color: 'white',
+  backgroundColor: '#2563eb',          // 明るめの青色
+  color: '#fff',
   padding: '10px 24px',
   fontSize: '16px',
   border: 'none',
   borderRadius: '12px',
   cursor: 'pointer',
+  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+  fontWeight: 'bold',
+  transition: 'background-color 0.2s ease',
 };
+
 
 const uploadButtonStyle: React.CSSProperties = {
   backgroundColor: '#ffffff',

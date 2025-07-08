@@ -82,10 +82,18 @@ export default function CameraView() {
         videoRef.current.srcObject = stream;
       }
     } catch (err) {
-      console.error('カメラ取得失敗:', err);
+      console.error('📵 カメラ取得失敗:', err);
+      setPopup({
+        isVisible: true,
+        title: 'カメラアクセスエラー',
+        message: 'カメラの利用が許可されていません。ナビ画面に戻ります。',
+        type: 'error',
+      });
+
+      router.push('/navigating');
+
     }
   };
-
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     if (videoRef.current) videoRef.current.srcObject = null;
@@ -186,16 +194,63 @@ export default function CameraView() {
 
   return (
     <div style={{ textAlign: 'center' }}>
-      {!photoDataUrl && (
-        <>
-          <video ref={videoRef} autoPlay playsInline style={{ width: '100%' }} />
-          <canvas ref={canvasRef} style={{ display: 'none' }} />
-          <button onClick={takePhoto} style={{ marginTop: '16px' }}>📸 写真を撮る</button>
-          <button onClick={() => setFacingMode((prev) => prev === 'user' ? 'environment' : 'user')} style={{ marginLeft: '8px' }}>
+    {/* カメラ起動中（撮影前）の表示 */}
+    {!photoDataUrl && (
+      <>
+        <video ref={videoRef} autoPlay playsInline style={{ width: '100%' }} />
+        <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+        {/* 撮影 & 戻るボタンを横並びにする */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
+          <button
+            onClick={() => router.push('/navigating')}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#ccc',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              cursor: 'pointer',
+            }}
+          >
+            ← 戻る
+          </button>
+
+          <button
+            onClick={takePhoto}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#007b5f',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              cursor: 'pointer',
+            }}
+          >
+            📸 写真を撮る
+          </button>
+
+          <button
+            onClick={() =>
+              setFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'))
+            }
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#888',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              cursor: 'pointer',
+            }}
+          >
             🔄 カメラ切替
           </button>
-        </>
-      )}
+        </div>
+      </>
+    )}
+
 
       {photoDataUrl && (
         <>
