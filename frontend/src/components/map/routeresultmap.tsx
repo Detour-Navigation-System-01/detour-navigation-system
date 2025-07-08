@@ -422,14 +422,36 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
     };
   }, [fromParam, toParam, timeParam, onComplete]);
   
-  // routeSteps と routeCoords を sessionStorage に保存
+  // routeSteps、routeCoords、目的地パラメータ、出発地点の座標をsessionStorageに保存
   useEffect(() => {
     if (routeSteps.length > 0 && routeCoords.length > 0) {
       sessionStorage.setItem("routeSteps", JSON.stringify(routeSteps));
       sessionStorage.setItem("routeCoordinates", JSON.stringify(routeCoords));
-      console.log("✅ routeSteps と routeCoordinates を sessionStorage に保存しました");
+      
+      // 目的地パラメータを保存
+      if (toParam) {
+        sessionStorage.setItem("toParam", toParam);
+      }
+      
+      // 出発地の座標を保存
+      if (fromCoord) {
+        sessionStorage.setItem("fromCoord", JSON.stringify(fromCoord));
+      }
+      
+      // 目的地の座標を保存
+      if (toCoord) {
+        sessionStorage.setItem("toCoord", JSON.stringify(toCoord));
+      }
+      
+      console.log("✅ ナビゲーション情報を sessionStorage に保存しました", {
+        stepsCount: routeSteps.length,
+        coordsCount: routeCoords.length,
+        fromCoord,
+        toCoord,
+        toParam
+      });
     }
-  }, [routeSteps, routeCoords]);
+  }, [routeSteps, routeCoords, fromCoord, toCoord, toParam]);
   
   // Loading状態
   if (loading || !isClient || !leafletIcons) {
