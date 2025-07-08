@@ -25,10 +25,13 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=password
       - DB_NAME=wanderdb
+      - OSRM_API_URL=http://osrm:5000
   
     depends_on:
       db:
         condition: service_healthy
+      osrm:  # ← OSRM起動後にbackend起動
+        condition: service_started
   
   db:
     image: postgres:14
@@ -58,6 +61,21 @@ services:
       ADMINER_DESIGN: pepa-linha
     depends_on:
       - db
+
+  # OSRMサーバー（自前・東京エリア）
+  osrm:
+    image: osrm/osrm-backend:latest
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./osrm-data:/data
+    command: osrm-routed --algorithm mld /data/kanto-latest.osrm
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/route/v1/foot/139.691,35.689;139.700,35.690"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   postgres_data:

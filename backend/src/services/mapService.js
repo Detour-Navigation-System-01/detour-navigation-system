@@ -26,7 +26,7 @@ class MapService {
     // 利用可能なプロファイル（移動手段）
     this.profiles = {
       CAR: 'driving',
-      WALKING: 'walking',
+      WALKING: 'foot',
       BICYCLE: 'cycling'
     };
     
