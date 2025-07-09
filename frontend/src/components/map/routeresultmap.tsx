@@ -443,11 +443,27 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
         sessionStorage.setItem("toCoord", JSON.stringify(toCoord));
       }
       
+      // 距離と所要時間も保存
+      if (distance) {
+        sessionStorage.setItem("distance", distance);
+      }
+      
+      if (duration) {
+        sessionStorage.setItem("duration", duration.toString());
+      }
+      
+      // 制限時間も保存
+      if (timeParam) {
+        sessionStorage.setItem("timeParam", timeParam);
+      }
+      
       console.log("✅ ナビゲーション情報を sessionStorage に保存しました", {
         stepsCount: routeSteps.length,
         coordsCount: routeCoords.length,
         fromCoord,
         toCoord,
+        distance,
+        duration,
         toParam
       });
     }
@@ -615,7 +631,7 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
   const { center, zoom } = getMapSettings();
 
   return (
-    <div className="h-screen w-screen relative" style={{ height: "73vh", width: "100vw" }}>
+    <div className="h-screen w-screen relative" style={{ height: "100vh", width: "100vw" }}>
       <MapContainer 
         center={center} 
         zoom={zoom} 
@@ -681,42 +697,6 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
           </Marker>
         )}
       </MapContainer>
-
-      {/* 上部情報パネル */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-md z-[1000] w-[90%] max-w-md px-4 py-3">
-        <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-2" />
-
-        <div className="text-center mb-3">
-          <div className="text-lg font-bold text-gray-800 mb-1">
-            {duration ? formatDuration(duration) : '計算中...'} ({distance}km)
-          </div>
-          
-          {timeParam && duration && (
-            <div className={`text-sm font-medium ${
-              duration <= parseInt(timeParam)
-                ? 'text-green-600'
-                : 'text-red-600'
-            }`}>
-              {duration <= parseInt(timeParam)
-                ? `制限時間内に到着可能`
-                : `制限時間を${duration - parseInt(timeParam)}分超過`
-              }
-            </div>
-          )}
-
-          {/* {routeSteps.length > 0 && (
-            <div className="text-xs text-gray-500 mt-1">
-              {routeSteps.length}つのステップ
-            </div>
-          )}
-
-          {routeId && (
-            <div className="text-xs text-blue-600 mt-1">
-              ルートID: {routeId}
-            </div>
-          )} */}
-        </div>
-      </div>
     </div>
   );
 }
