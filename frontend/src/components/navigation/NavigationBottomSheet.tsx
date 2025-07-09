@@ -9,8 +9,9 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface NavigationBottomSheetProps {
   onTakePhoto: () => void;
@@ -71,6 +72,7 @@ export default function NavigationBottomSheet({
     gap: '5px', // ギャップを小さくする
     paddingLeft: '20px', // 左右にパディングを追加して中央に配置
     paddingRight: '20px',
+    paddingTop: '10px',
     boxSizing: 'border-box' as const,
   };
 
@@ -81,7 +83,7 @@ export default function NavigationBottomSheet({
     border: 'none',
     borderRadius: '8px',
     padding: '8px 5px',
-    fontSize: '12px', // フォントサイズを小さく
+    fontSize: '12px',
     fontWeight: '600',
     flex: '1',
     cursor: 'pointer',
@@ -89,14 +91,14 @@ export default function NavigationBottomSheet({
     flexDirection: 'column' as const,
     alignItems: 'center',
     justifyContent: 'center',
-    height: '70px', // 高さを小さく
+    height: '70px', // 一定の高さ
     maxWidth: '32%', // 各ボタンの最大幅を制限
     minWidth: '60px', // 最小幅も設定
   };
 
   // 縮小時と展開時のシートの高さ
-  const collapsedHeight = '65px'; // 少し小さくして見た目を調整
-  const expandedHeight = '130px'; // ボタンの高さに合わせて調整
+  const collapsedHeight = '65px'; // 下部が見切れるように調整
+  const expandedHeight = '120px'; // ボタンの高さに合わせて調整
   
   return (
     <div
@@ -107,14 +109,17 @@ export default function NavigationBottomSheet({
         left: 0,
         width: '100%',
         height: isExpanded ? expandedHeight : collapsedHeight,
-        backgroundColor: 'white',
+        backgroundColor: 'black',
         borderTopLeftRadius: '16px',
         borderTopRightRadius: '16px',
         boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)',
         transition: 'height 0.3s ease',
         zIndex: 999,
-        padding: '10px 0', // 左右のパディングを0に変更
-        boxSizing: 'border-box', // ボックスサイズの計算方法を変更
+        padding: '8px 0 0 0',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden' // 収納状態では高さを超えたコンテンツが見切れるように
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -127,37 +132,59 @@ export default function NavigationBottomSheet({
           height: '4px',
           backgroundColor: '#ccc',
           borderRadius: '2px',
-          margin: '5px auto 10px', // 上部のマージンを調整
+          margin: '0 auto 5px', // マージンをさらに小さく
         }}
       />
       
       {/* アクションボタン */}
       <div style={{
-        opacity: isExpanded ? 1 : 0,
-        transition: 'opacity 0.3s ease',
-        height: isExpanded ? 'auto' : '0',
-        overflow: 'hidden',
-        marginTop: '10px',
-        marginBottom: '5px',
+        opacity: 1, // 常に完全表示
+        transition: 'all 0.3s ease',
+        height: 'auto',
+        padding: '10px 10px 0',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        overflow: 'hidden', // 収納状態では自動的に下部分がクリップされる
       }}>
         <div style={buttonContainerStyle}>
-          <button style={buttonStyle} onClick={onTakePhoto}>
-            <span style={{ fontSize: '22px', marginBottom: '5px' }}>📸</span>
-            写真
-          </button>
-          
-          <button style={buttonStyle} onClick={onAddPin}>
-            <span style={{ fontSize: '22px', marginBottom: '5px' }}>📍</span>
-            ピン
-          </button>
-          
           <button 
             style={{ ...buttonStyle, backgroundColor: '#ef4444' }} 
             onClick={onExit}
           >
-            <span style={{ fontSize: '22px', marginBottom: '5px' }}>✕</span>
-            終了
+            <Image 
+              src="/icons/navigation/exit.svg" 
+              alt="終了" 
+              width={24} 
+              height={24} 
+              style={{ marginBottom: '5px' }}
+            />
+            <span style={{ fontSize: '12px' }}>終了</span>
           </button>
+          <button style={buttonStyle} onClick={onTakePhoto}>
+            <Image 
+              src="/icons/navigation/camera.svg" 
+              alt="写真" 
+              width={24} 
+              height={24} 
+              style={{ marginBottom: '5px' }}
+            />
+            <span style={{ fontSize: '12px' }}>写真</span>
+          </button>
+          
+          <button style={{ ...buttonStyle, backgroundColor: '#2cac6e' }} onClick={onAddPin}>
+            <Image 
+              src="/icons/navigation/pin.svg" 
+              alt="ピン" 
+              width={24} 
+              height={24} 
+              style={{ marginBottom: '5px' }}
+            />
+            <span style={{ fontSize: '12px' }}>ピン</span>
+          </button>
+          
+          
         </div>
       </div>
     </div>
