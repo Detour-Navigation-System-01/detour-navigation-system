@@ -3,8 +3,8 @@
  * @description 出発地、目的地、制限時間を取得し、ジオコーディングを行いバックエンドで生成されたルートを表示します。
  * @author 尾﨑諒
  * @created 2025-06-24
- * @updated 2025-07-04
- * @version 5.0.3
+ * @updated 2025-07-09
+ * @version 5.0.5
  */
 
 "use client";
@@ -457,28 +457,126 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
   if (loading || !isClient || !leafletIcons) {
     return (
         <div 
-          className="fixed top-0 left-0 w-full h-full bg-gray-50 z-50"
+          className="fixed top-0 left-0 w-full h-full z-50"
           style={{ 
             display: 'flex', 
-            flexDirection: 'column', // ← 要素を縦に並べる
+            flexDirection: 'column',
             alignItems: 'center', 
             justifyContent: 'center',
             minHeight: '100vh',
             textAlign: 'center',
-            padding: '1rem'
+            padding: '1rem',
+            background: `url('/map.png')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            transition: 'backdrop-filter 0.3s ease-in-out'
           }}
         >
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <div 
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.85)',
+              padding: '25px',
+              borderRadius: '12px',
+              boxShadow: '0 8px 20px rgba(0,0,0,0.15), 0 2px 5px rgba(0, 0, 0, 0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              Width: '350px',
+              maxWidth: '80%',
+              border: '1px solid rgba(255, 255, 255, 0.8)',
+              animation: 'fadeIn 0.5s ease-out'
+            }}
+          >
+            {/* 地図&コンパスをイメージしたアニメーション SVG */}
+            <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              {/* 外側の円 - コンパスベース */}
+              <circle
+                cx="32"
+                cy="32"
+                r="30"
+                stroke="#e0e0e0"
+                strokeWidth="2"
+                fill="none"
+              />
+              
+              {/* コンパス針 - 回転するパーツ */}
+              <g style={{
+                transformOrigin: 'center',
+                animation: 'compassSpin 2s ease-in-out infinite'
+              }}>
+                <path 
+                  d="M32,8 L28,32 L32,56 L36,32 Z" 
+                  fill="#3498db" 
+                  stroke="#2980b9"
+                  strokeWidth="1"
+                />
+                <circle cx="32" cy="32" r="4" fill="white" stroke="#3498db" strokeWidth="2" />
+                <circle cx="32" cy="32" r="1" fill="#3498db" />
+              </g>
+              
+              {/* 方位記号 */}
+              <text x="32" y="14" textAnchor="middle" fill="#333" fontSize="8" fontWeight="bold">N</text>
+              <text x="32" y="54" textAnchor="middle" fill="#333" fontSize="8" fontWeight="bold">S</text>
+              <text x="54" y="34" textAnchor="middle" fill="#333" fontSize="8" fontWeight="bold">E</text>
+              <text x="10" y="34" textAnchor="middle" fill="#333" fontSize="8" fontWeight="bold">W</text>
+              
+              {/* パルスエフェクト - ルート検索中をイメージ */}
+              <circle 
+                cx="32" 
+                cy="32" 
+                r="20" 
+                stroke="#3498db" 
+                strokeWidth="1.5" 
+                fill="none"
+                strokeDasharray="6,3"
+                style={{
+                  transformOrigin: 'center',
+                  animation: 'pulse 3s ease-in-out infinite'
+                }}
+              />
+            </svg>
+            <style jsx>{`
+              @keyframes compassSpin {
+                0% { transform: rotate(0deg); }
+                25% { transform: rotate(90deg); }
+                50% { transform: rotate(180deg); }
+                75% { transform: rotate(270deg); }
+                100% { transform: rotate(360deg); }
+              }
+              @keyframes pulse {
+                0% { r: 20; opacity: 0.8; }
+                50% { r: 24; opacity: 0.4; }
+                100% { r: 20; opacity: 0.8; }
+              }
+              @keyframes fadeIn {
+                0% { opacity: 0; transform: translateY(10px); }
+                100% { opacity: 1; transform: translateY(0); }
+              }
+            `}</style>
 
-          <p className="text-gray-600 font-medium mb-2">{step}</p>
+            <p className="text-blue-700 font-medium mt-4 mb-2" style={{fontSize: '1.1rem'}}>
+              ルートを計算中...
+            </p>
 
-          <div className="text-sm text-gray-500 space-y-1">
-            <p>出発地: {fromParam}</p>
-            <p>目的地: {toParam}</p>
-            {timeParam && <p>制限時間: {timeParam}分</p>}
+            <div className="space-y-2 mt-3 p-3 bg-blue-50 rounded-md border border-blue-100" style={{width: '100%'}}>
+              <p style={{fontWeight: '500', color: '#334155', fontSize: '0.95rem'}}>
+                <span style={{display: 'inline-block', width: '4.5em', color: '#64748b'}}>出発地:</span> 
+                {fromParam}
+              </p>
+              <p style={{fontWeight: '500', color: '#334155', fontSize: '0.95rem'}}>
+                <span style={{display: 'inline-block', width: '4.5em', color: '#64748b'}}>目的地:</span> 
+                {toParam}
+              </p>
+              {timeParam && (
+                <p style={{fontWeight: '500', color: '#334155', fontSize: '0.95rem'}}>
+                  <span style={{display: 'inline-block', width: '4.5em', color: '#64748b'}}>制限時間:</span> 
+                  {timeParam}分
+                </p>
+              )}
+            </div>
           </div>
         </div>
-
     );
   }
 
