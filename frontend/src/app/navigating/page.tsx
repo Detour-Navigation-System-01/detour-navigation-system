@@ -9,7 +9,7 @@
 
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import NavigatingMap from '@/components/map/navigatingmap';
 import NavigationBottomSheet from '@/components/navigation/NavigationBottomSheet';
@@ -28,6 +28,15 @@ function NavigatingLoading() {
 
 export default function NavigatingPage() {
   const router = useRouter();
+
+  // ナビゲーション画面ではpaddingを0にする
+  useEffect(() => {
+    document.body.style.paddingBottom = '0';
+    return () => {
+      // コンポーネントのアンマウント時にデフォルト値に戻す
+      document.body.style.paddingBottom = '';
+    };
+  }, []);
 
   // 写真撮影機能
   const handleTakePhoto = () => {

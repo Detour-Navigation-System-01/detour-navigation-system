@@ -307,9 +307,11 @@ export default function NavigatingPage() {
               center={center}
               zoom={17}
               style={{ height: '100%', width: '100%' }}
+              zoomControl={false} // ズームコントロール（+/-ボタン）を非表示
+              attributionControl={false} // コピーライト表示を非表示
             >
               <TileLayer
-                attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+                attribution=''
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               {routeCoords.length > 0 && (

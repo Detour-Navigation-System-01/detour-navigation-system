@@ -524,9 +524,11 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
         style={{ height: "100%", width: "100%" }}
         className="z-0"
         whenReady={handleMapReady} // ✅ 地図読み込み完了時にコールバックを呼び出す
+        zoomControl={false} // ズームコントロール（+/-ボタン）を非表示
+        attributionControl={false} // コピーライト表示を非表示
       >
         <TileLayer
-          attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+          attribution=''
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         

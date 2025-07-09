@@ -24,6 +24,11 @@ export default function BottomNav() {
   if (pathname === '/navigating' || pathname === '/camera') {
     return null;
   }
+  
+  // これらのページではbodyのpaddingを適用
+  if (typeof document !== 'undefined') {
+    document.body.style.paddingBottom = '64px';
+  }
 
   const handleProfileClick = () => {
     console.log('🧭 現在のuser:', user);

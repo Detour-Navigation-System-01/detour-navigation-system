@@ -41,7 +41,7 @@ export default function RootLayout({
     <html lang="ja">
       <body
         className={`${interFont.variable} ${firaCodeFont.variable}`}
-        style={{ margin: 0, paddingBottom: '64px' }}
+        style={{ margin: 0 }}
       >
         <AuthProvider>
           {children}
