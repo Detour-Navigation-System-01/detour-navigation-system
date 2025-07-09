@@ -4,7 +4,7 @@
  * @author 尾﨑諒
  * @created 2025-06-17
  * @updated 2025-07-09
- * @version 1.0.5
+ * @version 1.0.6
  */
 
 "use client";
@@ -57,7 +57,11 @@ export default function NavigationButtons() {
     <>
       <button
         style={inputButtonStyle}
-        onClick={() => router.push("/input?focus=from")}
+        onClick={() => {
+          // 明示的にフラグを削除して、入力データが復元されないようにする
+          sessionStorage.removeItem("fromInputForm");
+          router.push("/input?focus=from");
+        }}
         onTouchStart={(e) =>
           (e.currentTarget.style.transform = "translateX(-50%) scale(0.95)")
         }
