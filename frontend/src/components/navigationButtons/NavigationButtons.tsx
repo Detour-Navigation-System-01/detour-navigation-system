@@ -3,8 +3,8 @@
  * @description 入力画面への遷移ボタン（虫眼鏡アイコン付き）
  * @author 尾﨑諒
  * @created 2025-06-17
- * @updated 2025-06-24
- * @version 1.0.3
+ * @updated 2025-07-09
+ * @version 1.0.6
  */
 
 "use client";
@@ -29,14 +29,16 @@ export default function NavigationButtons() {
   const inputButtonStyle = {
     position: "absolute" as const,
     top: "5vh",
-    left: "55%",
+    left: "50%", // 中央に配置
     transform: "translateX(-50%)",
-    width: "70vw",
+    width: "90%", // 画面幅の90%に設定
+    maxWidth: "600px", // 最大幅を設定して大きな画面でも適切なサイズに
     height: "10vh",
     minHeight: "48px",
-    fontSize: "1.3rem", // ← bigger text
+    maxHeight: "60px", // 高さも最大値を設定
+    fontSize: "1.3rem",
     fontWeight: 600,
-    backgroundColor: "while",
+    backgroundColor: "white", // スペルミスを修正
     color: "black",
     border: "none",
     borderRadius: "50px",
@@ -55,7 +57,11 @@ export default function NavigationButtons() {
     <>
       <button
         style={inputButtonStyle}
-        onClick={() => router.push("/input")}
+        onClick={() => {
+          // 明示的にフラグを削除して、入力データが復元されないようにする
+          sessionStorage.removeItem("fromInputForm");
+          router.push("/input?focus=from");
+        }}
         onTouchStart={(e) =>
           (e.currentTarget.style.transform = "translateX(-50%) scale(0.95)")
         }
@@ -63,21 +69,18 @@ export default function NavigationButtons() {
           (e.currentTarget.style.transform = "translateX(-50%)")
         }
       >
-        {/* 拡大された虫眼鏡アイコン */}
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          height="1.6em"
-          viewBox="0 0 24 24"
-          fill="black"
-          style={{ flexShrink: 0 }}
-        >
-          <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 
-                   6.5 6.5 0 109.5 16c1.61 0 3.09-.59 
-                   4.23-1.57l.27.28v.79l5 4.99L20.49 
-                   19l-4.99-5zm-6 0C8.01 14 6 11.99 
-                   6 9.5S8.01 5 10.5 5 15 7.01 15 
-                   9.5 12.99 14 10.5 14z" />
-        </svg>
+        {/* 虫眼鏡アイコン */}
+        <img
+          src="/icons/musimegane.svg"
+          alt="検索"
+          width={24}
+          height={24}
+          style={{ 
+            flexShrink: 0,
+            filter: 'brightness(0)'  // SVGを黒色に変換
+          }}
+        />
+        <span style={{ color: "#666", fontWeight: 400 }}>行き先を入力...</span>
         
       </button>
 

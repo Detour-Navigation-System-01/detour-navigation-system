@@ -20,6 +20,16 @@ export default function BottomNav() {
   const router = useRouter();
   const { user } = useAuth();
 
+  // ナビゲーション中とカメラ画面ではボトムナビゲーションを非表示
+  if (pathname === '/navigating' || pathname === '/camera') {
+    return null;
+  }
+  
+  // これらのページではbodyのpaddingを適用
+  if (typeof document !== 'undefined') {
+    document.body.style.paddingBottom = '64px';
+  }
+
   const handleProfileClick = () => {
     console.log('🧭 現在のuser:', user);
     if (user) {
