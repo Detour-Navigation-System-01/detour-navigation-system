@@ -47,7 +47,7 @@ export default function ProfileHeader({ user }: Props) {
     <div style={headerStyle}>
       {/* プロフィール画像 */}
       <img
-        src={user.image_url || '/images/default-user.svg'}
+        src={user.image_url || '/icons/user-placeholder.svg'}
         alt="プロフィール画像"
         width={120}
         height={120}
