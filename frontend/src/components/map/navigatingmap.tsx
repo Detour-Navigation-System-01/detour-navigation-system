@@ -380,7 +380,7 @@ export default function NavigatingPage() {
                 style={{
                   position: 'absolute',
                   top: '30px',
-                  left: '55%',
+                  left: '50%',
                   transform: 'translateX(-50%)',
                   width: '80vw',
                   height: '10vh',
@@ -397,6 +397,7 @@ export default function NavigatingPage() {
                   maxWidth: '90%',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  textAlign: 'center'
                 }}
               >
                 {nearbyMessage}
