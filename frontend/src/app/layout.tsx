@@ -34,6 +34,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // pathname を取得するために必要な React hooks は client components でのみ使用可能なため、
+  // BottomNav コンポーネント側で表示・非表示の条件分岐をする
+
   return (
     <html lang="ja">
       <body

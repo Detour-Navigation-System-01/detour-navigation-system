@@ -20,6 +20,11 @@ export default function BottomNav() {
   const router = useRouter();
   const { user } = useAuth();
 
+  // ナビゲーション中とカメラ画面ではボトムナビゲーションを非表示
+  if (pathname === '/navigating' || pathname === '/camera') {
+    return null;
+  }
+
   const handleProfileClick = () => {
     console.log('🧭 現在のuser:', user);
     if (user) {

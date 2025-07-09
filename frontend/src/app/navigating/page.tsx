@@ -9,9 +9,10 @@
 
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import NavigatingMap from '@/components/map/navigatingmap';
-import ToCamera from '../../components/navigationButtons/ToCamera'; 
+import NavigationBottomSheet from '@/components/navigation/NavigationBottomSheet';
 
 // Loading コンポーネント
 function NavigatingLoading() {
@@ -26,10 +27,33 @@ function NavigatingLoading() {
 }
 
 export default function NavigatingPage() {
+  const router = useRouter();
+
+  // 写真撮影機能
+  const handleTakePhoto = () => {
+    router.push('/camera');
+  };
+
+  // ピンを立てる機能
+  const handleAddPin = () => {
+    // ピンを立てる処理
+    // ここに位置情報をサーバーに送信するコードを追加
+    alert('この位置にピンを立てました');
+  };
+
+  // ナビゲーション終了機能
+  const handleExit = () => {
+    router.push('/');
+  };
+
   return (
     <Suspense fallback={<NavigatingLoading />}>
       <NavigatingMap />
-      <ToCamera />
+      <NavigationBottomSheet
+        onTakePhoto={handleTakePhoto}
+        onAddPin={handleAddPin}
+        onExit={handleExit}
+      />
     </Suspense>
   );
 }
