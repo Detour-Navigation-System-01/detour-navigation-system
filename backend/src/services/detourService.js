@@ -556,7 +556,14 @@ class TimeConstrainedDetourService {
     }
     const timeDifference = targetDuration - shortestRoute.duration;
     if (timeDifference <= 60) {
-      return { isValid: false, error: '目標時間との差が小さすぎます（最低60秒以上必要）' };
+      // 足りない時間を分単位で計算
+      const shortageSeconds = 60 - timeDifference;
+      const shortageMinutes = Math.ceil(shortageSeconds / 60);
+      
+      return { 
+        isValid: false, 
+        error: `目標時間との差が小さすぎます（最低60秒以上必要）。あと${shortageMinutes}分程度の余裕が必要です。` 
+      };
     }
     return { isValid: true };
   }
