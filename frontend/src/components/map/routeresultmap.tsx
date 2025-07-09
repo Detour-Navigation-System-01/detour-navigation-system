@@ -4,7 +4,7 @@
  * @author 尾﨑諒
  * @created 2025-06-24
  * @updated 2025-07-09
- * @version 5.0.5
+ * @version 5.0.6
  */
 
 "use client";
@@ -118,9 +118,12 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
   const toParam = searchParams.get('to');
   const timeParam = searchParams.get('time');
 
+  // ブラウザ環境かどうかをチェックする関数
+  const isBrowser = () => typeof window !== "undefined";
+
   // アイコンを初期化する関数
   const initializeIcons = () => {
-    if (typeof window !== "undefined") {
+    if (isBrowser()) {
       try {
         const startIcon = createStartIcon();
         const endIcon = createEndIcon();
@@ -142,7 +145,7 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
     console.log("📍 現在地取得開始");
     
     return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
+      if (!isBrowser() || !navigator.geolocation) {
         const errorMsg = "このブラウザでは位置情報が利用できません。";
         console.error("❌ " + errorMsg);
         reject(new Error(errorMsg));
@@ -353,6 +356,26 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
     }
   };
 
+  // ページリロード処理（ブラウザ環境チェック付き）
+  const handleReload = () => {
+    if (isBrowser()) {
+      window.location.reload();
+    } else {
+      // フォールバック: Next.jsルーターでリフレッシュ
+      router.refresh();
+    }
+  };
+
+  // 前のページに戻る処理（ブラウザ環境チェック付き）
+  const handleGoBack = () => {
+    if (isBrowser() && window.history.length > 1) {
+      window.history.back();
+    } else {
+      // フォールバック: Next.jsルーターで戻る
+      router.back();
+    }
+  };
+
   // 初期化処理
   useEffect(() => {
     let isMounted = true;
@@ -366,7 +389,7 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
           throw new Error("出発地または目的地が指定されていません");
         }
         
-        if (typeof window === "undefined") {
+        if (!isBrowser()) {
           return;
         }
         
@@ -424,7 +447,7 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
   
   // routeSteps、routeCoords、目的地パラメータ、出発地点の座標をsessionStorageに保存
   useEffect(() => {
-    if (routeSteps.length > 0 && routeCoords.length > 0) {
+    if (routeSteps.length > 0 && routeCoords.length > 0 && isBrowser()) {
       sessionStorage.setItem("routeSteps", JSON.stringify(routeSteps));
       sessionStorage.setItem("routeCoordinates", JSON.stringify(routeCoords));
       
@@ -467,7 +490,7 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
         toParam
       });
     }
-  }, [routeSteps, routeCoords, fromCoord, toCoord, toParam]);
+  }, [routeSteps, routeCoords, fromCoord, toCoord, toParam, distance, duration, timeParam]);
   
   // Loading状態
   if (loading || !isClient || !leafletIcons) {
@@ -611,13 +634,13 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
           </div>
           <div className="flex gap-3">
             <button 
-              onClick={() => window.location.reload()}
+              onClick={handleReload}
               className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
             >
               再試行
             </button>
             <button 
-              onClick={() => window.history.back()}
+              onClick={handleGoBack}
               className="px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
             >
               戻る
