@@ -138,7 +138,7 @@ export default function NavigatingPage() {
 
       showPopup(
         'success',
-        '現在地にピンを立てました！\n保存スポット一覧で確認できます。'
+        '現在地にピンを立てました！\n公開設定はプロフィール画面から変更できます。'
       );
       console.log('ピン立て成功:', { lat, lng });
     } catch (err: any) {
