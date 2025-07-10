@@ -90,7 +90,9 @@ export default function CameraView() {
         type: 'error',
       });
 
-      router.push('/navigating');
+      setTimeout(() => {
+        router.push('/navigating');
+      }, 2000);
 
     }
   };
@@ -193,71 +195,156 @@ export default function CameraView() {
   };
 
   return (
-    <div style={{ textAlign: 'center' }}>
-    {/* カメラ起動中（撮影前）の表示 */}
-    {!photoDataUrl && (
-      <>
-        <video ref={videoRef} autoPlay playsInline style={{ width: '100%' }} />
-        <canvas ref={canvasRef} style={{ display: 'none' }} />
+    <div style={{ textAlign: 'center', position: 'relative', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {!photoDataUrl && (
+        <>
+          <video ref={videoRef} autoPlay playsInline style={{ width: '100%', height: 'calc(100% - 64px)', objectFit: 'cover' }} />
+          <canvas ref={canvasRef} style={{ display: 'none' }} />
+        <div style={{ 
+          position: 'fixed', 
+          bottom: 0, 
+          left: 0, 
+          right: 0, 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          padding: '16px',
+          backgroundColor: 'rgb(0, 0, 0)',
+          height: '64px'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            position: 'relative',
+            width: '220px' // ← 横幅を広げた
+          }}>
+            {/* ← 🆕 戻るボタン */}
+            <button 
+              onClick={() => router.push('/navigating')}
+              style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                position: 'absolute',
+                left: '-20px',
+                bottom: '10px',
+                zIndex: 3
+              }}
+            >
+              <img src="/back.svg" alt="戻る" width={20} height={20} style={{ filter: 'invert(100%)' }} />
+            </button>
 
-        {/* 撮影 & 戻るボタンを横並びにする */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
-          <button
-            onClick={() => router.push('/navigating')}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#ccc',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              cursor: 'pointer',
-            }}
-          >
-            ← 戻る
-          </button>
+            {/* 撮影ボタン */}
+            <button 
+              onClick={takePhoto} 
+              style={{ 
+                width: '70px',
+                height: '70px',
+                borderRadius: '50%',
+                border: '4px solid white',
+                backgroundColor: 'white',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                position: 'relative',
+                zIndex: 2,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                boxSizing: 'border-box',
+                minWidth: '70px',
+                minHeight: '70px',
+                maxWidth: '70px',
+                maxHeight: '70px',
+                padding: 0
+              }}
+            >
+              <div style={{
+                width: '54px',
+                height: '54px',
+                borderRadius: '50%',
+                border: '2px solid #222',
+                backgroundColor: 'transparent',
+                boxSizing: 'border-box',
+              }}/>
+            </button>
 
-          <button
-            onClick={takePhoto}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#007b5f',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              cursor: 'pointer',
-            }}
-          >
-            📸 写真を撮る
-          </button>
-
-          <button
-            onClick={() =>
-              setFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'))
-            }
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#888',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              cursor: 'pointer',
-            }}
-          >
-            🔄 カメラ切替
-          </button>
+            {/* カメラ切替ボタン */}
+            <button 
+              onClick={() => setFacingMode((prev) => prev === 'user' ? 'environment' : 'user')}
+              style={{ 
+                width: '44px',
+                height: '44px',
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                position: 'absolute',
+                right: '-20px',
+                bottom: '10px',
+                zIndex: 3
+              }}
+            >
+              <img src="/repeat.svg" alt="カメラ切替" width={24} height={24} style={{ filter: 'invert(100%)' }} />
+            </button>
+          </div>
         </div>
-      </>
-    )}
 
+        </>
+      )}
 
       {photoDataUrl && (
         <>
-          <img src={photoDataUrl} alt="撮影写真" style={{ width: '100%', marginTop: '16px' }} />
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '12px' }}>
-            <button onClick={uploadPhoto}>⬆ サーバに送信</button>
-            <button onClick={discardPhoto}>🗑 撮り直す</button>
+          <img src={photoDataUrl} alt="撮影写真" style={{ width: '100%', height: 'calc(100% - 64px)', objectFit: 'cover' }} />
+          <div style={{ 
+            position: 'fixed', 
+            bottom: 0, 
+            left: 0, 
+            right: 0, 
+            display: 'flex', 
+            justifyContent: 'space-around', 
+            alignItems: 'center',
+            padding: '16px',
+            backgroundColor: 'rgb(0, 0, 0)',
+            backdropFilter: 'blur(5px)',
+            height: '64px'
+          }}>
+            <button 
+              onClick={discardPhoto}
+              style={{ 
+                padding: '12px 24px',
+                borderRadius: '24px',
+                border: 'none',
+                backgroundColor: '#6b7280',
+                color: 'white',
+                fontWeight: 'bold',
+                boxShadow: '0 2px 8px rgb(0, 0, 0)'
+              }}
+            >
+              🗑 撮り直す
+            </button>
+            <button 
+              onClick={uploadPhoto}
+              style={{ 
+                padding: '12px 24px',
+                borderRadius: '24px',
+                border: 'none',
+                backgroundColor: '#10b981',
+                color: 'white',
+                fontWeight: 'bold',
+                boxShadow: '0 2px 8px rgb(0, 0, 0)'
+              }}
+            >
+              ⬆ 保存する
+            </button>
           </div>
         </>
       )}

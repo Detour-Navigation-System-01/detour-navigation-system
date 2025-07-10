@@ -26,6 +26,7 @@ export default function BottomNav() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
 
+
   useEffect(() => {
     const getUser = async () => {
       try {
@@ -40,9 +41,6 @@ export default function BottomNav() {
     getUser();
   }, []);
 
-  // 🔕 /navigating では非表示
-  if (pathname === '/navigating') return null;
-
   const tabs = [
     { href: '/', label: 'Map', icon: '/icons/map.svg' },
     { href: '/preservation', label: 'Preserve', icon: '/icons/preserve.svg' },
@@ -52,6 +50,17 @@ export default function BottomNav() {
       icon: '/icons/profile.svg',
     },
   ];
+
+  // ナビゲーション中とカメラ画面ではボトムナビゲーションを非表示
+  if (pathname === '/navigating' || pathname === '/camera') {
+    return null;
+  }
+  
+  // これらのページではbodyのpaddingを適用
+  if (typeof document !== 'undefined') {
+    document.body.style.paddingBottom = '64px';
+  }
+
 
   return (
     <nav className="bottom-nav">

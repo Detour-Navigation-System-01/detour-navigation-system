@@ -1,3 +1,13 @@
+/**
+ * @fileoverview ユーザーAPIルーティング設定
+ * @description Expressを用いたユーザー関連APIのルート定義。URLパスとHTTPメソッドをコントローラーの各処理にマッピングする。
+ * @author 笠置啓太
+ * @created 2025-06-17
+ * @updated 2025-07-01
+ * @version 1.2.0
+ */
+
+
 // backend/src/routes/user.js
 /**
  * @fileoverview ユーザー関連APIルート

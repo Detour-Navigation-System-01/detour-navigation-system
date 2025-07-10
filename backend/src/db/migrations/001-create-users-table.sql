@@ -1,3 +1,12 @@
+/*
+  ファイル名: 001-create-users-table.sql
+  概要: ユーザー情報を管理するusersテーブルを作成するマイグレーション
+  作成者: 笠置啓太
+  作成日: 2025-06-17
+  更新日: 2025-06-17
+  バージョン: 1.0.0
+*/
+
 -- ファイル名: backend/src/db/migrations/001-create-users-table.sql
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,

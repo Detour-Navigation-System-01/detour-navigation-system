@@ -67,9 +67,11 @@ export default function PreservationDetail() {
           center={[position.lat, position.lng]}
           zoom={13}
           style={{ height: '100%', width: '100%' }}
+          zoomControl={false}
+          attributionControl={false}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+            attribution=''
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <Marker position={[position.lat, position.lng]}>

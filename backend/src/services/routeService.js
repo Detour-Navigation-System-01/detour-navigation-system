@@ -164,17 +164,24 @@ class RouteService {
         
         // 所要時間のチェック: 指定された所要時間が最短経路より短い場合はエラー
         if (requestedDuration < shortestDuration) {
+          // 足りない時間を計算（秒と分）
+          const shortageSeconds = shortestDuration - requestedDuration;
+          const shortageMinutes = Math.ceil(shortageSeconds / 60);
+          
           console.log('⚠️ 指定された所要時間が短すぎます:', {
             requestedDuration,
-            shortestDuration
+            shortestDuration,
+            shortage: `${shortageSeconds}秒 (約${shortageMinutes}分)`
           });
           
           return {
             success: false,
-            message: '指定された所要時間が最短経路の所要時間より短いため、経路を計算できません',
+            message: `指定された所要時間が最短経路の所要時間より短いため、経路を計算できません。目標時間を少なくとも${Math.ceil(shortestDuration / 60 + 1)}分以上に設定してください。`,
             data: {
               requestedDuration,
               shortestDuration,
+              shortageSeconds,
+              shortageMinutes,
               minimumRequired: shortestDuration + 60 // 最低でも1分は余裕が必要
             }
           };
