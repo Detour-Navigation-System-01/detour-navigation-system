@@ -5,8 +5,9 @@
   background-color: #e6fff2;
   border-top: 1px solid #ccc;
   display: flex;
-  justify-content: space-around;
-  padding: 8px 0;
+  justify-content: space-evenly; /* space-aroundからspace-evenlyに変更して均等配置 */
+  padding: 0; /* パディングを削除して、アイテムが上下いっぱいになるようにする */
+  height: 70px; /* 明示的な高さを設定 */
   z-index: 1000;
 }
 
@@ -14,13 +15,37 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 500;
   color: #333;
   text-decoration: none;
+  width: 33.33%; /* 均等な幅を設定 */
+  justify-content: center; /* 中央揃え */
+  padding: 5px 0;
+  margin: 0;
+  height: 100%;
+  border-radius: 10px;
+  transition: background-color 0.3s ease;
+}
+
+/* アクティブなナビゲーションアイテムのスタイル */
+.nav-item.active {
+  background-color: rgb(217, 237, 224); /* 少し暗い背景色 */
+  font-weight: 600;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.03); /* 内側に微妙な境界線を追加 */
 }
 
 .icon-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-bottom: 2px; /* テキストとアイコンの間隔を微調整 */
+}
+
+/* マップアイコンのみサイズを小さく */
+.map-icon {
+  transform: scale(0.85); /* 85%のサイズに縮小 */
+  margin-top: 1px; /* 少し下げてバランスを調整 */
 }

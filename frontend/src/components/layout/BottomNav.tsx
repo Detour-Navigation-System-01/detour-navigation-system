@@ -42,11 +42,11 @@ export default function BottomNav() {
   }, []);
 
   const tabs = [
-    { href: '/', label: 'Map', icon: '/icons/map.svg' },
-    { href: '/preservation', label: 'Preserve', icon: '/icons/preserve.svg' },
+    { href: '/', label: 'マップ', icon: '/icons/map.svg' },
+    { href: '/preservation', label: 'ギャラリー', icon: '/icons/preserve.svg' },
     {
       href: user ? `/profile/${user.id}` : '/login',
-      label: 'Profile',
+      label: 'プロフィール',
       icon: '/icons/profile.svg',
     },
   ];
@@ -58,7 +58,7 @@ export default function BottomNav() {
   
   // これらのページではbodyのpaddingを適用
   if (typeof document !== 'undefined') {
-    document.body.style.paddingBottom = '64px';
+    document.body.style.paddingBottom = '70px'; // ナビゲーションバーの高さに合わせて調整
   }
 
 
@@ -68,7 +68,11 @@ export default function BottomNav() {
         const isActive = pathname === href;
 
         return (
-          <Link key={label} href={href} className="nav-item">
+          <Link 
+            key={label} 
+            href={href} 
+            className={`nav-item ${isActive ? 'active' : ''}`}
+          >
             <div
               className="icon-wrapper"
               style={{
@@ -76,7 +80,14 @@ export default function BottomNav() {
                 transition: 'transform 0.2s ease-out',
               }}
             >
-              <Image src={icon} alt={label} width={24} height={24} />
+              <Image 
+                src={icon} 
+                alt={label} 
+                width={25} 
+                height={25} 
+                className={label === 'マップ' ? 'map-icon' : ''}
+                style={{ objectFit: 'contain' }} 
+              />
             </div>
             <span>{label}</span>
           </Link>
