@@ -3,19 +3,27 @@
  * @description 経路が見つからなかった場合に表示されるエラーメッセージと入力画面への遷移ボタンを表示するページ
  * @author 尾﨑諒
  * @created 2025-07-03
- * @updated 2025-07-03
- * @version 1.0.0
+ * @updated 2025-07-10
+ * @version 1.1.0
  */
 
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function RouteError() {
   const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState("経路が見つかりませんでした");
+
+  useEffect(() => {
+    const storedMessage = sessionStorage.getItem("errorMessage");
+    if (storedMessage) {
+      setErrorMessage(storedMessage);
+    }
+  }, []);
 
   const handleBackToInput = () => {
-    router.push('/input');
+    router.push("/input");
   };
 
   return (
@@ -23,7 +31,7 @@ export default function RouteError() {
       <div
         style={{
           position: "absolute",
-          bottom: "50%",
+          bottom: "40%",
           left: "50%",
           transform: "translateX(-50%)",
           background: "white",
@@ -37,7 +45,7 @@ export default function RouteError() {
         }}
       >
         <h2 className="text-xl font-bold text-gray-800 mb-2">
-          経路が見つかりませんでした
+          {errorMessage}
         </h2>
         <button
           onClick={handleBackToInput}
