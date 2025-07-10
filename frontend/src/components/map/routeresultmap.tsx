@@ -3,8 +3,8 @@
  * @description 出発地、目的地、制限時間を取得し、ジオコーディングを行いバックエンドで生成されたルートを表示します。
  * @author 尾﨑諒
  * @created 2025-06-24
- * @updated 2025-07-09
- * @version 5.0.6
+ * @updated 2025-07-10
+ * @version 6.0.2
  */
 
 "use client";

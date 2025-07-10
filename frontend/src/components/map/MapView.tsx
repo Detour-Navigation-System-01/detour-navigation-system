@@ -3,8 +3,8 @@
  * @description Leafletを使用して現在地を中心にマップを表示し、お気に入りスポットを設置するコンポーネント
  * @author 尾﨑諒
  * @created 2025-06-17
- * @updated 2025-07-04
- * @version 4.0.2
+ * @updated 2025-07-10
+ * @version 5.0.4
  */
 
 'use client';
@@ -310,31 +310,95 @@ export default function MapView({ user }: Props) {
         places
           .filter((place) => place.lat && place.lng) // 有効な座標のみフィルタリング
           .map((place) => (
+            // <Marker
+            //   key={place.id}
+            //   position={[parseFloat(place.lat), parseFloat(place.lng)]} // lat, lng を使用
+            //   icon={hasValidImage(place.image_url) ? placeWithImageIcon : placeWithoutImageIcon}
+            // >
+
+            
+            //   <Popup>
+            //     <div style={{ 
+            //       minWidth: '200px', 
+            //       maxWidth: '300px',
+            //       fontSize: '14px'
+            //     }}>
+            //       <h3 style={{ 
+            //         margin: '0 0 8px 0', 
+            //         fontSize: '16px',
+            //         fontWeight: 'bold'
+            //       }}>
+            //         {/* {place.name || '名前未設定'} */}
+            //       </h3>
+                  
+            //       {/* 画像の表示 */}
+            //       {hasValidImage(place.image_url) && (
+            //         <div style={{ marginBottom: '8px' }}>
+            //           <img 
+            //             src={place.image_url} 
+            //             // alt={place.name || '場所の写真'}
+            //             style={{
+            //               width: '100%',
+            //               height: '150px',
+            //               objectFit: 'cover',
+            //               borderRadius: '4px',
+            //               border: '1px solid #ddd'
+            //             }}
+            //             onError={(e) => {
+            //               // 画像読み込みエラー時の処理
+            //               e.currentTarget.style.display = 'none';
+            //             }}
+            //           />
+            //         </div>
+            //       )}
+                  
+            //       {/* 画像がない場合のメッセージ */}
+            //       {/* {!hasValidImage(place.image_url) && (
+            //         <div style={{ 
+            //           marginBottom: '8px',
+            //           padding: '8px',
+            //           backgroundColor: '#f3f4f6',
+            //           borderRadius: '4px',
+            //           textAlign: 'center',
+            //           color: '#6b7280'
+            //         }}>
+            //           📷 画像なし
+            //         </div>
+            //       )}
+                  
+            //       <h3>{place.name || '名前未設定'}</h3>
+            //       <p>{place.address || '住所未設定'}</p>
+            //       <p>{place.description || '説明なし'}</p>
+            //       <p>
+            //         作成日: {new Date(place.created_at).toLocaleString()}
+            //       </p> */}
+            //     </div>
+            //   </Popup>
+            // </Marker>
             <Marker
               key={place.id}
-              position={[parseFloat(place.lat), parseFloat(place.lng)]} // lat, lng を使用
+              position={[parseFloat(place.lat), parseFloat(place.lng)]}
               icon={hasValidImage(place.image_url) ? placeWithImageIcon : placeWithoutImageIcon}
             >
-              <Popup>
-                <div style={{ 
-                  minWidth: '200px', 
-                  maxWidth: '300px',
-                  fontSize: '14px'
-                }}>
-                  <h3 style={{ 
-                    margin: '0 0 8px 0', 
-                    fontSize: '16px',
-                    fontWeight: 'bold'
+              {hasValidImage(place.image_url) && (
+                <Popup>
+                  <div style={{ 
+                    minWidth: '200px', 
+                    maxWidth: '300px',
+                    fontSize: '14px'
                   }}>
-                    {/* {place.name || '名前未設定'} */}
-                  </h3>
-                  
-                  {/* 画像の表示 */}
-                  {hasValidImage(place.image_url) && (
+                    <h3 style={{ 
+                      margin: '0 0 8px 0', 
+                      fontSize: '16px',
+                      fontWeight: 'bold'
+                    }}>
+                      {/* {place.name || '名前未設定'} */}
+                    </h3>
+
                     <div style={{ marginBottom: '8px' }}>
                       <img 
                         src={place.image_url} 
-                        // alt={place.name || '場所の写真'}
+                        alt={place.name || '場所の写真'}
                         style={{
                           width: '100%',
                           height: '150px',
@@ -343,36 +407,16 @@ export default function MapView({ user }: Props) {
                           border: '1px solid #ddd'
                         }}
                         onError={(e) => {
-                          // 画像読み込みエラー時の処理
                           e.currentTarget.style.display = 'none';
                         }}
                       />
                     </div>
-                  )}
-                  
-                  {/* 画像がない場合のメッセージ */}
-                  {!hasValidImage(place.image_url) && (
-                    <div style={{ 
-                      marginBottom: '8px',
-                      padding: '8px',
-                      backgroundColor: '#f3f4f6',
-                      borderRadius: '4px',
-                      textAlign: 'center',
-                      color: '#6b7280'
-                    }}>
-                      📷 画像なし
-                    </div>
-                  )}
-                  
-                  {/* <h3>{place.name || '名前未設定'}</h3>
-                  <p>{place.address || '住所未設定'}</p>
-                  <p>{place.description || '説明なし'}</p> */}
-                  <p>
-                    作成日: {new Date(place.created_at).toLocaleString()}
-                  </p>
-                </div>
-              </Popup>
+                  </div>
+                </Popup>
+              )}
             </Marker>
+
+
           ))}
 
       {/* エラーメッセージの表示 */}
