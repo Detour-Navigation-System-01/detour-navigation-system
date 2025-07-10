@@ -102,8 +102,8 @@ const nameStyle: React.CSSProperties = {
 };
 
 const editButtonStyle: React.CSSProperties = {
-  backgroundColor: '#2563eb',          // 明るめの青色
-  color: '#fff',
+  backgroundColor: 'rgb(217, 237, 224)',          // 明るめの青色
+  color: 'rgb(103, 103, 103)',                // 黒色
   padding: '10px 24px',
   fontSize: '16px',
   border: 'none',
