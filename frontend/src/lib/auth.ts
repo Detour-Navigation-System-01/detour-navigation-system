@@ -2,7 +2,7 @@
 
 /**
  * @fileoverview 認証コンポーネント
- * @description ログイン画面用css
+ * @description ユーザ情報取得，ログアウト
  * @author 平野
  * @created 2025-06-24
  * @updated 2025-07-02
