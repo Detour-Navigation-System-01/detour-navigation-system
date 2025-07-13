@@ -10,15 +10,46 @@
 
 'use client';
 
+import Link from 'next/link';
 import Image from 'next/image';
 import './BottomNav.css';
-import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/AuthContext';
+import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { fetchCurrentUser } from '@/lib/auth';
+
+interface User {
+  id: number;
+  username: string;
+}
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user } = useAuth();
+  const [user, setUser] = useState<User | null>(null);
+
+
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const res = await fetchCurrentUser();
+        if (res?.data?.user) {
+          setUser(res.data.user);
+        }
+      } catch (e) {
+        console.warn('ユーザ情報取得失敗', e);
+      }
+    };
+    getUser();
+  }, []);
+
+  const tabs = [
+    { href: '/', label: 'マップ', icon: '/icons/map.svg' },
+    { href: '/preservation', label: 'ギャラリー', icon: '/icons/preserve.svg' },
+    {
+      href: user ? `/profile/${user.id}` : '/login',
+      label: 'プロフィール',
+      icon: '/icons/profile.svg',
+    },
+  ];
 
   // ナビゲーション中とカメラ画面ではボトムナビゲーションを非表示
   if (pathname === '/navigating' || pathname === '/camera') {
@@ -27,43 +58,41 @@ export default function BottomNav() {
   
   // これらのページではbodyのpaddingを適用
   if (typeof document !== 'undefined') {
-    document.body.style.paddingBottom = '64px';
+    document.body.style.paddingBottom = '70px'; // ナビゲーションバーの高さに合わせて調整
   }
 
-  const handleProfileClick = () => {
-    console.log('🧭 現在のuser:', user);
-    if (user) {
-      router.push(`/profile/${user.id}`);
-    } else {
-      router.push('/login');
-    }
-  };
 
   return (
     <nav className="bottom-nav">
-      <div
-        className={`nav-item ${pathname === '/' ? 'active' : ''}`}
-        onClick={() => router.push('/')}
-      >
-        <Image src="/icons/map.svg" alt="Map Icon" width={24} height={24} />
-        <span>マップ</span>
-      </div>
+      {tabs.map(({ href, label, icon }) => {
+        const isActive = pathname === href;
 
-      <div
-        className={`nav-item ${pathname === '/preservation' ? 'active' : ''}`}
-        onClick={() => router.push('/preservation')}
-      >
-        <Image src="/icons/preserve.svg" alt="Preserve Icon" width={24} height={24} />
-        <span>ギャラリー</span>
-      </div>
-
-      <div
-        className={`nav-item ${pathname.startsWith('/profile') || pathname === '/login' ? 'active' : ''}`}
-        onClick={handleProfileClick}
-      >
-        <Image src="/icons/profile.svg" alt="Profile Icon" width={24} height={24} />
-        <span>プロフィール</span>
-      </div>
+        return (
+          <Link 
+            key={label} 
+            href={href} 
+            className={`nav-item ${isActive ? 'active' : ''}`}
+          >
+            <div
+              className="icon-wrapper"
+              style={{
+                transform: isActive ? 'translateY(-6px)' : 'none',
+                transition: 'transform 0.2s ease-out',
+              }}
+            >
+              <Image 
+                src={icon} 
+                alt={label} 
+                width={25} 
+                height={25} 
+                className={label === 'マップ' ? 'map-icon' : ''}
+                style={{ objectFit: 'contain' }} 
+              />
+            </div>
+            <span>{label}</span>
+          </Link>
+        );
+      })}
     </nav>
   );
 }

@@ -16,7 +16,7 @@ import TripInputForm from "@/components/input/TripInputForm";
 export default function InputPage() {
   useEffect(() => {
     // スクロール禁止
-    document.body.style.overflow = "hidden";
+    // document.body.style.overflow = "hidden";
 
     // クリーンアップ時に元に戻す
     return () => {
