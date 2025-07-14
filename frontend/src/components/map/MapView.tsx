@@ -287,6 +287,8 @@ export default function MapView({ user }: Props) {
       center={position}
       zoom={16}
       style={{ height: '100%', width: '100%' }}
+      zoomControl={false}
+      attributionControl={false}
     >
       <TileLayer
         attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'

@@ -114,7 +114,7 @@ export default function Navigate() {
   
   const handleNavigateStart = () => {
     // 現在地と出発地の距離をチェック
-    setLoading(true);
+    setLoading(true); // ローディング状態を有効にして、ボタンの状態を変更
     console.log("Navigate: handleNavigateStartが呼び出されました");
     
     // 最悪の場合でも5秒後にはナビゲーションを開始する
@@ -142,15 +142,17 @@ export default function Navigate() {
             fromCoord.lon
           );
           
-          setDistance(distance);
-          console.log(`現在地と出発地点の距離: ${distance}m`);
+          // setDistanceを呼び出さないことで、ボトムシートの表示が変わらないようにする
+          // 代わりに一時変数に保存して使用する
+          const currentDistance = distance;
+          console.log(`現在地と出発地点の距離: ${currentDistance}m`);
           
           // 出発地との距離を保存
-          sessionStorage.setItem("startDistance", distance.toString());
+          sessionStorage.setItem("startDistance", currentDistance.toString());
           
           // 許容距離（200m）以内なら移動可能
-          if (distance <= 200) {
-            setIsNearStart(true);
+          const isNear = distance <= 200;
+          if (isNear) {
             console.log("出発地の近くにいます - ナビゲーションを開始します");
             
             // 両方の手法で確実に遷移する
@@ -160,6 +162,7 @@ export default function Navigate() {
             }, 200);
           } else {
             console.log("出発地から離れています - モーダルを表示します");
+            // モーダル表示のためだけにsetIsNearStartを更新する
             setIsNearStart(false);
           }
           setLoading(false);
@@ -178,7 +181,7 @@ export default function Navigate() {
         console.error("出発地点情報の解析エラー:", err);
         clearTimeout(navigationTimeout);
         router.push('/navigating');
-        setLoading(false);
+        setLoading(false); // エラー発生時もローディングを解除
       }
     } else {
       // 出発地情報がない場合はとりあえずナビゲーションを開始

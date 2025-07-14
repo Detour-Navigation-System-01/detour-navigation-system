@@ -247,7 +247,7 @@ class PlaceService {
           AND lng BETWEEN $5 AND $6
         HAVING distance < $7
         ORDER BY distance
-        LIMIT 50
+        LIMIT 300
       `;
 
       const params = [

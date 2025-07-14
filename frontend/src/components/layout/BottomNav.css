@@ -24,7 +24,7 @@
   padding: 5px 0;
   margin: 0;
   height: 100%;
-  border-radius: 10px;
+  border-radius: 0px; /* 角を完全な直角に */
   transition: background-color 0.3s ease;
 }
 
@@ -32,7 +32,7 @@
 .nav-item.active {
   background-color: rgb(217, 237, 224); /* 少し暗い背景色 */
   font-weight: 600;
-  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.03); /* 内側に微妙な境界線を追加 */
+  box-shadow: none; /* 内側の境界線を削除 */
 }
 
 .icon-wrapper {
