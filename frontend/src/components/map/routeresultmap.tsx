@@ -3,8 +3,8 @@
  * @description 出発地、目的地、制限時間を取得し、ジオコーディングを行いバックエンドで生成されたルートを表示します。
  * @author 尾﨑諒
  * @created 2025-06-24
- * @updated 2025-07-09
- * @version 5.0.6
+ * @updated 2025-07-10
+ * @version 6.0.2
  */
 
 "use client";
@@ -221,9 +221,200 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
   };
 
   // バックエンドAPIを使用したルート取得関数
+  // const fetchRoute = async (from: Coordinate, to: Coordinate) => {
+  //   console.log("🚗 ルート取得開始（バックエンドAPI使用）:", { from, to });
+    
+  //   try {
+  //     const requestBody = {
+  //       origin: {
+  //         lat: from.lat,
+  //         lng: from.lon
+  //       },
+  //       destination: {
+  //         lat: to.lat,
+  //         lng: to.lon
+  //       },
+  //       profile: "walking",
+  //       includeSteps: true,
+  //       requestedDuration: timeParam ? parseInt(timeParam) * 60 : null 
+  //     };
+
+  //     console.log("📤 API送信データ:", requestBody);
+
+  //     const response = await fetch(`${API_BASE_URL}/routes/calculate`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Accept': 'application/json'
+  //       },
+  //       body: JSON.stringify(requestBody)
+  //     });
+      
+  //     if (!response.ok) {
+  //       const errorText = await response.text();
+  //       console.error("❌ API エラーレスポンス:", errorText);
+  //       throw new Error(`バックエンドAPI エラー: ${response.status} ${response.statusText}`);
+  //     }
+      
+  //     const data: RouteResponse = await response.json();
+  //     console.log("📊 バックエンドAPI ルート取得結果:", data);
+      
+  //     if (data.success && data.data && data.data.route) {
+  //       const route = data.data.route;
+        
+  //       // ルートIDを保存
+  //       if (route.id) {
+  //         setRouteId(route.id);
+  //       }
+        
+  //       // 座標データの処理
+  //       let coords: [number, number][] = [];
+        
+  //       if (data.data.coordinates && data.data.coordinates.length > 0) {
+  //         coords = data.data.coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
+  //       } else {
+  //         coords = [
+  //           [route.origin_lat, route.origin_lng],
+  //           [route.destination_lat, route.destination_lng]
+  //         ];
+  //         console.log("⚠️ 詳細な座標情報がないため、始点と終点のみ表示します");
+  //       }
+        
+  //       setRouteCoords(coords);
+  //       setDistance((route.distance / 1000).toFixed(1));
+  //       setDuration(Math.round(route.duration / 60));
+  //       setRouteSteps(data.data.steps || []);
+        
+  //       console.log("✅ ルート設定完了:", {
+  //         distance: (route.distance / 1000).toFixed(1) + "km",
+  //         duration: Math.round(route.duration / 60) + "分",
+  //         points: coords.length,
+  //         steps: data.data.steps?.length || 0,
+  //         routeId: route.id
+  //       });
+        
+  //       return true;
+  //     } else {
+  //       throw new Error(data.message || "指定された地点間のルートが見つかりませんでした");
+  //     }
+  //   } catch (err) {
+  //     console.error("❌ バックエンドAPI ルート取得エラー:", err);
+  //     sessionStorage.setItem("errorMessage", data.message);
+  //     router.push("/error");
+  //     return false;
+  //   }
+  // };
+
+  // const fetchRoute = async (from: Coordinate, to: Coordinate) => {
+  //   console.log("🚗 ルート取得開始（バックエンドAPI使用）:", { from, to });
+
+  //   try {
+  //     const requestBody = {
+  //       origin: {
+  //         lat: from.lat,
+  //         lng: from.lon
+  //       },
+  //       destination: {
+  //         lat: to.lat,
+  //         lng: to.lon
+  //       },
+  //       profile: "walking",
+  //       includeSteps: true,
+  //       requestedDuration: timeParam ? parseInt(timeParam) * 60 : null
+  //     };
+
+  //     console.log("📤 API送信データ:", requestBody);
+
+  //     const response = await fetch(`${API_BASE_URL}/routes/calculate`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Accept': 'application/json'
+  //       },
+  //       body: JSON.stringify(requestBody)
+  //     });
+
+  //     const responseText = await response.text();
+
+  //     if (!response.ok) {
+  //       console.error("❌ API エラーレスポンス:", responseText);
+
+  //       try {
+  //         const errorData = JSON.parse(responseText);
+  //         if (errorData?.message) {
+  //           sessionStorage.setItem("errorMessage", errorData.message);
+  //         } else {
+  //           sessionStorage.setItem("errorMessage", "ルート計算中に不明なエラーが発生しました。");
+  //         }
+  //       } catch (parseErr) {
+  //         console.warn("⚠️ JSONパース失敗:", parseErr);
+  //         sessionStorage.setItem("errorMessage", "ルート計算中に予期しないエラーが発生しました。");
+  //       }
+  //       sessionStorage.getItem("errorMessage");
+  //       if (errorMessage) {
+  //         console.log("保存されたエラーメッセージ:", errorMessage);
+  //       }
+  //       router.push("/error");
+  //       return false;
+  //     }
+
+  //     const data: RouteResponse = JSON.parse(responseText);
+  //     console.log("📊 バックエンドAPI ルート取得結果:", data);
+
+  //     if (data.success && data.data && data.data.route) {
+  //       const route = data.data.route;
+
+  //       if (route.id) {
+  //         setRouteId(route.id);
+  //       }
+
+  //       let coords: [number, number][] = [];
+
+  //       if (data.data.coordinates && data.data.coordinates.length > 0) {
+  //         coords = data.data.coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
+  //       } else {
+  //         coords = [
+  //           [route.origin_lat, route.origin_lng],
+  //           [route.destination_lat, route.destination_lng]
+  //         ];
+  //         console.log("⚠️ 詳細な座標情報がないため、始点と終点のみ表示します");
+  //       }
+
+  //       setRouteCoords(coords);
+  //       setDistance((route.distance / 1000).toFixed(1));
+  //       setDuration(Math.round(route.duration / 60));
+  //       setRouteSteps(data.data.steps || []);
+
+  //       console.log("✅ ルート設定完了:", {
+  //         distance: (route.distance / 1000).toFixed(1) + "km",
+  //         duration: Math.round(route.duration / 60) + "分",
+  //         points: coords.length,
+  //         steps: data.data.steps?.length || 0,
+  //         routeId: route.id
+  //       });
+
+  //       return true;
+  //     } else {
+  //       const fallbackMessage = data.message || "指定された地点間のルートが見つかりませんでした";
+  //       sessionStorage.setItem("errorMessage", fallbackMessage);
+  //       router.push("/error");
+  //       return false;
+  //     }
+  //   } catch (err) {
+  //     console.error("❌ バックエンドAPI ルート取得エラー:", err);
+  //     sessionStorage.setItem("errorMessage", "ルート取得中にエラーが発生しました。");
+  //     const errorMessage = sessionStorage.getItem("errorMessage");
+  //     if (errorMessage) {
+  //       console.log("保存されたエラーメッセージ:", errorMessage);
+  //     }
+  //     router.push("/error");
+  //     return false;
+  //   }
+  // };
+
   const fetchRoute = async (from: Coordinate, to: Coordinate) => {
     console.log("🚗 ルート取得開始（バックエンドAPI使用）:", { from, to });
-    
+
     try {
       const requestBody = {
         origin: {
@@ -236,7 +427,7 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
         },
         profile: "walking",
         includeSteps: true,
-        requestedDuration: timeParam ? parseInt(timeParam) * 60 : null 
+        requestedDuration: timeParam ? parseInt(timeParam) * 60 : null
       };
 
       console.log("📤 API送信データ:", requestBody);
@@ -249,42 +440,56 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
         },
         body: JSON.stringify(requestBody)
       });
-      
+
+      const responseText = await response.text();
+
+      // HTTPステータスエラー時
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ API エラーレスポンス:", errorText);
-        throw new Error(`バックエンドAPI エラー: ${response.status} ${response.statusText}`);
+        console.error("❌ API エラーレスポンス:", responseText);
+
+        try {
+          const errorData = JSON.parse(responseText);
+          const message = errorData?.message || "ルート計算中に不明なエラーが発生しました。";
+          sessionStorage.setItem("errorMessage", message);
+          console.log("💾 保存されたエラーメッセージ:", message);
+        } catch (parseErr) {
+          console.warn("⚠️ JSONパース失敗:", parseErr);
+          sessionStorage.setItem("errorMessage", "ルート計算中に予期しないエラーが発生しました。");
+        }
+
+        router.push("/error");
+        return false;
       }
-      
-      const data: RouteResponse = await response.json();
+
+      // HTTPは成功 → JSONに変換
+      const data: RouteResponse = JSON.parse(responseText);
       console.log("📊 バックエンドAPI ルート取得結果:", data);
-      
+
+      // ルート取得成功時の処理
       if (data.success && data.data && data.data.route) {
         const route = data.data.route;
-        
-        // ルートIDを保存
+
         if (route.id) {
           setRouteId(route.id);
         }
-        
-        // 座標データの処理
-        let coords: [number, number][] = [];
-        
-        if (data.data.coordinates && data.data.coordinates.length > 0) {
-          coords = data.data.coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
-        } else {
-          coords = [
-            [route.origin_lat, route.origin_lng],
-            [route.destination_lat, route.destination_lng]
-          ];
+
+        const coords: [number, number][] =
+          data.data.coordinates?.length > 0
+            ? data.data.coordinates.map(coord => [coord.lat, coord.lng] as [number, number])
+            : [
+                [route.origin_lat, route.origin_lng],
+                [route.destination_lat, route.destination_lng]
+              ];
+
+        if (!data.data.coordinates?.length) {
           console.log("⚠️ 詳細な座標情報がないため、始点と終点のみ表示します");
         }
-        
+
         setRouteCoords(coords);
         setDistance((route.distance / 1000).toFixed(1));
         setDuration(Math.round(route.duration / 60));
         setRouteSteps(data.data.steps || []);
-        
+
         console.log("✅ ルート設定完了:", {
           distance: (route.distance / 1000).toFixed(1) + "km",
           duration: Math.round(route.duration / 60) + "分",
@@ -292,13 +497,21 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
           steps: data.data.steps?.length || 0,
           routeId: route.id
         });
-        
+
         return true;
-      } else {
-        throw new Error(data.message || "指定された地点間のルートが見つかりませんでした");
       }
+
+      // success: false の場合
+      const fallbackMessage = data.message || "指定された地点間のルートが見つかりませんでした";
+      sessionStorage.setItem("errorMessage", fallbackMessage);
+      console.error("⚠️ API結果エラー:", fallbackMessage);
+      router.push("/error");
+      return false;
     } catch (err) {
       console.error("❌ バックエンドAPI ルート取得エラー:", err);
+      const defaultError = "ルート取得中にエラーが発生しました。";
+      sessionStorage.setItem("errorMessage", defaultError);
+      console.log("💾 保存されたエラーメッセージ:", defaultError);
       router.push("/error");
       return false;
     }

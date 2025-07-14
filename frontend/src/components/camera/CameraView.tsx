@@ -82,10 +82,20 @@ export default function CameraView() {
         videoRef.current.srcObject = stream;
       }
     } catch (err) {
-      console.error('カメラ取得失敗:', err);
+      console.error('📵 カメラ取得失敗:', err);
+      setPopup({
+        isVisible: true,
+        title: 'カメラアクセスエラー',
+        message: 'カメラの利用が許可されていません。ナビ画面に戻ります。',
+        type: 'error',
+      });
+
+      setTimeout(() => {
+        router.push('/navigating');
+      }, 2000);
+
     }
   };
-
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     if (videoRef.current) videoRef.current.srcObject = null;
@@ -190,83 +200,104 @@ export default function CameraView() {
         <>
           <video ref={videoRef} autoPlay playsInline style={{ width: '100%', height: 'calc(100% - 64px)', objectFit: 'cover' }} />
           <canvas ref={canvasRef} style={{ display: 'none' }} />
-          <div style={{ 
-            position: 'fixed', 
-            bottom: 0, 
-            left: 0, 
-            right: 0, 
-            display: 'flex', 
-            justifyContent: 'center', 
+        <div style={{ 
+          position: 'fixed', 
+          bottom: 0, 
+          left: 0, 
+          right: 0, 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          padding: '16px',
+          backgroundColor: 'rgb(0, 0, 0)',
+          height: '64px'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
             alignItems: 'center',
-            padding: '16px',
-            backgroundColor: 'rgb(0, 0, 0)',
-            height: '64px'
+            position: 'relative',
+            width: '220px' // ← 横幅を広げた
           }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              position: 'relative',
-              width: '160px'
-            }}>
-              <button 
-                onClick={takePhoto} 
-                style={{ 
-                  width: '70px',
-                  height: '70px',
-                  borderRadius: '50%',
-                  border: '4px solid white',
-                  backgroundColor: 'white',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
-                  position: 'relative',
-                  zIndex: 2,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  boxSizing: 'border-box',
-                  minWidth: '70px',
-                  minHeight: '70px',
-                  maxWidth: '70px',
-                  maxHeight: '70px',
-                  padding: 0
-                }}
-              >
-                <div style={{
-                  width: '54px',
-                  height: '54px',
-                  borderRadius: '50%',
-                  border: '2px solid #222',
-                  backgroundColor: 'transparent',
-                  boxSizing: 'border-box',
-                  minWidth: '54px',
-                  minHeight: '54px',
-                  maxWidth: '54px',
-                  maxHeight: '54px',
-                  overflow: 'hidden'
-                }}/>
-              </button>
-              <button 
-                onClick={() => setFacingMode((prev) => prev === 'user' ? 'environment' : 'user')}
-                style={{ 
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '50%',
-                  border: 'none',
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
-                  position: 'absolute',
-                  right: '-20px',
-                  bottom: '10px',
-                  zIndex: 3
-                }}
-              >
-                <img src="/repeat.svg" alt="カメラ切替" width={24} height={24} style={{ filter: 'invert(100%)' }} />
-              </button>
-            </div>
+            {/* ← 🆕 戻るボタン */}
+            <button 
+              onClick={() => router.push('/navigating')}
+              style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                position: 'absolute',
+                left: '-20px',
+                bottom: '10px',
+                zIndex: 3
+              }}
+            >
+              <img src="/back.svg" alt="戻る" width={20} height={20} style={{ filter: 'invert(100%)' }} />
+            </button>
+
+            {/* 撮影ボタン */}
+            <button 
+              onClick={takePhoto} 
+              style={{ 
+                width: '70px',
+                height: '70px',
+                borderRadius: '50%',
+                border: '4px solid white',
+                backgroundColor: 'white',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                position: 'relative',
+                zIndex: 2,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                boxSizing: 'border-box',
+                minWidth: '70px',
+                minHeight: '70px',
+                maxWidth: '70px',
+                maxHeight: '70px',
+                padding: 0
+              }}
+            >
+              <div style={{
+                width: '54px',
+                height: '54px',
+                borderRadius: '50%',
+                border: '2px solid #222',
+                backgroundColor: 'transparent',
+                boxSizing: 'border-box',
+              }}/>
+            </button>
+
+            {/* カメラ切替ボタン */}
+            <button 
+              onClick={() => setFacingMode((prev) => prev === 'user' ? 'environment' : 'user')}
+              style={{ 
+                width: '44px',
+                height: '44px',
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                position: 'absolute',
+                right: '-20px',
+                bottom: '10px',
+                zIndex: 3
+              }}
+            >
+              <img src="/repeat.svg" alt="カメラ切替" width={24} height={24} style={{ filter: 'invert(100%)' }} />
+            </button>
           </div>
+        </div>
+
         </>
       )}
 
