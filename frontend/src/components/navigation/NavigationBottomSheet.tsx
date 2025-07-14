@@ -109,10 +109,10 @@ export default function NavigationBottomSheet({
     display: 'flex',
     justifyContent: 'space-between',
     width: '100%',
-    gap: '5px', // ギャップを小さくする
+    gap: '15px', // ギャップを広げる（5px→15px）
     paddingLeft: '20px', // 左右にパディングを追加して中央に配置
     paddingRight: '20px',
-    paddingTop: '5px', // パディングを小さくして余白を削減
+    paddingTop: '15px', // 上部の余白を増やす（5px→15px）
     boxSizing: 'border-box' as const,
   };
 
@@ -122,7 +122,7 @@ export default function NavigationBottomSheet({
     color: 'white',
     border: 'none',
     borderRadius: '8px',
-    padding: '8px 5px',
+    padding: '10px 5px', // パディングを少し増やす（8px→10px）
     fontSize: '12px',
     fontWeight: '600',
     flex: '1',
@@ -131,9 +131,9 @@ export default function NavigationBottomSheet({
     flexDirection: 'column' as const,
     alignItems: 'center',
     justifyContent: 'center',
-    height: '70px', // 一定の高さ
-    maxWidth: '32%', // 各ボタンの最大幅を制限
-    minWidth: '60px', // 最小幅も設定
+    height: '75px', // 少し高さを増やす（70px→75px）
+    maxWidth: '30%', // 各ボタンの最大幅をわずかに減らし、間隔を確保（32%→30%）
+    minWidth: '60px', // 最小幅はそのまま
   };
 
   // 縮小時と展開時のシートの高さ
@@ -332,7 +332,7 @@ export default function NavigationBottomSheet({
                 textAlign: 'center',
                 marginBottom: '2px',
               }}>
-                {duration ? `${duration}分 (${distance ? distance.toFixed(1) : '---'}km)` : '計算中...'}
+                {duration ? `${duration}分 (${distance && !loading ? distance.toFixed(1) : '---'}km)` : '計算中...'}
               </div>
               
               {timeParam && duration && isExpanded && (
@@ -525,7 +525,7 @@ export default function NavigationBottomSheet({
           opacity: 1, // 常に完全表示
           transition: 'all 0.3s ease',
           height: 'auto',
-          padding: '10px 10px 0',
+          padding: '15px 10px 0', // 上部のパディングを増加（10px→15px）
           flex: 1,
           display: 'flex',
           flexDirection: 'column',

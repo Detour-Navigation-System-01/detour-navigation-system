@@ -707,38 +707,40 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
   
   // Loading状態
   if (loading || !isClient || !leafletIcons) {
-    return (
-        <div 
-          className="fixed top-0 left-0 w-full h-full z-50"
-          style={{ 
-            display: 'flex', 
+    return (      <div 
+        className="fixed top-0 left-0 w-full h-full z-50"
+        style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center', 
+          justifyContent: 'center',
+          minHeight: 'calc(100vh - 70px)', /* ナビゲーションバーの高さ(70px)を引く */
+          textAlign: 'center',
+          paddingTop: '1rem',
+          paddingLeft: '1rem',
+          paddingRight: '1rem',
+          paddingBottom: '70px', /* ナビゲーションバーの高さ分下にパディングを入れる */
+          background: `url('/map.png')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundColor: 'rgba(255,255,255,0.2)',
+          transition: 'backdrop-filter 0.3s ease-in-out'
+        }}
+        >        <div 
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.85)',
+            padding: '25px',
+            borderRadius: '12px',
+            boxShadow: '0 8px 20px rgba(0,0,0,0.15), 0 2px 5px rgba(0, 0, 0, 0.1)',
+            display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center', 
-            justifyContent: 'center',
-            minHeight: '100vh',
-            textAlign: 'center',
-            padding: '1rem',
-            background: `url('/map.png')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundColor: 'rgba(255,255,255,0.2)',
-            transition: 'backdrop-filter 0.3s ease-in-out'
+            alignItems: 'center',
+            width: '350px',
+            maxWidth: '70%',
+            border: '1px solid rgba(255, 255, 255, 0.8)',
+            animation: 'fadeIn 0.5s ease-out',
+            marginBottom: '35px' /* ナビゲーションバーの半分の高さを引いて中央に */
           }}
-        >
-          <div 
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.85)',
-              padding: '25px',
-              borderRadius: '12px',
-              boxShadow: '0 8px 20px rgba(0,0,0,0.15), 0 2px 5px rgba(0, 0, 0, 0.1)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              Width: '350px',
-              maxWidth: '80%',
-              border: '1px solid rgba(255, 255, 255, 0.8)',
-              animation: 'fadeIn 0.5s ease-out'
-            }}
           >
             {/* 地図&コンパスをイメージしたアニメーション SVG */}
             <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
