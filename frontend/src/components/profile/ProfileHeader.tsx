@@ -1,3 +1,12 @@
+/**
+ * @fileoverview プロフィールページヘッダ
+ * @description プロフィール画面のヘッダ設定
+ * @author 平野
+ * @created 2025-06-17
+ * @updated 2025-07-07
+ * @version 1.6.0
+ */
+
 'use client';
 
 import React, { useState } from 'react';
@@ -47,7 +56,7 @@ export default function ProfileHeader({ user }: Props) {
     <div style={headerStyle}>
       {/* プロフィール画像 */}
       <img
-        src={user.image_url || '/images/default-user.svg'}
+        src={user.image_url || '/icons/user-placeholder.svg'}
         alt="プロフィール画像"
         width={120}
         height={120}
@@ -93,14 +102,18 @@ const nameStyle: React.CSSProperties = {
 };
 
 const editButtonStyle: React.CSSProperties = {
-  backgroundColor: '#74A799',
-  color: 'white',
+  backgroundColor: 'rgb(217, 237, 224)',          // 明るめの青色
+  color: 'rgb(103, 103, 103)',                // 黒色
   padding: '10px 24px',
   fontSize: '16px',
   border: 'none',
   borderRadius: '12px',
   cursor: 'pointer',
+  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+  fontWeight: 'bold',
+  transition: 'background-color 0.2s ease',
 };
+
 
 const uploadButtonStyle: React.CSSProperties = {
   backgroundColor: '#ffffff',

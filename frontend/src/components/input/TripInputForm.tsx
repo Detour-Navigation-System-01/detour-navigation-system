@@ -3,8 +3,8 @@
  * @description 出発地・目的地・移動時間の入力と検索履歴表示を行い、経路計算ページへ遷移するフォーム
  * @author 尾﨑諒
  * @created 2025-06-17
- * @updated 2025-07-01
- * @version 3.0.2
+ * @updated 2025-07-09
+ * @version 3.0.3
  */
 
 
@@ -93,6 +93,21 @@ export default function TripInputForm() {
       restoreInputData();
       // 復元後にフラグを削除
       sessionStorage.removeItem("fromInputForm");
+    }
+    
+    // URLからクエリパラメータを取得して自動フォーカスを設定
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const focusField = searchParams.get('focus');
+      if (focusField === 'from') {
+        // 少し遅延させることでレンダリングが完了した後にフォーカスする
+        setTimeout(() => {
+          const fromInput = document.getElementById('fromInput') as HTMLInputElement;
+          if (fromInput) {
+            fromInput.focus();
+          }
+        }, 100);
+      }
     }
   }, []);
 
@@ -211,7 +226,7 @@ export default function TripInputForm() {
           {/* 出発地 */}
           <div style={inputWrapperStyle}>
             <div style={inputContainerStyle}>
-              <input type="text" placeholder="出発地" value={from} onChange={handleFromChange} style={errors.from ? inputErrorStyle : inputStyle} />
+              <input id="fromInput" type="text" placeholder="出発地" value={from} onChange={handleFromChange} style={errors.from ? inputErrorStyle : inputStyle} />
               <button type="button" onClick={handleCurrentLocation} style={currentLocationButtonStyle}>
                 <svg style={targetIconStyle} viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="3" fill="currentColor" />

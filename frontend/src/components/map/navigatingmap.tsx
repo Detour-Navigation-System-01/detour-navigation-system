@@ -4,7 +4,7 @@
  * @author 尾﨑諒
  * @created 2025-06-24
  * @updated 2025-07-04
- * @version 4.0.2
+ * @version 4.0.3
  */
 
 'use client';
@@ -55,7 +55,7 @@ const createEndIcon = () =>
       'data:image/svg+xml;base64,' +
       btoa(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#EF4444" width="24" height="24">
-      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5 2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
     </svg>
   `),
     iconSize: [32, 32],
@@ -81,6 +81,84 @@ function getDistanceMeters(
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
+}
+
+// 点から線分への最短距離を計算する関数
+function getDistanceToLineSegment(
+  pointLat: number,
+  pointLon: number,
+  line1Lat: number,
+  line1Lon: number,
+  line2Lat: number,
+  line2Lon: number
+): number {
+  const R = 6371000; // 地球半径[m]
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  
+  // 緯度経度をメートル単位の座標に変換（簡易投影）
+  const lat1 = toRad(line1Lat);
+  const lon1 = toRad(line1Lon);
+  const lat2 = toRad(line2Lat);
+  const lon2 = toRad(line2Lon);
+  const latP = toRad(pointLat);
+  const lonP = toRad(pointLon);
+  
+  // 線分の両端点をメートル単位で計算
+  const x1 = R * Math.cos(lat1) * lon1;
+  const y1 = R * lat1;
+  const x2 = R * Math.cos(lat2) * lon2;
+  const y2 = R * lat2;
+  const xP = R * Math.cos(latP) * lonP;
+  const yP = R * latP;
+  
+  // 線分のベクトル
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  
+  // 線分の長さの2乗
+  const lengthSq = dx * dx + dy * dy;
+  
+  if (lengthSq === 0) {
+    // 線分が点の場合
+    return Math.sqrt((xP - x1) * (xP - x1) + (yP - y1) * (yP - y1));
+  }
+  
+  // 点から線分への投影パラメータ
+  const t = Math.max(0, Math.min(1, ((xP - x1) * dx + (yP - y1) * dy) / lengthSq));
+  
+  // 投影点
+  const projX = x1 + t * dx;
+  const projY = y1 + t * dy;
+  
+  // 点から投影点への距離
+  return Math.sqrt((xP - projX) * (xP - projX) + (yP - projY) * (yP - projY));
+}
+
+// 現在地が経路付近にいるかどうかを判定する関数
+function isNearRoute(
+  currentLat: number,
+  currentLon: number,
+  routeCoords: [number, number][],
+  threshold: number = 50 // 50m以内
+): boolean {
+  if (routeCoords.length < 2) return false;
+  
+  for (let i = 0; i < routeCoords.length - 1; i++) {
+    const distance = getDistanceToLineSegment(
+      currentLat,
+      currentLon,
+      routeCoords[i][0],
+      routeCoords[i][1],
+      routeCoords[i + 1][0],
+      routeCoords[i + 1][1]
+    );
+    
+    if (distance <= threshold) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 function generateViewCone(
@@ -257,21 +335,33 @@ export default function NavigatingPage() {
             )} (${new Date().toLocaleTimeString()})`
           );
 
+          // メッセージ表示ロジックの改良
           if (steps.length > 0) {
             const nextStep = steps[0];
-            const distance = getDistanceMeters(
+            const distanceToNextStep = getDistanceMeters(
               coords[0],
               coords[1],
               nextStep.start_lat,
               nextStep.start_lng
             );
-            if (distance <20) {
+
+            // 次のステップ地点に近い場合（20m以内）
+            if (distanceToNextStep < 20) {
               setNearbyMessage(`${nextStep.instruction}`);
-              console.log('案内表示');
+              console.log('次のステップ案内表示');
             } else {
-              setNearbyMessage(null);
-              console.log('案内非表示');
+              // 経路付近にいるかチェック
+              const nearRoute = isNearRoute(coords[0], coords[1], routeCoords);
+              if (nearRoute) {
+                setNearbyMessage('進んでください');
+                console.log('経路案内表示');
+              } else {
+                setNearbyMessage(null);
+                console.log('案内非表示');
+              }
             }
+          } else {
+            setNearbyMessage(null);
           }
         },
         (err) => {
@@ -294,7 +384,7 @@ export default function NavigatingPage() {
         navigator.geolocation.clearWatch(watchIdRef.current);
       }
     };
-  }, [steps]);
+  }, [steps, routeCoords]); // routeCoordsを依存配列に追加
 
   return (
     <div className="p-4 max-w-xl mx-auto space-y-4">
@@ -307,9 +397,11 @@ export default function NavigatingPage() {
               center={center}
               zoom={17}
               style={{ height: '100%', width: '100%' }}
+              zoomControl={false} // ズームコントロール（+/-ボタン）を非表示
+              attributionControl={false} // コピーライト表示を非表示
             >
               <TileLayer
-                attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+                attribution=''
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               {routeCoords.length > 0 && (
@@ -378,7 +470,7 @@ export default function NavigatingPage() {
                 style={{
                   position: 'absolute',
                   top: '30px',
-                  left: '55%',
+                  left: '50%',
                   transform: 'translateX(-50%)',
                   width: '80vw',
                   height: '10vh',
@@ -395,6 +487,7 @@ export default function NavigatingPage() {
                   maxWidth: '90%',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  textAlign: 'center'
                 }}
               >
                 {nearbyMessage}

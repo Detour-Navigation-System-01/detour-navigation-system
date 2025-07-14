@@ -2,8 +2,8 @@
 
 /**
  * @fileoverview 認証コンポーネント
- * @description ログイン画面用css
- * @author 平野,赤津
+ * @description API用ふぇっちゃー
+ * @author 平野
  * @created 2025-06-10
  * @updated 2025-07-03
  * @version 2.1.5

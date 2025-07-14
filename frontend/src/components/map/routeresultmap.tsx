@@ -3,8 +3,8 @@
  * @description 出発地、目的地、制限時間を取得し、ジオコーディングを行いバックエンドで生成されたルートを表示します。
  * @author 尾﨑諒
  * @created 2025-06-24
- * @updated 2025-07-04
- * @version 5.0.3
+ * @updated 2025-07-10
+ * @version 6.0.2
  */
 
 "use client";
@@ -115,9 +115,12 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
   const toParam = searchParams.get('to');
   const timeParam = searchParams.get('time');
 
+  // ブラウザ環境かどうかをチェックする関数
+  const isBrowser = () => typeof window !== "undefined";
+
   // アイコンを初期化する関数
   const initializeIcons = () => {
-    if (typeof window !== "undefined") {
+    if (isBrowser()) {
       try {
         const startIcon = createStartIcon();
         const endIcon = createEndIcon();
@@ -139,7 +142,7 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
     console.log("📍 現在地取得開始");
     
     return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
+      if (!isBrowser() || !navigator.geolocation) {
         const errorMsg = "このブラウザでは位置情報が利用できません。";
         console.error("❌ " + errorMsg);
         reject(new Error(errorMsg));
@@ -218,9 +221,200 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
   };
 
   // バックエンドAPIを使用したルート取得関数
+  // const fetchRoute = async (from: Coordinate, to: Coordinate) => {
+  //   console.log("🚗 ルート取得開始（バックエンドAPI使用）:", { from, to });
+    
+  //   try {
+  //     const requestBody = {
+  //       origin: {
+  //         lat: from.lat,
+  //         lng: from.lon
+  //       },
+  //       destination: {
+  //         lat: to.lat,
+  //         lng: to.lon
+  //       },
+  //       profile: "walking",
+  //       includeSteps: true,
+  //       requestedDuration: timeParam ? parseInt(timeParam) * 60 : null 
+  //     };
+
+  //     console.log("📤 API送信データ:", requestBody);
+
+  //     const response = await fetch(`${API_BASE_URL}/routes/calculate`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Accept': 'application/json'
+  //       },
+  //       body: JSON.stringify(requestBody)
+  //     });
+      
+  //     if (!response.ok) {
+  //       const errorText = await response.text();
+  //       console.error("❌ API エラーレスポンス:", errorText);
+  //       throw new Error(`バックエンドAPI エラー: ${response.status} ${response.statusText}`);
+  //     }
+      
+  //     const data: RouteResponse = await response.json();
+  //     console.log("📊 バックエンドAPI ルート取得結果:", data);
+      
+  //     if (data.success && data.data && data.data.route) {
+  //       const route = data.data.route;
+        
+  //       // ルートIDを保存
+  //       if (route.id) {
+  //         setRouteId(route.id);
+  //       }
+        
+  //       // 座標データの処理
+  //       let coords: [number, number][] = [];
+        
+  //       if (data.data.coordinates && data.data.coordinates.length > 0) {
+  //         coords = data.data.coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
+  //       } else {
+  //         coords = [
+  //           [route.origin_lat, route.origin_lng],
+  //           [route.destination_lat, route.destination_lng]
+  //         ];
+  //         console.log("⚠️ 詳細な座標情報がないため、始点と終点のみ表示します");
+  //       }
+        
+  //       setRouteCoords(coords);
+  //       setDistance((route.distance / 1000).toFixed(1));
+  //       setDuration(Math.round(route.duration / 60));
+  //       setRouteSteps(data.data.steps || []);
+        
+  //       console.log("✅ ルート設定完了:", {
+  //         distance: (route.distance / 1000).toFixed(1) + "km",
+  //         duration: Math.round(route.duration / 60) + "分",
+  //         points: coords.length,
+  //         steps: data.data.steps?.length || 0,
+  //         routeId: route.id
+  //       });
+        
+  //       return true;
+  //     } else {
+  //       throw new Error(data.message || "指定された地点間のルートが見つかりませんでした");
+  //     }
+  //   } catch (err) {
+  //     console.error("❌ バックエンドAPI ルート取得エラー:", err);
+  //     sessionStorage.setItem("errorMessage", data.message);
+  //     router.push("/error");
+  //     return false;
+  //   }
+  // };
+
+  // const fetchRoute = async (from: Coordinate, to: Coordinate) => {
+  //   console.log("🚗 ルート取得開始（バックエンドAPI使用）:", { from, to });
+
+  //   try {
+  //     const requestBody = {
+  //       origin: {
+  //         lat: from.lat,
+  //         lng: from.lon
+  //       },
+  //       destination: {
+  //         lat: to.lat,
+  //         lng: to.lon
+  //       },
+  //       profile: "walking",
+  //       includeSteps: true,
+  //       requestedDuration: timeParam ? parseInt(timeParam) * 60 : null
+  //     };
+
+  //     console.log("📤 API送信データ:", requestBody);
+
+  //     const response = await fetch(`${API_BASE_URL}/routes/calculate`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Accept': 'application/json'
+  //       },
+  //       body: JSON.stringify(requestBody)
+  //     });
+
+  //     const responseText = await response.text();
+
+  //     if (!response.ok) {
+  //       console.error("❌ API エラーレスポンス:", responseText);
+
+  //       try {
+  //         const errorData = JSON.parse(responseText);
+  //         if (errorData?.message) {
+  //           sessionStorage.setItem("errorMessage", errorData.message);
+  //         } else {
+  //           sessionStorage.setItem("errorMessage", "ルート計算中に不明なエラーが発生しました。");
+  //         }
+  //       } catch (parseErr) {
+  //         console.warn("⚠️ JSONパース失敗:", parseErr);
+  //         sessionStorage.setItem("errorMessage", "ルート計算中に予期しないエラーが発生しました。");
+  //       }
+  //       sessionStorage.getItem("errorMessage");
+  //       if (errorMessage) {
+  //         console.log("保存されたエラーメッセージ:", errorMessage);
+  //       }
+  //       router.push("/error");
+  //       return false;
+  //     }
+
+  //     const data: RouteResponse = JSON.parse(responseText);
+  //     console.log("📊 バックエンドAPI ルート取得結果:", data);
+
+  //     if (data.success && data.data && data.data.route) {
+  //       const route = data.data.route;
+
+  //       if (route.id) {
+  //         setRouteId(route.id);
+  //       }
+
+  //       let coords: [number, number][] = [];
+
+  //       if (data.data.coordinates && data.data.coordinates.length > 0) {
+  //         coords = data.data.coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
+  //       } else {
+  //         coords = [
+  //           [route.origin_lat, route.origin_lng],
+  //           [route.destination_lat, route.destination_lng]
+  //         ];
+  //         console.log("⚠️ 詳細な座標情報がないため、始点と終点のみ表示します");
+  //       }
+
+  //       setRouteCoords(coords);
+  //       setDistance((route.distance / 1000).toFixed(1));
+  //       setDuration(Math.round(route.duration / 60));
+  //       setRouteSteps(data.data.steps || []);
+
+  //       console.log("✅ ルート設定完了:", {
+  //         distance: (route.distance / 1000).toFixed(1) + "km",
+  //         duration: Math.round(route.duration / 60) + "分",
+  //         points: coords.length,
+  //         steps: data.data.steps?.length || 0,
+  //         routeId: route.id
+  //       });
+
+  //       return true;
+  //     } else {
+  //       const fallbackMessage = data.message || "指定された地点間のルートが見つかりませんでした";
+  //       sessionStorage.setItem("errorMessage", fallbackMessage);
+  //       router.push("/error");
+  //       return false;
+  //     }
+  //   } catch (err) {
+  //     console.error("❌ バックエンドAPI ルート取得エラー:", err);
+  //     sessionStorage.setItem("errorMessage", "ルート取得中にエラーが発生しました。");
+  //     const errorMessage = sessionStorage.getItem("errorMessage");
+  //     if (errorMessage) {
+  //       console.log("保存されたエラーメッセージ:", errorMessage);
+  //     }
+  //     router.push("/error");
+  //     return false;
+  //   }
+  // };
+
   const fetchRoute = async (from: Coordinate, to: Coordinate) => {
     console.log("🚗 ルート取得開始（バックエンドAPI使用）:", { from, to });
-    
+
     try {
       const requestBody = {
         origin: {
@@ -233,7 +427,7 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
         },
         profile: "walking",
         includeSteps: true,
-        requestedDuration: timeParam ? parseInt(timeParam) * 60 : null 
+        requestedDuration: timeParam ? parseInt(timeParam) * 60 : null
       };
 
       console.log("📤 API送信データ:", requestBody);
@@ -246,42 +440,56 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
         },
         body: JSON.stringify(requestBody)
       });
-      
+
+      const responseText = await response.text();
+
+      // HTTPステータスエラー時
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ API エラーレスポンス:", errorText);
-        throw new Error(`バックエンドAPI エラー: ${response.status} ${response.statusText}`);
+        console.error("❌ API エラーレスポンス:", responseText);
+
+        try {
+          const errorData = JSON.parse(responseText);
+          const message = errorData?.message || "ルート計算中に不明なエラーが発生しました。";
+          sessionStorage.setItem("errorMessage", message);
+          console.log("💾 保存されたエラーメッセージ:", message);
+        } catch (parseErr) {
+          console.warn("⚠️ JSONパース失敗:", parseErr);
+          sessionStorage.setItem("errorMessage", "ルート計算中に予期しないエラーが発生しました。");
+        }
+
+        router.push("/error");
+        return false;
       }
-      
-      const data: RouteResponse = await response.json();
+
+      // HTTPは成功 → JSONに変換
+      const data: RouteResponse = JSON.parse(responseText);
       console.log("📊 バックエンドAPI ルート取得結果:", data);
-      
+
+      // ルート取得成功時の処理
       if (data.success && data.data && data.data.route) {
         const route = data.data.route;
-        
-        // ルートIDを保存
+
         if (route.id) {
           setRouteId(route.id);
         }
-        
-        // 座標データの処理
-        let coords: [number, number][] = [];
-        
-        if (data.data.coordinates && data.data.coordinates.length > 0) {
-          coords = data.data.coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
-        } else {
-          coords = [
-            [route.origin_lat, route.origin_lng],
-            [route.destination_lat, route.destination_lng]
-          ];
+
+        const coords: [number, number][] =
+          data.data.coordinates?.length > 0
+            ? data.data.coordinates.map(coord => [coord.lat, coord.lng] as [number, number])
+            : [
+                [route.origin_lat, route.origin_lng],
+                [route.destination_lat, route.destination_lng]
+              ];
+
+        if (!data.data.coordinates?.length) {
           console.log("⚠️ 詳細な座標情報がないため、始点と終点のみ表示します");
         }
-        
+
         setRouteCoords(coords);
         setDistance((route.distance / 1000).toFixed(1));
         setDuration(Math.round(route.duration / 60));
         setRouteSteps(data.data.steps || []);
-        
+
         console.log("✅ ルート設定完了:", {
           distance: (route.distance / 1000).toFixed(1) + "km",
           duration: Math.round(route.duration / 60) + "分",
@@ -289,13 +497,21 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
           steps: data.data.steps?.length || 0,
           routeId: route.id
         });
-        
+
         return true;
-      } else {
-        throw new Error(data.message || "指定された地点間のルートが見つかりませんでした");
       }
+
+      // success: false の場合
+      const fallbackMessage = data.message || "指定された地点間のルートが見つかりませんでした";
+      sessionStorage.setItem("errorMessage", fallbackMessage);
+      console.error("⚠️ API結果エラー:", fallbackMessage);
+      router.push("/error");
+      return false;
     } catch (err) {
       console.error("❌ バックエンドAPI ルート取得エラー:", err);
+      const defaultError = "ルート取得中にエラーが発生しました。";
+      sessionStorage.setItem("errorMessage", defaultError);
+      console.log("💾 保存されたエラーメッセージ:", defaultError);
       router.push("/error");
       return false;
     }
@@ -350,6 +566,26 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
     }
   };
 
+  // ページリロード処理（ブラウザ環境チェック付き）
+  const handleReload = () => {
+    if (isBrowser()) {
+      window.location.reload();
+    } else {
+      // フォールバック: Next.jsルーターでリフレッシュ
+      router.refresh();
+    }
+  };
+
+  // 前のページに戻る処理（ブラウザ環境チェック付き）
+  const handleGoBack = () => {
+    if (isBrowser() && window.history.length > 1) {
+      window.history.back();
+    } else {
+      // フォールバック: Next.jsルーターで戻る
+      router.back();
+    }
+  };
+
   // 初期化処理
   useEffect(() => {
     let isMounted = true;
@@ -363,7 +599,7 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
           throw new Error("出発地または目的地が指定されていません");
         }
         
-        if (typeof window === "undefined") {
+        if (!isBrowser()) {
           return;
         }
         
@@ -421,7 +657,7 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
   
   // routeSteps、routeCoords、目的地パラメータ、出発地点の座標をsessionStorageに保存
   useEffect(() => {
-    if (routeSteps.length > 0 && routeCoords.length > 0) {
+    if (routeSteps.length > 0 && routeCoords.length > 0 && isBrowser()) {
       sessionStorage.setItem("routeSteps", JSON.stringify(routeSteps));
       sessionStorage.setItem("routeCoordinates", JSON.stringify(routeCoords));
       
@@ -440,42 +676,156 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
         sessionStorage.setItem("toCoord", JSON.stringify(toCoord));
       }
       
+      // 距離と所要時間も保存
+      if (distance) {
+        sessionStorage.setItem("distance", distance);
+      }
+      
+      if (duration) {
+        sessionStorage.setItem("duration", duration.toString());
+      }
+      
+      // 制限時間も保存
+      if (timeParam) {
+        sessionStorage.setItem("timeParam", timeParam);
+      }
+      
       console.log("✅ ナビゲーション情報を sessionStorage に保存しました", {
         stepsCount: routeSteps.length,
         coordsCount: routeCoords.length,
         fromCoord,
         toCoord,
+        distance,
+        duration,
         toParam
       });
     }
-  }, [routeSteps, routeCoords, fromCoord, toCoord, toParam]);
+  }, [routeSteps, routeCoords, fromCoord, toCoord, toParam, distance, duration, timeParam]);
   
   // Loading状態
   if (loading || !isClient || !leafletIcons) {
     return (
         <div 
-          className="fixed top-0 left-0 w-full h-full bg-gray-50 z-50"
+          className="fixed top-0 left-0 w-full h-full z-50"
           style={{ 
             display: 'flex', 
-            flexDirection: 'column', // ← 要素を縦に並べる
+            flexDirection: 'column',
             alignItems: 'center', 
             justifyContent: 'center',
             minHeight: '100vh',
             textAlign: 'center',
-            padding: '1rem'
+            padding: '1rem',
+            background: `url('/map.png')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            transition: 'backdrop-filter 0.3s ease-in-out'
           }}
         >
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <div 
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.85)',
+              padding: '25px',
+              borderRadius: '12px',
+              boxShadow: '0 8px 20px rgba(0,0,0,0.15), 0 2px 5px rgba(0, 0, 0, 0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              Width: '350px',
+              maxWidth: '80%',
+              border: '1px solid rgba(255, 255, 255, 0.8)',
+              animation: 'fadeIn 0.5s ease-out'
+            }}
+          >
+            {/* 地図&コンパスをイメージしたアニメーション SVG */}
+            <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              {/* 外側の円 - コンパスベース */}
+              <circle
+                cx="32"
+                cy="32"
+                r="30"
+                stroke="#e0e0e0"
+                strokeWidth="2"
+                fill="none"
+              />
+              
+              {/* コンパス針 - 回転するパーツ */}
+              <g style={{
+                transformOrigin: 'center',
+                animation: 'compassSpin 2s ease-in-out infinite'
+              }}>
+                <path 
+                  d="M32,8 L28,32 L32,56 L36,32 Z" 
+                  fill="#3498db" 
+                  stroke="#2980b9"
+                  strokeWidth="1"
+                />
+                <circle cx="32" cy="32" r="4" fill="white" stroke="#3498db" strokeWidth="2" />
+                <circle cx="32" cy="32" r="1" fill="#3498db" />
+              </g>
+              
+              {/* 方位記号 */}
+              <text x="32" y="14" textAnchor="middle" fill="#333" fontSize="8" fontWeight="bold">N</text>
+              <text x="32" y="54" textAnchor="middle" fill="#333" fontSize="8" fontWeight="bold">S</text>
+              <text x="54" y="34" textAnchor="middle" fill="#333" fontSize="8" fontWeight="bold">E</text>
+              <text x="10" y="34" textAnchor="middle" fill="#333" fontSize="8" fontWeight="bold">W</text>
+              
+              {/* パルスエフェクト - ルート検索中をイメージ */}
+              <circle 
+                cx="32" 
+                cy="32" 
+                r="20" 
+                stroke="#3498db" 
+                strokeWidth="1.5" 
+                fill="none"
+                strokeDasharray="6,3"
+                style={{
+                  transformOrigin: 'center',
+                  animation: 'pulse 3s ease-in-out infinite'
+                }}
+              />
+            </svg>
+            <style jsx>{`
+              @keyframes compassSpin {
+                0% { transform: rotate(0deg); }
+                25% { transform: rotate(90deg); }
+                50% { transform: rotate(180deg); }
+                75% { transform: rotate(270deg); }
+                100% { transform: rotate(360deg); }
+              }
+              @keyframes pulse {
+                0% { r: 20; opacity: 0.8; }
+                50% { r: 24; opacity: 0.4; }
+                100% { r: 20; opacity: 0.8; }
+              }
+              @keyframes fadeIn {
+                0% { opacity: 0; transform: translateY(10px); }
+                100% { opacity: 1; transform: translateY(0); }
+              }
+            `}</style>
 
-          <p className="text-gray-600 font-medium mb-2">{step}</p>
+            <p className="text-blue-700 font-medium mt-4 mb-2" style={{fontSize: '1.1rem'}}>
+              ルートを計算中...
+            </p>
 
-          <div className="text-sm text-gray-500 space-y-1">
-            <p>出発地: {fromParam}</p>
-            <p>目的地: {toParam}</p>
-            {timeParam && <p>制限時間: {timeParam}分</p>}
+            <div className="space-y-2 mt-3 p-3 bg-blue-50 rounded-md border border-blue-100" style={{width: '100%'}}>
+              <p style={{fontWeight: '500', color: '#334155', fontSize: '0.95rem'}}>
+                <span style={{display: 'inline-block', width: '4.5em', color: '#64748b'}}>出発地:</span> 
+                {fromParam}
+              </p>
+              <p style={{fontWeight: '500', color: '#334155', fontSize: '0.95rem'}}>
+                <span style={{display: 'inline-block', width: '4.5em', color: '#64748b'}}>目的地:</span> 
+                {toParam}
+              </p>
+              {timeParam && (
+                <p style={{fontWeight: '500', color: '#334155', fontSize: '0.95rem'}}>
+                  <span style={{display: 'inline-block', width: '4.5em', color: '#64748b'}}>制限時間:</span> 
+                  {timeParam}分
+                </p>
+              )}
+            </div>
           </div>
         </div>
-
     );
   }
 
@@ -494,13 +844,13 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
           </div>
           <div className="flex gap-3">
             <button 
-              onClick={() => window.location.reload()}
+              onClick={handleReload}
               className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
             >
               再試行
             </button>
             <button 
-              onClick={() => window.history.back()}
+              onClick={handleGoBack}
               className="px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
             >
               戻る
@@ -514,16 +864,18 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
   const { center, zoom } = getMapSettings();
 
   return (
-    <div className="h-screen w-screen relative" style={{ height: "73vh", width: "100vw" }}>
+    <div className="h-screen w-screen relative" style={{ height: "100vh", width: "100vw" }}>
       <MapContainer 
         center={center} 
         zoom={zoom} 
         style={{ height: "100%", width: "100%" }}
         className="z-0"
         whenReady={handleMapReady} // ✅ 地図読み込み完了時にコールバックを呼び出す
+        zoomControl={false} // ズームコントロール（+/-ボタン）を非表示
+        attributionControl={false} // コピーライト表示を非表示
       >
         <TileLayer
-          attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+          attribution=''
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
@@ -578,42 +930,6 @@ export default function RouteResultMap({ onComplete }: RouteResultMapProps) {
           </Marker>
         )}
       </MapContainer>
-
-      {/* 上部情報パネル */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-md z-[1000] w-[90%] max-w-md px-4 py-3">
-        <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-2" />
-
-        <div className="text-center mb-3">
-          <div className="text-lg font-bold text-gray-800 mb-1">
-            {duration ? formatDuration(duration) : '計算中...'} ({distance}km)
-          </div>
-          
-          {timeParam && duration && (
-            <div className={`text-sm font-medium ${
-              duration <= parseInt(timeParam)
-                ? 'text-green-600'
-                : 'text-red-600'
-            }`}>
-              {duration <= parseInt(timeParam)
-                ? `制限時間内に到着可能`
-                : `制限時間を${duration - parseInt(timeParam)}分超過`
-              }
-            </div>
-          )}
-
-          {/* {routeSteps.length > 0 && (
-            <div className="text-xs text-gray-500 mt-1">
-              {routeSteps.length}つのステップ
-            </div>
-          )}
-
-          {routeId && (
-            <div className="text-xs text-blue-600 mt-1">
-              ルートID: {routeId}
-            </div>
-          )} */}
-        </div>
-      </div>
     </div>
   );
 }
