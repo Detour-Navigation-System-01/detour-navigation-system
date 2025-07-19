@@ -46,6 +46,18 @@ export default function NavigatingPage() {
     message: '',
     isVisible: false,
   });
+  
+  // ページ初期化時にセッションストレージをチェック
+  useEffect(() => {
+    const routeCoords = sessionStorage.getItem('routeCoordinates');
+    const routeSteps = sessionStorage.getItem('routeSteps');
+    
+    if (!routeCoords || !routeSteps) {
+      console.error('❌ セッションストレージにルートデータがありません');
+      sessionStorage.setItem("errorMessage", "ナビゲーション情報が見つかりません。もう一度ルート検索をお試しください。");
+      router.push("/error");
+    }
+  }, [router]);
 
   // ナビゲーション画面ではpaddingを0にする
   useEffect(() => {

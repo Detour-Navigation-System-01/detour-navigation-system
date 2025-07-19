@@ -6,6 +6,7 @@
 
 'use client';
 import { useEffect, useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   MapContainer,
   TileLayer,
@@ -264,6 +265,7 @@ function generateViewCone(
 // =============================================================================
 export default function NavigatingPage() {
   // State定義
+  const router = useRouter();
   const [steps, setSteps] = useState<Step[]>([]);
   const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
   const [center, setCenter] = useState<[number, number]>([35.681236, 139.767125]);
@@ -275,6 +277,11 @@ export default function NavigatingPage() {
   
   // 🔧 改善6: デバッグ用state追加
   const [debugInfo, setDebugInfo] = useState<string>('');
+  
+  // 到着モーダル用のstate
+  const [showArrivalModal, setShowArrivalModal] = useState<boolean>(false);
+  // 到着モーダルが一度表示されたことを記録するstate
+  const [arrivalModalShown, setArrivalModalShown] = useState<boolean>(false);
 
   const watchIdRef = useRef<number | null>(null);
   const endIcon = createEndIcon();
@@ -291,31 +298,51 @@ export default function NavigatingPage() {
     console.log('=== 初期化開始 ===');
     console.log('利用可能なsessionStorageキー:', Object.keys(sessionStorage));
 
-    if (storedSteps) {
-      const parsedSteps: Step[] = JSON.parse(storedSteps);
-      setSteps(parsedSteps);
-      console.log(`✅ ステップ読み込み完了: ${parsedSteps.length}個`);
+    // ルートデータの存在チェック
+    if (!storedSteps || !storedCoords) {
+      console.error('❌ セッションストレージにルートデータがありません', {
+        hasSteps: !!storedSteps,
+        hasCoords: !!storedCoords
+      });
+      // エラーページにリダイレクト
+      sessionStorage.setItem("errorMessage", "ナビゲーション情報が見つかりません。もう一度ルート検索をお試しください。");
+      // ここでリダイレクトは不要（useEffectの初期化中で行うと問題を起こす可能性があるため）
+      return;
+    }
 
-      if (parsedSteps.length > 0) {
-        setCenter([parsedSteps[0].start_lat, parsedSteps[0].start_lng]);
+    if (storedSteps) {
+      try {
+        const parsedSteps: Step[] = JSON.parse(storedSteps);
+        setSteps(parsedSteps);
+        console.log(`✅ ステップ読み込み完了: ${parsedSteps.length}個`);
+
+        if (parsedSteps.length > 0) {
+          setCenter([parsedSteps[0].start_lat, parsedSteps[0].start_lng]);
+        }
+      } catch (error) {
+        console.error('❌ ステップデータの解析に失敗:', error);
       }
     }
 
     if (storedCoords) {
-      const parsedCoords: [number, number][] = JSON.parse(storedCoords);
-      setRouteCoords(parsedCoords);
-      console.log(`✅ 経路座標読み込み完了: ${parsedCoords.length}点`);
+      try {
+        const parsedCoords: [number, number][] = JSON.parse(storedCoords);
+        setRouteCoords(parsedCoords);
+        console.log(`✅ 経路座標読み込み完了: ${parsedCoords.length}点`);
 
-      if (parsedCoords.length > 0 && !storedSteps) {
-        const avgLat = parsedCoords.reduce((sum, c) => sum + c[0], 0) / parsedCoords.length;
-        const avgLng = parsedCoords.reduce((sum, c) => sum + c[1], 0) / parsedCoords.length;
-        setCenter([avgLat, avgLng]);
-      }
+        if (parsedCoords.length > 0 && !storedSteps) {
+          const avgLat = parsedCoords.reduce((sum, c) => sum + c[0], 0) / parsedCoords.length;
+          const avgLng = parsedCoords.reduce((sum, c) => sum + c[1], 0) / parsedCoords.length;
+          setCenter([avgLat, avgLng]);
+        }
 
-      if (parsedCoords.length > 0 && !storedToCoord) {
-        const lastCoord = parsedCoords[parsedCoords.length - 1];
-        setToCoord({ lat: lastCoord[0], lon: lastCoord[1] });
-        console.log('📍 経路終点を目的地に設定:', { lat: lastCoord[0], lon: lastCoord[1] });
+        if (parsedCoords.length > 0 && !storedToCoord) {
+          const lastCoord = parsedCoords[parsedCoords.length - 1];
+          setToCoord({ lat: lastCoord[0], lon: lastCoord[1] });
+          console.log('📍 経路終点を目的地に設定:', { lat: lastCoord[0], lon: lastCoord[1] });
+        }
+      } catch (error) {
+        console.error('❌ 経路座標の解析に失敗:', error);
       }
     }
 
@@ -440,19 +467,19 @@ export default function NavigatingPage() {
             if (nextStep) {
               if (distanceToNext < 10) {
                 // 10m以内：緊急案内
-                setNearbyMessage(`🔜 まもなく${nextStep.instruction}`);
+                setNearbyMessage(`まもなく${nextStep.instruction}`);
                 setDebugInfo(`次ステップまで${Math.round(distanceToNext)}m`);
               } else if (distanceToNext < 50) {
                 // 50m以内：予告案内
-                setNearbyMessage(`📍 ${Math.round(distanceToNext)}m先で${nextStep.instruction}`);
+                setNearbyMessage(`${Math.round(distanceToNext)}m先で${nextStep.instruction}`);
                 setDebugInfo(`ステップ${nextStep.sequence}: ${Math.round(distanceToNext)}m`);
               } else if (distanceToNext < 100) {
                 // 100m以内：準備案内
-                setNearbyMessage(`⏩ ${Math.round(distanceToNext)}m先で${nextStep.instruction}`);
+                setNearbyMessage(`${Math.round(distanceToNext)}m先で${nextStep.instruction}`);
                 setDebugInfo(`準備: ${Math.round(distanceToNext)}m`);
               } else if (isNearRoute(coords[0], coords[1], routeCoords)) {
                 // 経路上：継続案内
-                setNearbyMessage('🛣️ 経路に沿って進んでください');
+                setNearbyMessage('経路に沿って進んでください');
                 setDebugInfo(`経路上: 次まで${Math.round(distanceToNext)}m`);
               } else {
                 // 経路外：復帰案内
@@ -469,15 +496,20 @@ export default function NavigatingPage() {
                 if (distanceToDestination < 20) {
                   setNearbyMessage('🎉 目的地に到着しました！');
                   setDebugInfo('到着完了');
+                  // 到着モーダルを表示（一度も表示していない場合のみ）
+                  if (!arrivalModalShown) {
+                    setShowArrivalModal(true);
+                    setArrivalModalShown(true); // 表示したことを記録
+                  }
                 } else if (distanceToDestination < 100) {
-                  setNearbyMessage(`🏁 目的地まで${Math.round(distanceToDestination)}m`);
+                  setNearbyMessage(`目的地まで${Math.round(distanceToDestination)}m`);
                   setDebugInfo(`残り${Math.round(distanceToDestination)}m`);
                 } else {
-                  setNearbyMessage('🎯 目的地まで直進してください');
+                  setNearbyMessage('目的地まで直進してください');
                   setDebugInfo(`目的地まで${Math.round(distanceToDestination)}m`);
                 }
               } else {
-                setNearbyMessage('ℹ️ 案内を完了しました');
+                setNearbyMessage('ℹ案内を完了しました');
                 setDebugInfo('案内完了');
               }
             }
@@ -653,22 +685,115 @@ export default function NavigatingPage() {
               </div>
             )}
 
-            {/* 🔧 新機能: デバッグ情報表示（開発用） */}
-            {debugInfo && (
+            {/* 🔧 デバッグ情報表示は非表示に変更 */}
+            
+            {/* 到着モーダル */}
+            {showArrivalModal && (
               <div
                 style={{
-                  position: 'absolute',
-                  bottom: '10px',
-                  right: '10px',
-                  backgroundColor: 'rgba(0,0,0,0.7)',
-                  color: 'white',
-                  padding: '5px 10px',
-                  borderRadius: '5px',
-                  fontSize: '12px',
-                  zIndex: 1000,
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 2000,
                 }}
               >
-                {debugInfo}
+                <div
+                  style={{
+                    backgroundColor: 'white',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    width: '85%',
+                    maxWidth: '400px',
+                    textAlign: 'center',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '48px',
+                      marginBottom: '16px',
+                    }}
+                  >
+                    🎉
+                  </div>
+                  <h3
+                    style={{
+                      margin: '0 0 16px 0',
+                      fontSize: '24px',
+                      fontWeight: '700',
+                      color: '#10B981',
+                    }}
+                  >
+                    目的地に到着しました
+                  </h3>
+                  <p
+                    style={{
+                      margin: '0 0 24px 0',
+                      color: '#4B5563',
+                      fontSize: '16px',
+                      lineHeight: '1.5',
+                    }}
+                  >
+                    {toParam ? `${toParam}に到着しました。` : '目的地に到着しました。'}
+                    <br />
+                    ナビゲーションを終了しますか？
+                  </p>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '12px',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <button
+                      onClick={() => {
+                        setShowArrivalModal(false); // モーダルを閉じる
+                        setArrivalModalShown(true); // 再表示防止のフラグを設定
+                        router.push('/'); // ホーム画面に戻る
+                      }}
+                      style={{
+                        backgroundColor: '#10B981',
+                        color: 'white',
+                        border: 'none',
+                        padding: '12px 24px',
+                        borderRadius: '8px',
+                        fontWeight: '600',
+                        fontSize: '16px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ナビを終える
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowArrivalModal(false); // モーダルを閉じる
+                        
+                        // 5秒後に再度モーダルを表示できるようにする
+                        setTimeout(() => {
+                          setArrivalModalShown(false);
+                        }, 10000);
+                      }}
+                      style={{
+                        backgroundColor: '#F3F4F6',
+                        color: '#4B5563',
+                        border: '1px solid #D1D5DB',
+                        padding: '12px 24px',
+                        borderRadius: '8px',
+                        fontWeight: '600',
+                        fontSize: '16px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ナビを続ける
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
