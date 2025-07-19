@@ -284,7 +284,17 @@ export default function ToNavigating() {
   
   const handleNavigateClick = () => {
     if (isNearStart) {
-      router.push("/navigating");
+      // ナビゲーション開始時にセッションストレージにルート情報が存在することを確認
+      const hasRouteData = sessionStorage.getItem("routeCoordinates") && sessionStorage.getItem("routeSteps");
+      
+      if (hasRouteData) {
+        console.log("✅ セッションストレージにルートデータが存在。ナビゲーションを開始します");
+        router.push("/navigating");
+      } else {
+        console.error("❌ セッションストレージにルートデータがありません");
+        sessionStorage.setItem("errorMessage", "ルート情報が見つかりません。もう一度ルート検索をお試しください。");
+        router.push("/error");
+      }
     } else {
       // 出発地から離れている場合はモーダルを表示
       setShowModal(true);
