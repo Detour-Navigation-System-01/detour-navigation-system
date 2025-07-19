@@ -176,7 +176,7 @@ class RouteService {
           
           return {
             success: false,
-            message: `指定された所要時間が最短経路の所要時間より短いため、経路を計算できません。目標時間を少なくとも${Math.ceil(shortestDuration / 60 + 1)}分以上に設定してください。`,
+            message: `時間が足りません。目標時間を少なくとも${Math.ceil(shortestDuration / 60 + 1)}分以上に設定してください！`,
             data: {
               requestedDuration,
               shortestDuration,
