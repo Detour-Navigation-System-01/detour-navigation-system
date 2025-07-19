@@ -1,7 +1,7 @@
 /**
- * @fileoverview ナビゲーション用地図表示コンポーネント（改善版）
+ * @fileoverview ナビゲーション用地図表示コンポーネント（問題修正版）
  * @description リアルタイム位置追跡と詳細な案内メッセージを提供
- * @version 5.0.0 - 大幅改善版
+ * @version 5.1.0 - ステップ進行管理とモーダル表示の修正版
  */
 
 'use client';
@@ -68,7 +68,7 @@ const createEndIcon = () =>
   });
 
 // =============================================================================
-// 🔧 改善1: 距離計算関数（高精度版）
+// 🔧 修正1: 距離計算関数（既存と同じ）
 // =============================================================================
 function getDistanceMeters(
   lat1: number,
@@ -76,7 +76,7 @@ function getDistanceMeters(
   lat2: number,
   lon2: number
 ): number {
-  const R = 6371000; // 地球半径（メートル）
+  const R = 6371000;
   const toRad = (x: number) => (x * Math.PI) / 180;
   
   const dLat = toRad(lat2 - lat1);
@@ -94,45 +94,65 @@ function getDistanceMeters(
 }
 
 // =============================================================================
-// 🔧 改善2: 新しい関数 - 現在地に最適なステップを見つける
+// 🔧 修正2: 改良された現在のステップ判定関数
 // =============================================================================
-function findCurrentStep(
+function findCurrentNavigationStep(
   currentLat: number,
   currentLon: number,
-  steps: Step[]
-): { currentStepIndex: number; nextStep: Step | null; distanceToNext: number } {
+  steps: Step[],
+  currentStepIndex: number // 🎯 現在のステップインデックスを渡す
+): { 
+  currentStepIndex: number; 
+  nextStep: Step | null; 
+  distanceToNext: number;
+  shouldAdvanceStep: boolean; // 🎯 ステップを進めるべきかどうか
+} {
   
   if (steps.length === 0) {
-    return { currentStepIndex: -1, nextStep: null, distanceToNext: Infinity };
+    return { 
+      currentStepIndex: -1, 
+      nextStep: null, 
+      distanceToNext: Infinity,
+      shouldAdvanceStep: false
+    };
   }
 
-  let closestIndex = 0;
-  let minDistance = Infinity;
+  // 🎯 現在のステップインデックスが範囲外の場合は最後に設定
+  if (currentStepIndex >= steps.length) {
+    return {
+      currentStepIndex: steps.length - 1,
+      nextStep: null,
+      distanceToNext: Infinity,
+      shouldAdvanceStep: false
+    };
+  }
 
-  // 🎯 全てのステップとの距離を計算して最も近いものを見つける
-  for (let i = 0; i < steps.length; i++) {
-    const distance = getDistanceMeters(
+  // 🎯 現在のステップまたは次のステップを取得
+  let targetStepIndex = Math.max(0, currentStepIndex);
+  let shouldAdvanceStep = false;
+
+  // 現在のステップに十分近い場合（30m以内）、次のステップへ進むべきかチェック
+  if (targetStepIndex < steps.length) {
+    const currentStep = steps[targetStepIndex];
+    const distanceToCurrentStep = getDistanceMeters(
       currentLat,
       currentLon,
-      steps[i].start_lat,
-      steps[i].start_lng
+      currentStep.start_lat,
+      currentStep.start_lng
     );
-    
-    if (distance < minDistance) {
-      minDistance = distance;
-      closestIndex = i;
+
+    console.log(`📍 現在ステップ${targetStepIndex}との距離: ${Math.round(distanceToCurrentStep)}m`);
+
+    // 🎯 現在のステップを通過したと判定（30m以内に近づいた場合）
+    if (distanceToCurrentStep < 30 && targetStepIndex < steps.length - 1) {
+      targetStepIndex = currentStepIndex + 1;
+      shouldAdvanceStep = true;
+      console.log(`✅ ステップ${currentStepIndex}を通過 → 次のステップ${targetStepIndex}へ`);
     }
   }
 
-  // 📍 次のステップを決定
-  let nextStepIndex = closestIndex;
-  
-  // 現在のステップに十分近い場合（20m以内）は次のステップへ
-  if (minDistance < 20 && closestIndex < steps.length - 1) {
-    nextStepIndex = closestIndex + 1;
-  }
-
-  const nextStep = nextStepIndex < steps.length ? steps[nextStepIndex] : null;
+  // 次に表示すべきステップを決定
+  const nextStep = targetStepIndex < steps.length ? steps[targetStepIndex] : null;
   
   const distanceToNext = nextStep ? getDistanceMeters(
     currentLat,
@@ -141,17 +161,16 @@ function findCurrentStep(
     nextStep.start_lng
   ) : Infinity;
 
-  console.log(`📍 ステップ判定: 現在=${closestIndex}, 次=${nextStepIndex}, 距離=${Math.round(distanceToNext)}m`);
-
   return { 
-    currentStepIndex: closestIndex, 
+    currentStepIndex: targetStepIndex,
     nextStep, 
-    distanceToNext 
+    distanceToNext,
+    shouldAdvanceStep
   };
 }
 
 // =============================================================================
-// 🔧 改善3: 点から線分への距離計算（改良版）
+// 🔧 修正3: 点から線分への距離計算（既存と同じ）
 // =============================================================================
 function getDistanceToLineSegment(
   pointLat: number,
@@ -161,10 +180,9 @@ function getDistanceToLineSegment(
   line2Lat: number,
   line2Lon: number
 ): number {
-  const R = 6371000; // 地球半径[m]
+  const R = 6371000;
   const toRad = (deg: number) => (deg * Math.PI) / 180;
   
-  // 緯度経度をメートル単位の座標に変換（簡易投影）
   const lat1 = toRad(line1Lat);
   const lon1 = toRad(line1Lon);
   const lat2 = toRad(line2Lat);
@@ -172,7 +190,6 @@ function getDistanceToLineSegment(
   const latP = toRad(pointLat);
   const lonP = toRad(pointLon);
   
-  // 線分の両端点をメートル単位で計算
   const x1 = R * Math.cos(lat1) * lon1;
   const y1 = R * lat1;
   const x2 = R * Math.cos(lat2) * lon2;
@@ -180,21 +197,15 @@ function getDistanceToLineSegment(
   const xP = R * Math.cos(latP) * lonP;
   const yP = R * latP;
   
-  // 線分のベクトル
   const dx = x2 - x1;
   const dy = y2 - y1;
-  
-  // 線分の長さの2乗
   const lengthSq = dx * dx + dy * dy;
   
   if (lengthSq === 0) {
     return Math.sqrt((xP - x1) * (xP - x1) + (yP - y1) * (yP - y1));
   }
   
-  // 点から線分への投影パラメータ
   const t = Math.max(0, Math.min(1, ((xP - x1) * dx + (yP - y1) * dy) / lengthSq));
-  
-  // 投影点
   const projX = x1 + t * dx;
   const projY = y1 + t * dy;
   
@@ -202,13 +213,13 @@ function getDistanceToLineSegment(
 }
 
 // =============================================================================
-// 🔧 改善4: 経路付近判定（閾値調整）
+// 🔧 修正4: 経路付近判定（既存と同じ）
 // =============================================================================
 function isNearRoute(
   currentLat: number,
   currentLon: number,
   routeCoords: [number, number][],
-  threshold: number = 30 // 30m以内に調整（より敏感に）
+  threshold: number = 30
 ): boolean {
   if (routeCoords.length < 2) return false;
   
@@ -231,7 +242,7 @@ function isNearRoute(
 }
 
 // =============================================================================
-// 🔧 改善5: 向き表示用の視野コーン生成（改良版）
+// 🔧 修正5: 向き表示用の視野コーン生成（既存と同じ）
 // =============================================================================
 function generateViewCone(
   center: [number, number],
@@ -246,8 +257,7 @@ function generateViewCone(
 
   const points: [number, number][] = [center];
 
-  // 📐 より滑らかな扇形を作成（角度を細かく分割）
-  for (let a = -angle / 2; a <= angle / 2; a += 5) { // 5度刻みで滑らか
+  for (let a = -angle / 2; a <= angle / 2; a += 5) {
     const θ = toRad(heading + a);
     const dx = range * Math.sin(θ);
     const dy = range * Math.cos(θ);
@@ -264,7 +274,6 @@ function generateViewCone(
 // 🚀 メインコンポーネント
 // =============================================================================
 export default function NavigatingPage() {
-  // State定義
   const router = useRouter();
   const [steps, setSteps] = useState<Step[]>([]);
   const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
@@ -275,19 +284,19 @@ export default function NavigatingPage() {
   const [toCoord, setToCoord] = useState<Coordinate | null>(null);
   const [toParam, setToParam] = useState<string>('');
   
-  // 🔧 改善6: デバッグ用state追加
+  // 🎯 修正6: ステップ進行管理用のstate追加
+  const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [debugInfo, setDebugInfo] = useState<string>('');
   
   // 到着モーダル用のstate
   const [showArrivalModal, setShowArrivalModal] = useState<boolean>(false);
-  // 到着モーダルが一度表示されたことを記録するstate
   const [arrivalModalShown, setArrivalModalShown] = useState<boolean>(false);
 
   const watchIdRef = useRef<number | null>(null);
   const endIcon = createEndIcon();
 
   // =============================================================================
-  // 🔧 改善7: 初期化処理（既存とほぼ同じ、ログ強化）
+  // 🔧 修正7: 初期化処理（既存とほぼ同じ）
   // =============================================================================
   useEffect(() => {
     const storedSteps = sessionStorage.getItem('routeSteps');
@@ -296,17 +305,9 @@ export default function NavigatingPage() {
     const storedToCoord = sessionStorage.getItem('toCoord');
 
     console.log('=== 初期化開始 ===');
-    console.log('利用可能なsessionStorageキー:', Object.keys(sessionStorage));
 
-    // ルートデータの存在チェック
     if (!storedSteps || !storedCoords) {
-      console.error('❌ セッションストレージにルートデータがありません', {
-        hasSteps: !!storedSteps,
-        hasCoords: !!storedCoords
-      });
-      // エラーページにリダイレクト
-      sessionStorage.setItem("errorMessage", "ナビゲーション情報が見つかりません。もう一度ルート検索をお試しください。");
-      // ここでリダイレクトは不要（useEffectの初期化中で行うと問題を起こす可能性があるため）
+      console.error('❌ セッションストレージにルートデータがありません');
       return;
     }
 
@@ -318,6 +319,7 @@ export default function NavigatingPage() {
 
         if (parsedSteps.length > 0) {
           setCenter([parsedSteps[0].start_lat, parsedSteps[0].start_lng]);
+          setCurrentStepIndex(0); // 🎯 初期ステップインデックスを0に設定
         }
       } catch (error) {
         console.error('❌ ステップデータの解析に失敗:', error);
@@ -330,16 +332,10 @@ export default function NavigatingPage() {
         setRouteCoords(parsedCoords);
         console.log(`✅ 経路座標読み込み完了: ${parsedCoords.length}点`);
 
-        if (parsedCoords.length > 0 && !storedSteps) {
-          const avgLat = parsedCoords.reduce((sum, c) => sum + c[0], 0) / parsedCoords.length;
-          const avgLng = parsedCoords.reduce((sum, c) => sum + c[1], 0) / parsedCoords.length;
-          setCenter([avgLat, avgLng]);
-        }
-
         if (parsedCoords.length > 0 && !storedToCoord) {
           const lastCoord = parsedCoords[parsedCoords.length - 1];
           setToCoord({ lat: lastCoord[0], lon: lastCoord[1] });
-          console.log('📍 経路終点を目的地に設定:', { lat: lastCoord[0], lon: lastCoord[1] });
+          console.log('📍 経路終点を目的地に設定');
         }
       } catch (error) {
         console.error('❌ 経路座標の解析に失敗:', error);
@@ -363,7 +359,7 @@ export default function NavigatingPage() {
   }, []);
 
   // =============================================================================
-  // 🔧 改善8: 向き検出処理（フォールバック機能強化）
+  // 🔧 修正8: 向き検出処理（既存と同じ）
   // =============================================================================
   useEffect(() => {
     let orientationAvailable = false;
@@ -372,56 +368,36 @@ export default function NavigatingPage() {
     const handleOrientation = (event: DeviceOrientationEvent) => {
       if (event.alpha !== null) {
         orientationAvailable = true;
-        
-        // 🧭 デバイス別の向き補正
         let correctedHeading = event.alpha;
         
-        // Android端末の場合の補正
         if (navigator.userAgent.includes('Android')) {
           correctedHeading = (360 - event.alpha) % 360;
         }
         
         setHeading(correctedHeading);
-        console.log(`🧭 向き更新: ${Math.round(correctedHeading)}度`);
       }
     };
 
-    // iOS端末の許可取得
     if (
       typeof DeviceOrientationEvent !== 'undefined' &&
       typeof DeviceOrientationEvent.requestPermission === 'function'
     ) {
-      console.log('📱 iOS端末: 向き情報の許可を要求');
       DeviceOrientationEvent.requestPermission()
         .then((response) => {
           if (response === 'granted') {
             window.addEventListener('deviceorientation', handleOrientation, true);
-            console.log('✅ iOS向き情報許可取得');
-          } else {
-            console.log('❌ iOS向き情報許可拒否');
           }
-        })
-        .catch(() => {
-          console.log('❌ iOS向き情報許可エラー');
         });
-    } 
-    // その他のデバイス
-    else if ('DeviceOrientationEvent' in window) {
-      console.log('📱 向き情報イベント登録');
+    } else if ('DeviceOrientationEvent' in window) {
       window.addEventListener('deviceorientation', handleOrientation, true);
       
-      // 📱 3秒後のフォールバックチェック
       orientationTimeout = setTimeout(() => {
         if (!orientationAvailable) {
-          console.log('⚠️ 向き情報が利用できません - 表示なしで継続');
           setDebugInfo('向き情報: 利用不可');
         } else {
           setDebugInfo('向き情報: 利用可能');
         }
       }, 3000);
-    } else {
-      console.log('❌ このデバイスは向き検出をサポートしていません');
-      setDebugInfo('向き情報: 非対応');
     }
 
     return () => {
@@ -433,7 +409,7 @@ export default function NavigatingPage() {
   }, []);
 
   // =============================================================================
-  // 🔧 改善9: GPS位置追跡処理（高頻度化＋詳細案内）
+  // 🔧 修正9: GPS位置追跡処理（ステップ進行管理を含む）
   // =============================================================================
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -442,7 +418,6 @@ export default function NavigatingPage() {
       return;
     }
 
-    // 🎯 改良された位置更新処理
     const updatePosition = () => {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -455,51 +430,63 @@ export default function NavigatingPage() {
           const timestamp = new Date().toLocaleTimeString();
           console.log(`📍 位置更新 ${timestamp}: ${coords[0].toFixed(6)}, ${coords[1].toFixed(6)}`);
 
-          // 🚀 新しい案内メッセージロジック
+          // 🎯 修正された案内メッセージロジック
           if (steps.length > 0) {
-            const { currentStepIndex, nextStep, distanceToNext } = findCurrentStep(
+            const { 
+              currentStepIndex: newStepIndex, 
+              nextStep, 
+              distanceToNext, 
+              shouldAdvanceStep 
+            } = findCurrentNavigationStep(
               coords[0],
               coords[1],
-              steps
+              steps,
+              currentStepIndex
             );
 
-            // 📢 段階的な案内メッセージ
+            // 🎯 ステップが進んだ場合、状態を更新
+            if (shouldAdvanceStep && newStepIndex !== currentStepIndex) {
+              setCurrentStepIndex(newStepIndex);
+              console.log(`🚀 ステップ更新: ${currentStepIndex} → ${newStepIndex}`);
+            }
+
+            // 🎯 修正された案内メッセージの判定
             if (nextStep) {
+              // まだステップが残っている場合
               if (distanceToNext < 10) {
-                // 10m以内：緊急案内
                 setNearbyMessage(`まもなく${nextStep.instruction}`);
-                setDebugInfo(`次ステップまで${Math.round(distanceToNext)}m`);
+                setDebugInfo(`ステップ${newStepIndex}: あと${Math.round(distanceToNext)}m`);
               } else if (distanceToNext < 50) {
-                // 50m以内：予告案内
                 setNearbyMessage(`${Math.round(distanceToNext)}m先で${nextStep.instruction}`);
-                setDebugInfo(`ステップ${nextStep.sequence}: ${Math.round(distanceToNext)}m`);
+                setDebugInfo(`ステップ${newStepIndex}: ${Math.round(distanceToNext)}m`);
               } else if (distanceToNext < 100) {
-                // 100m以内：準備案内
                 setNearbyMessage(`${Math.round(distanceToNext)}m先で${nextStep.instruction}`);
-                setDebugInfo(`準備: ${Math.round(distanceToNext)}m`);
+                setDebugInfo(`ステップ${newStepIndex}: 準備中`);
               } else if (isNearRoute(coords[0], coords[1], routeCoords)) {
-                // 経路上：継続案内
                 setNearbyMessage('経路に沿って進んでください');
-                setDebugInfo(`経路上: 次まで${Math.round(distanceToNext)}m`);
+                setDebugInfo(`ステップ${newStepIndex}: 経路上`);
               } else {
-                // 経路外：復帰案内
                 setNearbyMessage('⚠️ 経路に戻ってください');
-                setDebugInfo(`経路外: ${Math.round(distanceToNext)}m`);
+                setDebugInfo(`ステップ${newStepIndex}: 経路外`);
               }
             } else {
-              // 🏁 最終地点付近の処理
+              // 🎯 修正: すべてのステップが完了した場合の目的地判定
               if (toCoord) {
                 const distanceToDestination = getDistanceMeters(
                   coords[0], coords[1], toCoord.lat, toCoord.lon
                 );
                 
-                if (distanceToDestination < 20) {
+                console.log(`🏁 目的地まで: ${Math.round(distanceToDestination)}m`);
+                
+                if (distanceToDestination < 30) { // 🎯 30mに変更（より確実に検出）
                   setNearbyMessage('🎉 目的地に到着しました！');
                   setDebugInfo('到着完了');
-                  // 到着モーダルを表示（一度も表示していない場合のみ）
+                  
+                  // 🎯 到着モーダルの表示条件を改善
                   if (!arrivalModalShown) {
+                    console.log('🎉 到着モーダルを表示します');
                     setShowArrivalModal(true);
-                    setArrivalModalShown(true); // 表示したことを記録
+                    setArrivalModalShown(true);
                   }
                 } else if (distanceToDestination < 100) {
                   setNearbyMessage(`目的地まで${Math.round(distanceToDestination)}m`);
@@ -509,8 +496,8 @@ export default function NavigatingPage() {
                   setDebugInfo(`目的地まで${Math.round(distanceToDestination)}m`);
                 }
               } else {
-                setNearbyMessage('ℹ案内を完了しました');
-                setDebugInfo('案内完了');
+                setNearbyMessage('案内を完了しました');
+                setDebugInfo('全ステップ完了');
               }
             }
           } else {
@@ -525,15 +512,14 @@ export default function NavigatingPage() {
         },
         {
           enableHighAccuracy: true,
-          timeout: 5000,        // 🔧 5秒でタイムアウト
-          maximumAge: 1000,     // 🔧 1秒以内のキャッシュを使用
+          timeout: 5000,
+          maximumAge: 1000,
         }
       );
     };
 
-    // 🔧 改善: 初回は即座に実行、その後1秒間隔
     updatePosition();
-    const intervalId = setInterval(updatePosition, 1000); // 10000 → 1000に短縮
+    const intervalId = setInterval(updatePosition, 1000);
 
     console.log('🚀 GPS追跡開始: 1秒間隔');
 
@@ -544,10 +530,10 @@ export default function NavigatingPage() {
       }
       console.log('🛑 GPS追跡停止');
     };
-  }, [steps, routeCoords, toCoord]); // 依存配列に toCoord 追加
+  }, [steps, routeCoords, toCoord, currentStepIndex]); // 🎯 currentStepIndexを依存配列に追加
 
   // =============================================================================
-  // 🎨 レンダリング
+  // 🎨 レンダリング（既存とほぼ同じ）
   // =============================================================================
   return (
     <div className="p-4 max-w-xl mx-auto space-y-4">
@@ -571,7 +557,6 @@ export default function NavigatingPage() {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               
-              {/* 経路表示 */}
               {routeCoords.length > 0 && (
                 <Polyline
                   positions={routeCoords}
@@ -581,7 +566,6 @@ export default function NavigatingPage() {
                 />
               )}
 
-              {/* 現在地表示 */}
               {currentPosition && (
                 <>
                   <Marker position={currentPosition} icon={currentLocationIcon}>
@@ -592,6 +576,8 @@ export default function NavigatingPage() {
                         緯度: {currentPosition[0].toFixed(6)}
                         <br />
                         経度: {currentPosition[1].toFixed(6)}
+                        <br />
+                        現在ステップ: {currentStepIndex + 1}
                         {heading && (
                           <>
                             <br />
@@ -612,7 +598,6 @@ export default function NavigatingPage() {
                     }}
                   />
 
-                  {/* 🔧 改善: 向き表示（利用可能な場合のみ） */}
                   {typeof heading === 'number' && !isNaN(heading) && (
                     <Polygon
                       positions={generateViewCone(currentPosition, heading)}
@@ -626,7 +611,6 @@ export default function NavigatingPage() {
                 </>
               )}
 
-              {/* 目的地マーカー */}
               {toCoord && (
                 <Marker position={[toCoord.lat, toCoord.lon]} icon={endIcon}>
                   <Popup>
@@ -649,7 +633,6 @@ export default function NavigatingPage() {
               )}
             </MapContainer>
 
-            {/* 🔧 改善: より詳細な案内メッセージ表示 */}
             {nearbyMessage && (
               <div
                 style={{
@@ -684,8 +667,6 @@ export default function NavigatingPage() {
                 {nearbyMessage}
               </div>
             )}
-
-            {/* 🔧 デバッグ情報表示は非表示に変更 */}
             
             {/* 到着モーダル */}
             {showArrivalModal && (
@@ -714,14 +695,7 @@ export default function NavigatingPage() {
                     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: '48px',
-                      marginBottom: '16px',
-                    }}
-                  >
-                    🎉
-                  </div>
+                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎉</div>
                   <h3
                     style={{
                       margin: '0 0 16px 0',
@@ -753,9 +727,9 @@ export default function NavigatingPage() {
                   >
                     <button
                       onClick={() => {
-                        setShowArrivalModal(false); // モーダルを閉じる
-                        setArrivalModalShown(true); // 再表示防止のフラグを設定
-                        router.push('/'); // ホーム画面に戻る
+                        console.log('🏠 ホームに戻ります');
+                        setShowArrivalModal(false);
+                        router.push('/');
                       }}
                       style={{
                         backgroundColor: '#10B981',
@@ -772,9 +746,10 @@ export default function NavigatingPage() {
                     </button>
                     <button
                       onClick={() => {
-                        setShowArrivalModal(false); // モーダルを閉じる
+                        console.log('📍 ナビを続行します');
+                        setShowArrivalModal(false);
                         
-                        // 5秒後に再度モーダルを表示できるようにする
+                        // 10秒後に再度モーダルを表示できるようにする
                         setTimeout(() => {
                           setArrivalModalShown(false);
                         }, 10000);
