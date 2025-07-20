@@ -287,6 +287,10 @@ export default function NavigatingPage() {
   // 🎯 修正6: ステップ進行管理用のstate追加
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [debugInfo, setDebugInfo] = useState<string>('');
+
+  // 🧭 向き情報関連のstate
+  const [showOrientationButton, setShowOrientationButton] = useState<boolean>(false);
+  const [orientationPermissionStatus, setOrientationPermissionStatus] = useState<string>('unknown');
   
   // 到着モーダル用のstate
   const [showArrivalModal, setShowArrivalModal] = useState<boolean>(false);
@@ -359,11 +363,27 @@ export default function NavigatingPage() {
   }, []);
 
   // =============================================================================
-  // 🔧 修正8: 向き検出処理（既存と同じ）
+  // 🔧 修正: 向き検出処理（デバッグ機能強化）
   // =============================================================================
   useEffect(() => {
     let orientationAvailable = false;
-    let orientationTimeout: NodeJS.Timeout;
+    
+    // デバイス情報のデバッグ
+    const userAgent = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+    const isIOSSafari = isIOS && /Safari/.test(userAgent) && !/CriOS|FxiOS/.test(userAgent);
+    const hasDeviceOrientationEvent = typeof DeviceOrientationEvent !== 'undefined';
+    const hasRequestPermission = hasDeviceOrientationEvent && 
+      typeof (DeviceOrientationEvent as any).requestPermission === 'function';
+    
+    console.log('🔍 デバイス情報デバッグ:', {
+      userAgent,
+      isIOS,
+      isIOSSafari,
+      hasDeviceOrientationEvent,
+      hasRequestPermission,
+      'showOrientationButton状態': showOrientationButton
+    });
     
     const handleOrientation = (event: DeviceOrientationEvent) => {
       if (event.alpha !== null) {
@@ -375,38 +395,90 @@ export default function NavigatingPage() {
         }
         
         setHeading(correctedHeading);
+        setOrientationPermissionStatus('granted');
+        console.log('✅ 向き情報取得成功:', correctedHeading);
       }
     };
 
-    if (
-      typeof DeviceOrientationEvent !== 'undefined' &&
-      typeof DeviceOrientationEvent.requestPermission === 'function'
-    ) {
-      DeviceOrientationEvent.requestPermission()
-        .then((response) => {
-          if (response === 'granted') {
-            window.addEventListener('deviceorientation', handleOrientation, true);
-          }
-        });
-    } else if ('DeviceOrientationEvent' in window) {
+    // 🎯 修正: より正確なiOS判定
+    if (hasRequestPermission) {
+      console.log('📱 iOS端末検出: 向き情報ボタンを表示します');
+      setShowOrientationButton(true);
+      setOrientationPermissionStatus('unknown');
+    } 
+    // その他のデバイス：直接イベント登録
+    else if (hasDeviceOrientationEvent) {
+      console.log('📱 非iOS端末: 向き情報イベントを直接登録');
       window.addEventListener('deviceorientation', handleOrientation, true);
       
-      orientationTimeout = setTimeout(() => {
+      setTimeout(() => {
         if (!orientationAvailable) {
-          setDebugInfo('向き情報: 利用不可');
+          console.log('⚠️ 向き情報が利用できません');
+          setOrientationPermissionStatus('denied');
         } else {
-          setDebugInfo('向き情報: 利用可能');
+          setOrientationPermissionStatus('granted');
         }
       }, 3000);
+    } else {
+      console.log('❌ このデバイスは向き検出をサポートしていません');
+      setOrientationPermissionStatus('denied');
     }
 
     return () => {
       window.removeEventListener('deviceorientation', handleOrientation);
-      if (orientationTimeout) {
-        clearTimeout(orientationTimeout);
-      }
     };
   }, []);
+
+  // =============================================================================
+  // 🔧 修正: 向き許可取得関数（エラーハンドリング強化）
+  // =============================================================================
+  const requestOrientationPermission = async () => {
+    console.log('🎯 向き許可取得開始');
+    setOrientationPermissionStatus('requesting');
+    
+    try {
+      if (
+        typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof (DeviceOrientationEvent as any).requestPermission === 'function'
+      ) {
+        console.log('📱 DeviceOrientationEvent.requestPermission() 実行');
+        const response = await (DeviceOrientationEvent as any).requestPermission();
+        console.log('📱 許可結果:', response);
+        
+        if (response === 'granted') {
+          const handleOrientation = (event: DeviceOrientationEvent) => {
+            if (event.alpha !== null) {
+              let correctedHeading = event.alpha;
+              
+              if (navigator.userAgent.includes('Android')) {
+                correctedHeading = (360 - event.alpha) % 360;
+              }
+              
+              setHeading(correctedHeading);
+              console.log('🧭 向き更新:', correctedHeading);
+            }
+          };
+          
+          window.addEventListener('deviceorientation', handleOrientation, true);
+          setOrientationPermissionStatus('granted');
+          setShowOrientationButton(false);
+          console.log('✅ iOS向き情報許可取得成功');
+        } else {
+          setOrientationPermissionStatus('denied');
+          setShowOrientationButton(false);
+          console.log('❌ iOS向き情報許可拒否');
+        }
+      } else {
+        console.log('❌ requestPermission関数が利用できません');
+        setOrientationPermissionStatus('denied');
+        setShowOrientationButton(false);
+      }
+    } catch (error) {
+      setOrientationPermissionStatus('denied');
+      setShowOrientationButton(false);
+      console.error('❌ 向き情報許可取得エラー:', error);
+    }
+  };
 
   // =============================================================================
   // 🔧 修正9: GPS位置追跡処理（ステップ進行管理を含む）
@@ -668,6 +740,93 @@ export default function NavigatingPage() {
               </div>
             )}
 
+            {/* 🧭 修正: 向き許可ボタン（より目立つデザイン） */}
+            {showOrientationButton && (
+              <div
+                style={{
+                  position: 'fixed',
+                  top: '50px', // より上に配置
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  zIndex: 2500, // より高いz-index
+                  backgroundColor: 'white',
+                  padding: '20px',
+                  borderRadius: '16px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                  textAlign: 'center',
+                  maxWidth: '90%',
+                  border: '2px solid #3498db', // 境界線を追加
+                }}
+              >
+                <div style={{ fontSize: '32px', marginBottom: '12px' }}>🧭</div>
+                <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 'bold' }}>
+                  向き情報の使用許可
+                </h3>
+                <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#666' }}>
+                  進行方向の表示に使用されます
+                  <br />
+                  （この機能は任意です）
+                </p>
+                
+                {/* デバッグ情報表示 */}
+                <div style={{ 
+                  fontSize: '11px', 
+                  color: '#999', 
+                  marginBottom: '12px',
+                  backgroundColor: '#f5f5f5',
+                  padding: '8px',
+                  borderRadius: '4px'
+                }}>
+                  状態: {orientationPermissionStatus}
+                  <br />
+                  iOS: {/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'Yes' : 'No'}
+                  <br />
+                  許可関数: {typeof DeviceOrientationEvent !== 'undefined' && 
+                    typeof (DeviceOrientationEvent as any).requestPermission === 'function' ? 'Available' : 'Not Available'}
+                </div>
+                
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button
+                    onClick={requestOrientationPermission}
+                    disabled={orientationPermissionStatus === 'requesting'}
+                    style={{
+                      backgroundColor: orientationPermissionStatus === 'requesting' ? '#ccc' : '#3498db',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 20px',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      cursor: orientationPermissionStatus === 'requesting' ? 'not-allowed' : 'pointer',
+                      minWidth: '80px'
+                    }}
+                  >
+                    {orientationPermissionStatus === 'requesting' ? '許可中...' : '許可する'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      console.log('📱 向き情報許可をスキップ');
+                      setShowOrientationButton(false);
+                      setOrientationPermissionStatus('denied');
+                    }}
+                    style={{
+                      backgroundColor: '#95a5a6',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 20px',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      minWidth: '80px'
+                    }}
+                  >
+                    スキップ
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* 🎯 デバッグ情報を一時的に表示（問題解決後に削除可能） */}
             {debugInfo && (
               <div
@@ -686,6 +845,36 @@ export default function NavigatingPage() {
                 {debugInfo}
                 <br />
                 ステップ: {currentStepIndex + 1}/{steps.length}
+              </div>
+            )}
+            
+            {/* デバッグ用：手動で向き許可ボタンを表示する機能 */}
+            {(orientationPermissionStatus === 'unknown' || orientationPermissionStatus === 'denied') && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  zIndex: 1000,
+                }}
+              >
+                <button
+                  onClick={() => {
+                    console.log('🔧 手動で向き許可ボタンを表示');
+                    setShowOrientationButton(true);
+                  }}
+                  style={{
+                    backgroundColor: '#f39c12',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  🧭 向き設定
+                </button>
               </div>
             )}
             
