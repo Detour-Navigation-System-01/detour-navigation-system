@@ -242,7 +242,7 @@ function isNearRoute(
 }
 
 // =============================================================================
-// 🔧 修正5: 向き表示用の視野コーン生成（既存と同じ）
+// 🔧 修正5: 向き表示用の視野コーン生成（改良版）
 // =============================================================================
 function generateViewCone(
   center: [number, number],
@@ -253,15 +253,25 @@ function generateViewCone(
   const toRad = (deg: number) => (deg * Math.PI) / 180;
   const lat = center[0];
   const lon = center[1];
-  const R = 6371000;
+  const R = 6371000; // 地球の半径（メートル）
 
   const points: [number, number][] = [center];
 
-  for (let a = -angle / 2; a <= angle / 2; a += 5) {
+  // 🔧 修正: 北を0度とした時計回りの角度に統一（地図の方角と合わせる）
+  // headingは既に正規化されているため、そのまま使用
+  
+  // 扇形を生成（スムーズな曲線のために細かく分割）
+  for (let a = -angle / 2; a <= angle / 2; a += 2) {
+    // 北を0度とした時計回りの角度に変換
     const θ = toRad(heading + a);
+    
+    // 極座標から直交座標への変換
+    // 注意: 地理的な方角では、北が0度で東が90度なので、
+    // sin(θ)が東西方向(経度)、cos(θ)が南北方向(緯度)の変化に対応
     const dx = range * Math.sin(θ);
     const dy = range * Math.cos(θ);
 
+    // 緯度経度への変換（地球の曲率を考慮）
     const dLat = (dy / R) * (180 / Math.PI);
     const dLon = (dx / (R * Math.cos(toRad(lat)))) * (180 / Math.PI);
 
@@ -388,11 +398,53 @@ export default function NavigatingPage() {
     const handleOrientation = (event: DeviceOrientationEvent) => {
       if (event.alpha !== null) {
         orientationAvailable = true;
-        let correctedHeading = event.alpha;
+        let correctedHeading: number;
         
-        if (navigator.userAgent.includes('Android')) {
+        // 🔧 修正: デバイスごとの向き情報の正規化処理
+        if (window.orientation !== undefined) {
+          // モバイルデバイスの場合
+          if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+            // iOS: WebkitのCompassHeadingを使用（存在する場合）
+            const compassHeading = (event as any).webkitCompassHeading;
+            if (compassHeading !== undefined) {
+              // iOS Safari: webkitCompassHeadingは地理的な北を0度として時計回り
+              correctedHeading = compassHeading;
+              console.log('📱 iOS webkitCompassHeading使用:', correctedHeading);
+            } else {
+              // iOS でwebkitCompassHeadingがない場合
+              correctedHeading = (360 - event.alpha!) % 360;
+              console.log('📱 iOS alpha使用:', correctedHeading);
+            }
+          } else if (navigator.userAgent.includes('Android')) {
+            // Android: alphaは通常デバイスの向きに関連しており、
+            // 北を0度として反時計回りなので、時計回りに変換
+            correctedHeading = (360 - event.alpha) % 360;
+            console.log('📱 Android向き補正:', correctedHeading);
+          } else {
+            // その他のモバイルデバイス
+            correctedHeading = (360 - event.alpha) % 360;
+            console.log('📱 その他モバイル向き補正:', correctedHeading);
+          }
+          
+          // スクリーン向きの補正
+          const screenOrientation = window.orientation || 0;
+          if (screenOrientation === 90) {
+            correctedHeading = (correctedHeading + 90) % 360;
+          } else if (screenOrientation === -90) {
+            correctedHeading = (correctedHeading - 90) % 360;
+          } else if (screenOrientation === 180) {
+            correctedHeading = (correctedHeading + 180) % 360;
+          }
+          
+          console.log('🧭 画面向き補正後:', correctedHeading, '画面角度:', screenOrientation);
+        } else {
+          // デスクトップの場合、単純に変換
           correctedHeading = (360 - event.alpha) % 360;
+          console.log('🖥️ デスクトップ向き補正:', correctedHeading);
         }
+        
+        // 負の値を正規化
+        if (correctedHeading < 0) correctedHeading += 360;
         
         setHeading(correctedHeading);
         setOrientationPermissionStatus('granted');
@@ -448,11 +500,39 @@ export default function NavigatingPage() {
         if (response === 'granted') {
           const handleOrientation = (event: DeviceOrientationEvent) => {
             if (event.alpha !== null) {
-              let correctedHeading = event.alpha;
+              let correctedHeading: number;
               
-              if (navigator.userAgent.includes('Android')) {
+              // iOSの場合はwebkitCompassHeadingを優先使用
+              const compassHeading = (event as any).webkitCompassHeading;
+              if (compassHeading !== undefined) {
+                // iOS SafariのwebkitCompassHeadingは地理的な北を0度として時計回り
+                correctedHeading = compassHeading;
+                console.log('🧭 iOS webkitCompassHeading使用:', correctedHeading);
+              } else if (navigator.userAgent.includes('Android')) {
+                // Android: 北を0度とした時計回りに変換
                 correctedHeading = (360 - event.alpha) % 360;
+                console.log('🧭 Android向き補正:', correctedHeading);
+              } else {
+                // その他のデバイス
+                correctedHeading = (360 - event.alpha) % 360;
+                console.log('🧭 その他デバイス向き補正:', correctedHeading);
               }
+              
+              // スクリーン向きの補正
+              if (window.orientation !== undefined) {
+                const screenOrientation = window.orientation || 0;
+                if (screenOrientation === 90) {
+                  correctedHeading = (correctedHeading + 90) % 360;
+                } else if (screenOrientation === -90) {
+                  correctedHeading = (correctedHeading - 90) % 360;
+                } else if (screenOrientation === 180) {
+                  correctedHeading = (correctedHeading + 180) % 360;
+                }
+                console.log('🧭 画面向き補正後:', correctedHeading, '画面角度:', screenOrientation);
+              }
+              
+              // 負の値を正規化
+              if (correctedHeading < 0) correctedHeading += 360;
               
               setHeading(correctedHeading);
               console.log('🧭 向き更新:', correctedHeading);
@@ -481,7 +561,7 @@ export default function NavigatingPage() {
   };
 
   // =============================================================================
-  // 🔧 修正9: GPS位置追跡処理（ステップ進行管理を含む）
+  // 🔧 修正: GPS位置追跡処理（モーダル表示確実化）
   // =============================================================================
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -502,7 +582,12 @@ export default function NavigatingPage() {
           const timestamp = new Date().toLocaleTimeString();
           console.log(`📍 位置更新 ${timestamp}: ${coords[0].toFixed(6)}, ${coords[1].toFixed(6)}`);
 
-          // 🎯 修正された案内メッセージロジック
+          // 🔧 到着モーダルが表示されている場合は案内メッセージを更新しない
+          if (showArrivalModal) {
+            console.log('🎉 到着モーダル表示中のため案内更新をスキップ');
+            return;
+          }
+
           if (steps.length > 0) {
             const { 
               currentStepIndex: newStepIndex, 
@@ -516,15 +601,13 @@ export default function NavigatingPage() {
               currentStepIndex
             );
 
-            // 🎯 ステップが進んだ場合、状態を更新
             if (shouldAdvanceStep && newStepIndex !== currentStepIndex) {
               setCurrentStepIndex(newStepIndex);
               console.log(`🚀 ステップ更新: ${currentStepIndex} → ${newStepIndex}`);
             }
 
-            // 🎯 修正された案内メッセージの判定
             if (nextStep) {
-              // まだステップが残っている場合
+              // ステップが残っている場合の案内
               if (distanceToNext < 10) {
                 setNearbyMessage(`まもなく${nextStep.instruction}`);
                 setDebugInfo(`ステップ${newStepIndex}: あと${Math.round(distanceToNext)}m`);
@@ -542,27 +625,50 @@ export default function NavigatingPage() {
                 setDebugInfo(`ステップ${newStepIndex}: 経路外`);
               }
             } else {
-              // 🎯 修正: すべてのステップが完了した場合の目的地判定
+              // 🔧 すべてのステップが完了した場合（目的地判定を改善）
               if (toCoord) {
                 const distanceToDestination = getDistanceMeters(
                   coords[0], coords[1], toCoord.lat, toCoord.lon
                 );
                 
-                console.log(`🏁 目的地まで: ${Math.round(distanceToDestination)}m`);
+                // 🎯 詳細なデバッグログ追加
+                console.log(`🏁 目的地距離判定:`, {
+                  距離: `${Math.round(distanceToDestination)}m`,
+                  閾値: '50m',
+                  モーダル表示済み: arrivalModalShown,
+                  現在のメッセージ: nearbyMessage
+                });
                 
-                if (distanceToDestination < 30) { // 🎯 30mに変更（より確実に検出）
-                  setNearbyMessage('🎉 目的地に到着しました！');
-                  setDebugInfo('到着完了');
-                  
-                  // 🎯 到着モーダルの表示条件を改善
+                // 🔧 到着判定の閾値を50mに拡大
+                if (distanceToDestination < 50) {
                   if (!arrivalModalShown) {
-                    console.log('🎉 到着モーダルを表示します');
+                    console.log('🎉 目的地到着検出！モーダル表示処理開始');
+                    
+                    // 🎯 まず案内メッセージを到着メッセージに変更
+                    setNearbyMessage('🎉 目的地に到着しました！');
+                    setDebugInfo(`到着完了 (${Math.round(distanceToDestination)}m)`);
+                    
+                    // 🎯 即座にモーダル表示フラグを設定（遅延なし）
                     setShowArrivalModal(true);
                     setArrivalModalShown(true);
+                    
+                    console.log('✅ モーダル表示状態設定完了');
+                  } else {
+                    // 既にモーダルが表示されている場合
+                    console.log('ℹ️ 到着モーダルは既に表示済み');
+                    setNearbyMessage('🎉 目的地に到着しました！');
+                    setDebugInfo(`到着完了 (${Math.round(distanceToDestination)}m) - 表示済み`);
                   }
-                } else if (distanceToDestination < 100) {
+                } 
+                // 🔧 もう少し近づいたら「まもなく到着」表示
+                else if (distanceToDestination < 100) {
                   setNearbyMessage(`目的地まで${Math.round(distanceToDestination)}m`);
                   setDebugInfo(`残り${Math.round(distanceToDestination)}m`);
+                } 
+                // 🔧 「まもなく到着」の条件を追加
+                else if (distanceToDestination < 200) {
+                  setNearbyMessage('まもなく目的地に到着します');
+                  setDebugInfo(`もうすぐ到着: ${Math.round(distanceToDestination)}m`);
                 } else {
                   setNearbyMessage('目的地まで直進してください');
                   setDebugInfo(`目的地まで${Math.round(distanceToDestination)}m`);
@@ -602,7 +708,7 @@ export default function NavigatingPage() {
       }
       console.log('🛑 GPS追跡停止');
     };
-  }, [steps, routeCoords, toCoord, currentStepIndex]); // 🎯 currentStepIndexを依存配列に追加
+  }, [steps, routeCoords, toCoord, currentStepIndex, showArrivalModal, arrivalModalShown]);
 
   // =============================================================================
   // 🎨 レンダリング（既存とほぼ同じ）
@@ -671,14 +777,42 @@ export default function NavigatingPage() {
                   />
 
                   {typeof heading === 'number' && !isNaN(heading) && (
-                    <Polygon
-                      positions={generateViewCone(currentPosition, heading)}
-                      pathOptions={{ 
-                        color: '#2563eb', 
-                        fillOpacity: 0.2,
-                        weight: 2 
-                      }}
-                    />
+                    <>
+                      <Polygon
+                        positions={generateViewCone(currentPosition, heading)}
+                        pathOptions={{ 
+                          color: '#2563eb', 
+                          fillOpacity: 0.2,
+                          weight: 2 
+                        }}
+                      />
+                      {/* 向きデバッグ表示 */}
+                      <Popup position={currentPosition} offset={[0, 0]} closeButton={false}>
+                        <div style={{ 
+                          backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          color: '#2563eb',
+                          textAlign: 'center'
+                        }}>
+                          方角: {Math.round(heading)}°
+                          <div style={{ 
+                            fontSize: '9px',
+                            marginTop: '2px',
+                            color: '#666'
+                          }}>
+                            {heading >= 337.5 || heading < 22.5 ? '北' : 
+                             heading >= 22.5 && heading < 67.5 ? '北東' :
+                             heading >= 67.5 && heading < 112.5 ? '東' :
+                             heading >= 112.5 && heading < 157.5 ? '南東' :
+                             heading >= 157.5 && heading < 202.5 ? '南' :
+                             heading >= 202.5 && heading < 247.5 ? '南西' :
+                             heading >= 247.5 && heading < 292.5 ? '西' : '北西'}
+                          </div>
+                        </div>
+                      </Popup>
+                    </>
                   )}
                 </>
               )}
@@ -845,6 +979,21 @@ export default function NavigatingPage() {
                 {debugInfo}
                 <br />
                 ステップ: {currentStepIndex + 1}/{steps.length}
+                {typeof heading === 'number' && !isNaN(heading) && (
+                  <>
+                    <br />
+                    方角: {Math.round(heading)}° 
+                    <span style={{ color: '#3498db' }}>
+                      {heading >= 337.5 || heading < 22.5 ? '↑北' : 
+                       heading >= 22.5 && heading < 67.5 ? '↗北東' :
+                       heading >= 67.5 && heading < 112.5 ? '→東' :
+                       heading >= 112.5 && heading < 157.5 ? '↘南東' :
+                       heading >= 157.5 && heading < 202.5 ? '↓南' :
+                       heading >= 202.5 && heading < 247.5 ? '↙南西' :
+                       heading >= 247.5 && heading < 292.5 ? '←西' : '↖北西'}
+                    </span>
+                  </>
+                )}
               </div>
             )}
             
@@ -878,7 +1027,56 @@ export default function NavigatingPage() {
               </div>
             )}
             
-            {/* 到着モーダル */}
+            {/* 🔧 デバッグ用：手動モーダル表示ボタン */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '100px',
+                right: '10px',
+                zIndex: 1000,
+              }}
+            >
+              <button
+                onClick={() => {
+                  console.log('🧪 手動でモーダルをテスト表示');
+                  setShowArrivalModal(true);
+                  setArrivalModalShown(true);
+                }}
+                style={{
+                  backgroundColor: '#e74c3c',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                }}
+              >
+                🧪 テスト
+              </button>
+              <br />
+              <button
+                onClick={() => {
+                  console.log('🔄 モーダル状態をリセット');
+                  setShowArrivalModal(false);
+                  setArrivalModalShown(false);
+                }}
+                style={{
+                  backgroundColor: '#3498db',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  marginTop: '4px',
+                }}
+              >
+                🔄 リセット
+              </button>
+            </div>
+            
+            {/* 🔧 修正: 到着モーダル（z-index最優先） */}
             {showArrivalModal && (
               <div
                 style={{
@@ -887,57 +1085,62 @@ export default function NavigatingPage() {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.9)', // より濃い背景
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  zIndex: 2000,
+                  zIndex: 9999, // 最高のz-index
                 }}
+                onClick={(e) => e.stopPropagation()} // クリックイベントの伝播を停止
               >
                 <div
                   style={{
                     backgroundColor: 'white',
-                    borderRadius: '16px',
-                    padding: '24px',
-                    width: '85%',
+                    borderRadius: '20px',
+                    padding: '32px',
+                    width: '90%',
                     maxWidth: '400px',
                     textAlign: 'center',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+                    border: '3px solid #10B981', // 緑の境界線
                   }}
+                  onClick={(e) => e.stopPropagation()} // モーダル内クリックで閉じないように
                 >
-                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎉</div>
+                  <div style={{ fontSize: '64px', marginBottom: '20px' }}>🎉</div>
                   <h3
                     style={{
-                      margin: '0 0 16px 0',
-                      fontSize: '24px',
+                      margin: '0 0 20px 0',
+                      fontSize: '28px',
                       fontWeight: '700',
                       color: '#10B981',
                     }}
                   >
-                    目的地に到着しました
+                    目的地に到着しました！
                   </h3>
                   <p
                     style={{
-                      margin: '0 0 24px 0',
+                      margin: '0 0 30px 0',
                       color: '#4B5563',
-                      fontSize: '16px',
-                      lineHeight: '1.5',
+                      fontSize: '18px',
+                      lineHeight: '1.6',
                     }}
                   >
                     {toParam ? `${toParam}に到着しました。` : '目的地に到着しました。'}
+                    <br />
+                    お疲れ様でした！
                     <br />
                     ナビゲーションを終了しますか？
                   </p>
                   <div
                     style={{
                       display: 'flex',
-                      gap: '12px',
+                      gap: '16px',
                       justifyContent: 'center',
                     }}
                   >
                     <button
                       onClick={() => {
-                        console.log('🏠 ホームに戻ります');
+                        console.log('🏠 ナビ終了 - ホームに戻ります');
                         setShowArrivalModal(false);
                         router.push('/');
                       }}
@@ -945,21 +1148,22 @@ export default function NavigatingPage() {
                         backgroundColor: '#10B981',
                         color: 'white',
                         border: 'none',
-                        padding: '12px 24px',
-                        borderRadius: '8px',
-                        fontWeight: '600',
-                        fontSize: '16px',
+                        padding: '16px 32px',
+                        borderRadius: '12px',
+                        fontWeight: '700',
+                        fontSize: '18px',
                         cursor: 'pointer',
+                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
                       }}
                     >
-                      ナビを終える
+                      ナビを終了
                     </button>
                     <button
                       onClick={() => {
-                        console.log('📍 ナビを続行します');
+                        console.log('📍 ナビ続行します');
                         setShowArrivalModal(false);
                         
-                        // 10秒後に再度モーダルを表示できるようにする
+                        // 10秒後に再度表示可能にする
                         setTimeout(() => {
                           setArrivalModalShown(false);
                         }, 10000);
@@ -967,16 +1171,28 @@ export default function NavigatingPage() {
                       style={{
                         backgroundColor: '#F3F4F6',
                         color: '#4B5563',
-                        border: '1px solid #D1D5DB',
-                        padding: '12px 24px',
-                        borderRadius: '8px',
-                        fontWeight: '600',
-                        fontSize: '16px',
+                        border: '2px solid #D1D5DB',
+                        padding: '16px 32px',
+                        borderRadius: '12px',
+                        fontWeight: '700',
+                        fontSize: '18px',
                         cursor: 'pointer',
                       }}
                     >
                       ナビを続ける
                     </button>
+                  </div>
+                  
+                  {/* デバッグ情報（開発時のみ表示） */}
+                  <div style={{ 
+                    marginTop: '20px', 
+                    fontSize: '12px', 
+                    color: '#999',
+                    backgroundColor: '#f5f5f5',
+                    padding: '8px',
+                    borderRadius: '4px'
+                  }}>
+                    デバッグ: showArrivalModal={showArrivalModal.toString()}, arrivalModalShown={arrivalModalShown.toString()}
                   </div>
                 </div>
               </div>
