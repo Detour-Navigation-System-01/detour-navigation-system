@@ -595,8 +595,8 @@ export default function NavigatingPage() {
             
             console.log(`� 目的地距離チェック: ${Math.round(distanceToDestination)}m`);
             
-            // 🎯 目的地から100m以内なら到着とみなす
-            if (distanceToDestination < 100) {
+            // 🎯 目的地から10m以内なら到着とみなす
+            if (distanceToDestination < 10) {
               console.log(`�🎉 目的地到着！モーダル表示開始`);
               setNearbyMessage('🎉 目的地に到着しました！');
               setDebugInfo(`到着完了 (${Math.round(distanceToDestination)}m)`);
@@ -778,42 +778,14 @@ export default function NavigatingPage() {
                   />
 
                   {typeof heading === 'number' && !isNaN(heading) && (
-                    <>
-                      <Polygon
-                        positions={generateViewCone(currentPosition, heading)}
-                        pathOptions={{ 
-                          color: '#2563eb', 
-                          fillOpacity: 0.2,
-                          weight: 2 
-                        }}
-                      />
-                      {/* 向きデバッグ表示 */}
-                      <Popup position={currentPosition} offset={[0, 0]} closeButton={false}>
-                        <div style={{ 
-                          backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          fontSize: '11px',
-                          color: '#2563eb',
-                          textAlign: 'center'
-                        }}>
-                          方角: {Math.round(heading)}°
-                          <div style={{ 
-                            fontSize: '9px',
-                            marginTop: '2px',
-                            color: '#666'
-                          }}>
-                            {heading >= 337.5 || heading < 22.5 ? '北' : 
-                             heading >= 22.5 && heading < 67.5 ? '北東' :
-                             heading >= 67.5 && heading < 112.5 ? '東' :
-                             heading >= 112.5 && heading < 157.5 ? '南東' :
-                             heading >= 157.5 && heading < 202.5 ? '南' :
-                             heading >= 202.5 && heading < 247.5 ? '南西' :
-                             heading >= 247.5 && heading < 292.5 ? '西' : '北西'}
-                          </div>
-                        </div>
-                      </Popup>
-                    </>
+                    <Polygon
+                      positions={generateViewCone(currentPosition, heading)}
+                      pathOptions={{ 
+                        color: '#2563eb', 
+                        fillOpacity: 0.2,
+                        weight: 2 
+                      }}
+                    />
                   )}
                 </>
               )}
@@ -890,7 +862,7 @@ export default function NavigatingPage() {
                   boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
                   textAlign: 'center',
                   maxWidth: '90%',
-                  border: '2px solid #3498db', // 境界線を追加
+                  // border: '2px solid #3498db', // 境界線を追加
                 }}
               >
                 <div style={{ fontSize: '32px', marginBottom: '12px' }}>🧭</div>
@@ -902,23 +874,6 @@ export default function NavigatingPage() {
                   <br />
                   （この機能は任意です）
                 </p>
-                
-                {/* デバッグ情報表示 */}
-                <div style={{ 
-                  fontSize: '11px', 
-                  color: '#999', 
-                  marginBottom: '12px',
-                  backgroundColor: '#f5f5f5',
-                  padding: '8px',
-                  borderRadius: '4px'
-                }}>
-                  状態: {orientationPermissionStatus}
-                  <br />
-                  iOS: {/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'Yes' : 'No'}
-                  <br />
-                  許可関数: {typeof DeviceOrientationEvent !== 'undefined' && 
-                    typeof (DeviceOrientationEvent as any).requestPermission === 'function' ? 'Available' : 'Not Available'}
-                </div>
                 
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                   <button
@@ -962,120 +917,7 @@ export default function NavigatingPage() {
               </div>
             )}
 
-            {/* 🎯 デバッグ情報を一時的に表示（問題解決後に削除可能） */}
-            {debugInfo && (
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: '10px',
-                  right: '10px',
-                  backgroundColor: 'rgba(0,0,0,0.7)',
-                  color: 'white',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  zIndex: 1000,
-                }}
-              >
-                {debugInfo}
-                <br />
-                ステップ: {currentStepIndex + 1}/{steps.length}
-                {typeof heading === 'number' && !isNaN(heading) && (
-                  <>
-                    <br />
-                    方角: {Math.round(heading)}° 
-                    <span style={{ color: '#3498db' }}>
-                      {heading >= 337.5 || heading < 22.5 ? '↑北' : 
-                       heading >= 22.5 && heading < 67.5 ? '↗北東' :
-                       heading >= 67.5 && heading < 112.5 ? '→東' :
-                       heading >= 112.5 && heading < 157.5 ? '↘南東' :
-                       heading >= 157.5 && heading < 202.5 ? '↓南' :
-                       heading >= 202.5 && heading < 247.5 ? '↙南西' :
-                       heading >= 247.5 && heading < 292.5 ? '←西' : '↖北西'}
-                    </span>
-                  </>
-                )}
-              </div>
-            )}
-            
-            {/* デバッグ用：手動で向き許可ボタンを表示する機能 */}
-            {(orientationPermissionStatus === 'unknown' || orientationPermissionStatus === 'denied') && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '10px',
-                  right: '10px',
-                  zIndex: 1000,
-                }}
-              >
-                <button
-                  onClick={() => {
-                    console.log('🔧 手動で向き許可ボタンを表示');
-                    setShowOrientationButton(true);
-                  }}
-                  style={{
-                    backgroundColor: '#f39c12',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  🧭 向き設定
-                </button>
-              </div>
-            )}
-            
-            {/* 🔧 デバッグ用：手動モーダル表示ボタン */}
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '100px',
-                right: '10px',
-                zIndex: 1000,
-              }}
-            >
-              <button
-                onClick={() => {
-                  console.log('🧪 手動でモーダルをテスト表示');
-                  setShowArrivalModal(true);
-                  setArrivalModalShown(true);
-                }}
-                style={{
-                  backgroundColor: '#e74c3c',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                }}
-              >
-                🧪 テスト
-              </button>
-              <br />
-              <button
-                onClick={() => {
-                  console.log('🔄 モーダル状態をリセット');
-                  setShowArrivalModal(false);
-                  setArrivalModalShown(false);
-                }}
-                style={{
-                  backgroundColor: '#3498db',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  marginTop: '4px',
-                }}
-              >
-                🔄 リセット
-              </button>
-            </div>
+            {/* デバッグ情報は削除しました */}
             
             {/* 🔧 修正: 到着モーダル（z-index最優先） */}
             {showArrivalModal && (
