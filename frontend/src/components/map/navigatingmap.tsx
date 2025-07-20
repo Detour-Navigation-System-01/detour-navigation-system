@@ -667,6 +667,27 @@ export default function NavigatingPage() {
                 {nearbyMessage}
               </div>
             )}
+
+            {/* 🎯 デバッグ情報を一時的に表示（問題解決後に削除可能） */}
+            {debugInfo && (
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '10px',
+                  right: '10px',
+                  backgroundColor: 'rgba(0,0,0,0.7)',
+                  color: 'white',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  zIndex: 1000,
+                }}
+              >
+                {debugInfo}
+                <br />
+                ステップ: {currentStepIndex + 1}/{steps.length}
+              </div>
+            )}
             
             {/* 到着モーダル */}
             {showArrivalModal && (
