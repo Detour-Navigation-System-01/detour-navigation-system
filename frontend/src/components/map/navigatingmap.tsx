@@ -561,7 +561,7 @@ export default function NavigatingPage() {
   };
 
   // =============================================================================
-  // 🔧 修正: GPS位置追跡処理（モーダル表示確実化）
+  // 🔧 修正: GPS位置追跡処理（到着判定を独立化）
   // =============================================================================
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -582,12 +582,31 @@ export default function NavigatingPage() {
           const timestamp = new Date().toLocaleTimeString();
           console.log(`📍 位置更新 ${timestamp}: ${coords[0].toFixed(6)}, ${coords[1].toFixed(6)}`);
 
-          // 🔧 到着モーダルが表示されている場合は案内メッセージを更新しない
           if (showArrivalModal) {
             console.log('🎉 到着モーダル表示中のため案内更新をスキップ');
             return;
           }
 
+          // 🔧 1. まず目的地到着判定（ステップとは独立）
+          if (toCoord && !arrivalModalShown) {
+            const distanceToDestination = getDistanceMeters(
+              coords[0], coords[1], toCoord.lat, toCoord.lon
+            );
+            
+            console.log(`� 目的地距離チェック: ${Math.round(distanceToDestination)}m`);
+            
+            // 🎯 目的地から100m以内なら到着とみなす
+            if (distanceToDestination < 100) {
+              console.log(`�🎉 目的地到着！モーダル表示開始`);
+              setNearbyMessage('🎉 目的地に到着しました！');
+              setDebugInfo(`到着完了 (${Math.round(distanceToDestination)}m)`);
+              setShowArrivalModal(true);
+              setArrivalModalShown(true);
+              return; // ここで処理終了
+            }
+          }
+
+          // 🔧 2. ステップベースの案内（到着判定とは独立）
           if (steps.length > 0) {
             const { 
               currentStepIndex: newStepIndex, 
@@ -606,8 +625,8 @@ export default function NavigatingPage() {
               console.log(`🚀 ステップ更新: ${currentStepIndex} → ${newStepIndex}`);
             }
 
+            // 🔧 ステップがある場合の案内
             if (nextStep) {
-              // ステップが残っている場合の案内
               if (distanceToNext < 10) {
                 setNearbyMessage(`まもなく${nextStep.instruction}`);
                 setDebugInfo(`ステップ${newStepIndex}: あと${Math.round(distanceToNext)}m`);
@@ -624,49 +643,15 @@ export default function NavigatingPage() {
                 setNearbyMessage('⚠️ 経路に戻ってください');
                 setDebugInfo(`ステップ${newStepIndex}: 経路外`);
               }
-            } else {
-              // 🔧 すべてのステップが完了した場合（目的地判定を改善）
+            } 
+            // 🔧 ステップがない場合でも目的地案内
+            else {
               if (toCoord) {
                 const distanceToDestination = getDistanceMeters(
                   coords[0], coords[1], toCoord.lat, toCoord.lon
                 );
                 
-                // 🎯 詳細なデバッグログ追加
-                console.log(`🏁 目的地距離判定:`, {
-                  距離: `${Math.round(distanceToDestination)}m`,
-                  閾値: '50m',
-                  モーダル表示済み: arrivalModalShown,
-                  現在のメッセージ: nearbyMessage
-                });
-                
-                // 🔧 到着判定の閾値を50mに拡大
-                if (distanceToDestination < 50) {
-                  if (!arrivalModalShown) {
-                    console.log('🎉 目的地到着検出！モーダル表示処理開始');
-                    
-                    // 🎯 まず案内メッセージを到着メッセージに変更
-                    setNearbyMessage('🎉 目的地に到着しました！');
-                    setDebugInfo(`到着完了 (${Math.round(distanceToDestination)}m)`);
-                    
-                    // 🎯 即座にモーダル表示フラグを設定（遅延なし）
-                    setShowArrivalModal(true);
-                    setArrivalModalShown(true);
-                    
-                    console.log('✅ モーダル表示状態設定完了');
-                  } else {
-                    // 既にモーダルが表示されている場合
-                    console.log('ℹ️ 到着モーダルは既に表示済み');
-                    setNearbyMessage('🎉 目的地に到着しました！');
-                    setDebugInfo(`到着完了 (${Math.round(distanceToDestination)}m) - 表示済み`);
-                  }
-                } 
-                // 🔧 もう少し近づいたら「まもなく到着」表示
-                else if (distanceToDestination < 100) {
-                  setNearbyMessage(`目的地まで${Math.round(distanceToDestination)}m`);
-                  setDebugInfo(`残り${Math.round(distanceToDestination)}m`);
-                } 
-                // 🔧 「まもなく到着」の条件を追加
-                else if (distanceToDestination < 200) {
+                if (distanceToDestination < 200) {
                   setNearbyMessage('まもなく目的地に到着します');
                   setDebugInfo(`もうすぐ到着: ${Math.round(distanceToDestination)}m`);
                 } else {
@@ -678,9 +663,25 @@ export default function NavigatingPage() {
                 setDebugInfo('全ステップ完了');
               }
             }
-          } else {
-            setNearbyMessage('📍 経路データを読み込み中...');
-            setDebugInfo('データ読み込み中');
+          } 
+          // 🔧 ステップデータがない場合でも目的地案内
+          else {
+            if (toCoord) {
+              const distanceToDestination = getDistanceMeters(
+                coords[0], coords[1], toCoord.lat, toCoord.lon
+              );
+              
+              if (distanceToDestination < 200) {
+                setNearbyMessage('まもなく目的地に到着します');
+                setDebugInfo(`もうすぐ到着: ${Math.round(distanceToDestination)}m`);
+              } else {
+                setNearbyMessage('目的地まで直進してください');
+                setDebugInfo(`目的地まで${Math.round(distanceToDestination)}m`);
+              }
+            } else {
+              setNearbyMessage('📍 経路データを読み込み中...');
+              setDebugInfo('データ読み込み中');
+            }
           }
         },
         (err) => {
